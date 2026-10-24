@@ -29,6 +29,22 @@
     try{fn?.()}catch(e){console.error('PLAYER HUB V2 // '+label,e)}
   }
 
+  function syncCyberDashboard(){
+    const operator=$('dcxDashOperatorName'),room=$('dcxDashRoom'),link=$('dcxDashLink'),clock=$('dcxDashClock');
+    const name=String($('name')?.value||$('qolIdentityName')?.textContent||'AGENTE').trim()||'AGENTE';
+    const roomName=String($('room')?.value||'—').trim()||'—';
+    const mode=String($('mode')?.textContent||'OFFLINE').trim().toUpperCase();
+    if(operator)operator.textContent=name;
+    if(room)room.textContent=roomName;
+    if(link)link.textContent=mode;
+    if(clock)clock.textContent=new Date().toLocaleTimeString('pt-BR',{hour12:false});
+  }
+
+  function openModule(name){
+    const map={yumiya:'dcxOpenYumiya',team:'dcxOpenTeam',notes:'dcxOpenNotes',handouts:'dcxOpenHandouts',notifications:'dcxOpenNotifications',polls:'dcxOpenPolls',settings:'dcxOpenSettings',channel:'dcxOpenTeamChannel',credentials:'dcxOpenCredentials'};
+    $(map[name])?.click();
+  }
+
   function bind(){
     $('workspaceTabGolpe')?.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();switchWorkspace('golpe')});
     $('workspaceTabDCX')?.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();switchWorkspace('dcx')});
@@ -45,10 +61,15 @@
     const unread=$('yumiyaUnread');
     if(unread)new MutationObserver(syncUnread).observe(unread,{subtree:true,childList:true,attributes:true,characterData:true});
     syncUnread();
-    console.info('[DCX OS] PLAYER HUB V2 // CSS ISOLADO // INTERACTION BIND OK');
+    syncCyberDashboard();
+    setInterval(syncCyberDashboard,1000);
+    ['name','room'].forEach(id=>$(id)?.addEventListener('input',syncCyberDashboard));
+    document.querySelectorAll('[data-dcx-open]').forEach(btn=>btn.addEventListener('click',()=>openModule(btn.dataset.dcxOpen)));
+    const mode=$('mode');if(mode)new MutationObserver(syncCyberDashboard).observe(mode,{subtree:true,childList:true,characterData:true});
+    console.info('[DCX OS] PLAYER HUB V2 // CYBER TACTICAL DASHBOARD // INTERACTION BIND OK');
   }
 
   window.DCX=window.DCX||{};
-  window.DCX.PlayerHub={switchWorkspace,get current(){return current}};
+  window.DCX.PlayerHub={switchWorkspace,openModule,syncCyberDashboard,get current(){return current}};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();

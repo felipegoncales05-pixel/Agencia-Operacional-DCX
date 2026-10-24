@@ -23,21 +23,60 @@
 </main>
 </div>
 <section aria-label="Central DCX" class="playerWorkspacePane dcxWorkspace" data-workspace="dcx" id="workspaceDCX">
-<div class="dcxWorkspaceHero">
-<div><div class="eyebrow">DCX // TERMINAL DO OPERADOR</div><h1>REDE INTERNA</h1><p>Comunicação, equipe e ferramentas de campo em uma área separada do planejamento do golpe.</p></div>
-<div class="dcxWorkspaceSeal"><span>DCX</span><small>OPERADOR</small></div>
+<div class="dcxPlayerDashboard">
+<section class="dcxDashHero" aria-label="Centro de Operações DCX">
+  <div class="dcxDashHeroCopy">
+    <div class="dcxDashKicker"><span>DCX</span><b>// CENTRO DE OPERAÇÕES</b></div>
+    <div class="eyebrow">TERMINAL DO OPERADOR // REDE INTERNA</div>
+    <h1>MESMAS PESSOAS.<br/><span>NOVAS HISTÓRIAS.</span></h1>
+    <p>Comunicação, inteligência e ferramentas de campo da DCX reunidas em uma única HUD operacional.</p>
+    <div class="dcxDashHeroActions">
+      <button class="btn accent" type="button" data-dcx-open="yumiya">ABRIR YUMIYA <span>→</span></button>
+      <button class="btn" type="button" data-dcx-open="handouts">VER HANDOUTS</button>
+    </div>
+  </div>
+  <div class="dcxDashSystem">
+    <div class="dcxDashSystemHead"><i></i><b>SISTEMA ONLINE</b></div>
+    <div class="dcxDashSystemGrid">
+      <div><small>OPERADOR</small><b id="dcxDashOperatorName">AGENTE</b></div>
+      <div><small>SALA</small><b id="dcxDashRoom">—</b></div>
+      <div><small>LINK</small><b id="dcxDashLink">AGUARDANDO</b></div>
+      <div><small>HORA LOCAL</small><b id="dcxDashClock">--:--:--</b></div>
+    </div>
+    <div class="dcxDashSignal"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+  </div>
+</section>
+
+<div class="dcxDashMainGrid">
+<section class="dcxDashOverview">
+<header class="dcxDashPanelHead"><div><span class="dcxDashPanelIcon">◎</span><b>VISÃO DO OPERADOR</b></div><small>DCX // TEMPO REAL</small></header>
+<div class="dcxDashMetrics">
+<button class="dcxModuleCard live dcxDashMetric team" id="dcxOpenTeam" type="button"><div class="dcxDashMetricTop"><span class="dcxModuleIcon">▦</span><small>EQUIPE // STATUS</small></div><strong>OPERACIONAL</strong><div class="dcxDashMetricBar"><i></i></div><em class="dcxModuleState">VISUALIZAR</em></button>
+<button class="dcxModuleCard live dcxDashMetric handouts" id="dcxOpenHandouts" type="button"><div class="dcxDashMetricTop"><span class="dcxModuleIcon">▤</span><small>HANDOUTS</small></div><strong>ARQUIVOS</strong><div class="dcxDashMetricBar"><i></i></div><em class="dcxModuleState">ABRIR</em></button>
+<button class="dcxModuleCard live dcxDashMetric polls" id="dcxOpenPolls" type="button"><div class="dcxDashMetricTop"><span class="dcxModuleIcon">✓</span><small>VOTAÇÕES</small></div><strong>DECISÕES</strong><div class="dcxDashMetricBar"><i></i></div><em class="dcxModuleState" id="dcxPollsCardState">CONECTE-SE</em><i class="hidden" id="dcxPollsCardCount">0</i></button>
+<button class="dcxModuleCard live dcxDashMetric notifications" id="dcxOpenNotifications" type="button"><div class="dcxDashMetricTop"><span class="dcxModuleIcon">!</span><small>NOTIFICAÇÕES</small></div><strong>EVENTOS</strong><div class="dcxDashMetricBar"><i></i></div><em class="dcxModuleState">ABRIR CENTRAL</em></button>
 </div>
-<div class="dcxWorkspaceGrid">
-<button class="dcxModuleCard live" id="dcxOpenYumiya" type="button"><span class="dcxModuleIcon">YK</span><div><small>COMUNICAÇÃO CRIPTOGRAFADA</small><b>YUMIYA // REMOTE</b><p>Canal individual, Reaction Sync e assistência operacional.</p></div><em class="dcxModuleState">ABRIR</em><i class="hidden" id="dcxYumiyaCardUnread">0</i></button>
-<button class="dcxModuleCard live" id="dcxOpenTeam" type="button"><span class="dcxModuleIcon">▦</span><div><small>ORGANIZAÇÃO OPERACIONAL</small><b>EQUIPE // STATUS</b><p>Veja equipes, funções e status definidos pelo Keymaster.</p></div><em class="dcxModuleState">VISUALIZAR</em></button>
+</section>
+
+<button class="dcxModuleCard live dcxDashYumiya" id="dcxOpenYumiya" type="button">
+  <div class="dcxDashYumiyaHead"><div><small>YUMIYA //</small><b>ASSISTÊNCIA REMOTA</b></div><span><i></i> ONLINE</span></div>
+  <div class="dcxDashYumiyaVisual"><img src="yumiya-normal.png" alt="Yumiya Kiryuin"/><div class="dcxDashYumiyaShade"></div><div class="dcxDashYumiyaMessage"><b>YUMIYA KIRYUIN</b><p>Canal seguro disponível para assistência operacional.</p><small>REACTION SYNC // LINK CRIPTOGRAFADO</small></div></div>
+  <div class="dcxDashYumiyaFoot"><span>ABRIR CANAL</span><b>→</b></div>
+  <i class="hidden" id="dcxYumiyaCardUnread">0</i>
+</button>
+</div>
+
+<section class="dcxDashToolsPanel">
+<header class="dcxDashPanelHead"><div><span class="dcxDashPanelIcon">⌘</span><b>FERRAMENTAS DE CAMPO</b></div><small>ACESSO RÁPIDO // OPERADOR</small></header>
+<div class="dcxWorkspaceGrid dcxDashTools">
 <button class="dcxModuleCard live" id="dcxOpenNotes" type="button"><span class="dcxModuleIcon">✎</span><div><small>BLOCO DE CAMPO</small><b>ANOTAÇÕES</b><p>Registre informações importantes e mantenha suas notas da operação.</p></div><em class="dcxModuleState">ABRIR</em></button>
-<button class="dcxModuleCard live" id="dcxOpenHandouts" type="button"><span class="dcxModuleIcon">▤</span><div><small>DOCUMENTOS RECEBIDOS</small><b>HANDOUTS</b><p>Arquivos, imagens e relatórios enviados durante a sessão.</p></div><em class="dcxModuleState">ABRIR</em></button>
-<button class="dcxModuleCard live" id="dcxOpenNotifications" type="button"><span class="dcxModuleIcon">!</span><div><small>CENTRAL DE EVENTOS</small><b>NOTIFICAÇÕES</b><p>Atualizações da operação, mensagens importantes e novos registros.</p></div><em class="dcxModuleState">ABRIR</em></button>
-<button class="dcxModuleCard live" id="dcxOpenPolls" type="button"><span class="dcxModuleIcon">✓</span><div><small>DECISÕES DA EQUIPE</small><b>VOTAÇÕES</b><p>Consulte votações ativas publicadas pelo Keymaster.</p></div><em class="dcxModuleState" id="dcxPollsCardState">CONECTE-SE</em><i class="hidden" id="dcxPollsCardCount">0</i></button>
-<button class="dcxModuleCard live" id="dcxOpenSettings" type="button"><span class="dcxModuleIcon">⚙</span><div><small>PREFERÊNCIAS LOCAIS</small><b>CONFIGURAÇÕES</b><p>Escolha densidade da HUD e um dos vinte e dois temas visuais do terminal.</p></div><em class="dcxModuleState">PERSONALIZAR</em></button>
 <button class="dcxModuleCard live" id="dcxOpenTeamChannel" type="button"><span class="dcxModuleIcon">#</span><div><small>COMUNICAÇÃO DE CAMPO</small><b>CANAL DA EQUIPE</b><p>Conversa em tempo real entre operadores da mesma equipe.</p></div><em class="dcxModuleState">ABRIR</em></button>
+<button class="dcxModuleCard live" id="dcxOpenSettings" type="button"><span class="dcxModuleIcon">⚙</span><div><small>PREFERÊNCIAS LOCAIS</small><b>CONFIGURAÇÕES</b><p>Densidade da HUD e vinte e duas paletas visuais do terminal.</p></div><em class="dcxModuleState">PERSONALIZAR</em></button>
 </div>
-<div class="dcxWorkspaceFoot"><span>GOLPE mantém o planejamento da missão separado das ferramentas internas da DCX.</span><b>DCX OS // PLAYER HUB V2</b></div>
+</section>
+
+<footer class="dcxDashFooter"><span><i></i> DCX NETWORK // CONEXÃO SEGURA</span><b>PLAYER HUB // CYBER TACTICAL V1</b></footer>
+</div>
 </section>
 </div>
 <div class="yumiyaLauncher hidden" id="yumiyaLauncher">

@@ -14,6 +14,11 @@ window.DCX = window.DCX || {};
   function now(){return firebase.database.ServerValue.TIMESTAMP}
   function narrative(op){return Object.assign({teamId:"",role:"",status:"OPERACIONAL",location:"",commsStatus:"ONLINE",visible:true},op?.narrative||{})}
   function operatorName(op,id){return op?.identity?.name||op?.name||id}
+  function teamSymbol(key){return window.DCX?.TeamSymbols?.get?.(key)?.key||"wolf"}
+  function teamIcon(key){return window.DCX?.TeamSymbols?.icon?.(teamSymbol(key))||"<span>◆</span>"}
+  function initials(v){const a=String(v||"AGENTE").trim().split(/\s+/).filter(Boolean);return(a.slice(0,2).map(x=>x[0]).join("")||"DCX").toUpperCase()}
+  function avatarUrl(id){try{return window.DCX?.Media?.getAvatarUrl?.(id)||""}catch{return""}}
+  function teamAccent(i){return ["#ff4f7d","#54a8ff","#b867ff","#43e3c2","#ffb64d","#62d7ff","#ff6fcf","#8be06f","#f06d6d","#7e8dff","#56dfaa","#d19cff"][i%12]}
   function touch(){lastInteraction=Date.now()}
   function accessStorageKey(){return `dcx-access-key-${room}`}
   function setGate(show,msg=""){const g=$("dcxAccessGate");if(!g)return;g.classList.toggle("hidden",!show);document.body.classList.toggle("dcxAccessLocked",!!show);if($("dcxAccessStatus"))$("dcxAccessStatus").textContent=msg;if(show){const saved=localStorage.getItem("oph-name")||"";if($("dcxAccessName")&&!$("dcxAccessName").value)$("dcxAccessName").value=saved;setTimeout(()=>$("dcxAccessName")?.focus(),60)}}
@@ -44,7 +49,29 @@ window.DCX = window.DCX || {};
     }catch(e){console.error("DCX Player init",e);return false}
   }
 
-  function renderTeams(){const box=$("dcxTeamContent");if(!box)return;const entries=Object.entries(teams||{}).filter(([id])=>id!=="_init");if(!entries.length){box.innerHTML=`<div class="dcxEmpty big">Nenhuma equipe operacional publicada.</div>`;return}box.innerHTML=entries.map(([tid,t])=>{const members=Object.entries(operators||{}).filter(([id,op])=>narrative(op).teamId===tid&&narrative(op).visible!==false);return `<article class="dcxPlayerTeamCard"><div class="dcxPlayerTeamHead"><div><span>${esc(t.codename||"EQUIPE")}</span><h3>${esc(t.name||tid)}</h3></div><b>${esc(t.status||"OPERACIONAL")}</b></div>${t.description?`<p>${esc(t.description)}</p>`:""}<div class="dcxPlayerRoster">${members.map(([id,op])=>{const n=narrative(op),me=id===playerId;return `<div class="dcxPlayerMember ${me?"self":""}" data-credential-pid="${esc(id)}" role="button" tabindex="0"><div><b>${esc(operatorName(op,id))}${me?" · VOCÊ":""}</b><small>${esc(n.role||"OPERADOR")}${n.location?` · ${esc(n.location)}`:""}</small></div><span>${esc(n.status||"OPERACIONAL")}</span><em>${esc(n.commsStatus||"ONLINE")}</em></div>`}).join("")||`<div class="dcxEmpty">Sem membros visíveis.</div>`}</div></article>`}).join("")}
+  function visibleTeamMembers(tid){return Object.entries(operators||{}).filter(([id,op])=>narrative(op).teamId===tid&&narrative(op).visible!==false)}
+  function avatarHtml(id,op){const src=avatarUrl(id),nm=operatorName(op,id);return src?`<span class="dcxDashTeamAvatar"><img alt="" src="${esc(src)}"></span>`:`<span class="dcxDashTeamAvatar">${esc(initials(nm))}</span>`}
+  function renderTeamShowcase(){
+    const box=$("dcxDashTeams");if(!box)return;
+    const entries=Object.entries(teams||{}).filter(([id])=>id!=="_init");
+    if(!entries.length){box.innerHTML='<div class="dcxDashTeamsEmpty">NENHUMA EQUIPE PUBLICADA.</div>';return}
+    box.innerHTML=entries.map(([tid,t],index)=>{const members=visibleTeamMembers(tid),accent=teamAccent(index);return `<button type="button" class="dcxDashTeamCard" style="--team-accent:${accent}" onclick="DCX.Player.openTeamDetail('${esc(tid)}')"><span class="dcxDashTeamIcon">${teamIcon(t.symbol)}</span><h3>${esc(t.name||tid)}</h3><small>${members.length} MEMBRO${members.length===1?"":"S"} · ${esc(t.codename||"DCX")}</small><span class="dcxDashTeamState"><i></i>${esc(t.status||"OPERACIONAL")}</span><span class="dcxDashTeamAvatars">${members.slice(0,4).map(([id,op])=>avatarHtml(id,op)).join("")}${members.length>4?`<span class="dcxDashTeamAvatar">+${members.length-4}</span>`:""}</span></button>`}).join("")
+  }
+  function ensureTeamDetail(){
+    let ov=$("dcxTeamDetailBackdrop");if(ov)return ov;
+    ov=document.createElement("div");ov.id="dcxTeamDetailBackdrop";ov.className="dcxTeamDetailBackdrop hidden";ov.innerHTML='<section class="dcxTeamDetailCard" id="dcxTeamDetailCard"></section>';document.body.appendChild(ov);
+    ov.addEventListener("click",e=>{if(e.target===ov)ov.classList.add("hidden")});
+    document.addEventListener("keydown",e=>{if(e.key==="Escape")ov.classList.add("hidden")});
+    return ov
+  }
+  function openTeamDetail(tid){
+    const t=teams?.[tid];if(!t)return;
+    const entries=Object.entries(teams||{}).filter(([id])=>id!=="_init"),idx=Math.max(0,entries.findIndex(([id])=>id===tid)),accent=teamAccent(idx),members=visibleTeamMembers(tid),ov=ensureTeamDetail(),card=$("dcxTeamDetailCard");
+    card.style.setProperty("--team-accent",accent);
+    card.innerHTML=`<header class="dcxTeamDetailHead"><span class="dcxDashTeamIcon">${teamIcon(t.symbol)}</span><div><small>${esc(t.codename||"EQUIPE")} // ${esc(t.status||"OPERACIONAL")}</small><h2>${esc(t.name||tid)}</h2></div><button class="chatIconBtn" type="button" onclick="document.getElementById('dcxTeamDetailBackdrop').classList.add('hidden')">×</button></header>${t.description?`<p class="dcxTeamDetailDesc">${esc(t.description)}</p>`:""}<div class="dcxTeamDetailMembers">${members.map(([id,op])=>{const n=narrative(op);return`<div class="dcxTeamDetailMember" data-credential-pid="${esc(id)}" role="button" tabindex="0">${avatarHtml(id,op)}<div><b>${esc(operatorName(op,id))}${id===playerId?" · VOCÊ":""}</b><small>${esc(n.role||"OPERADOR")}${n.location?" · "+esc(n.location):""}</small></div><em>${esc(n.status||"OPERACIONAL")} // ${esc(n.commsStatus||"ONLINE")}</em></div>`}).join("")||'<div class="dcxEmpty">Sem membros visíveis.</div>'}</div>`;
+    ov.classList.remove("hidden")
+  }
+  function renderTeams(){const box=$("dcxTeamContent");if(!box)return;const entries=Object.entries(teams||{}).filter(([id])=>id!=="_init");if(!entries.length){box.innerHTML=`<div class="dcxEmpty big">Nenhuma equipe operacional publicada.</div>`;renderTeamShowcase();return}box.innerHTML=entries.map(([tid,t],index)=>{const members=visibleTeamMembers(tid),accent=teamAccent(index);return `<article class="dcxPlayerTeamCard" style="--team-accent:${accent}"><button class="dcxPlayerTeamSummary" type="button" onclick="DCX.Player.openTeamDetail('${esc(tid)}')"><span class="dcxDashTeamIcon">${teamIcon(t.symbol)}</span><div class="dcxPlayerTeamHead"><div><span>${esc(t.codename||"EQUIPE")}</span><h3>${esc(t.name||tid)}</h3></div><b>${esc(t.status||"OPERACIONAL")}</b></div><span class="dcxPlayerTeamCount">${members.length} MEMBRO${members.length===1?"":"S"} →</span></button>${t.description?`<p>${esc(t.description)}</p>`:""}</article>`}).join("");renderTeamShowcase()}
   function toggleTeam(force){const p=$("dcxTeamPanel");if(!p)return;const open=typeof force==="boolean"?force:p.classList.contains("hidden");p.classList.toggle("hidden",!open);if(open)renderTeams()}
 
   function noteEntries(){return Object.entries(notes||{}).filter(([id])=>id!=="_init").sort((a,b)=>(Number(b[1]?.updatedAt)||0)-(Number(a[1]?.updatedAt)||0))}
@@ -76,5 +103,5 @@ window.DCX = window.DCX || {};
   function getLocalIdentity(){return {playerId,name,room,connected};}
 
   ["pointerdown","keydown","touchstart"].forEach(ev=>window.addEventListener(ev,touch,{passive:true}));document.addEventListener("visibilitychange",()=>{touch();heartbeat()});window.addEventListener("focus",()=>{touch();heartbeat()});window.addEventListener("blur",heartbeat);
-  window.DCX.Player={bootstrap,submitAccess,init,toggleTeam,toggleNotes,newNote,selectNote,saveNote,deleteNote,exportNote,getCredentialData,getLocalIdentity};
+  window.DCX.Player={openTeamDetail,renderTeamShowcase,bootstrap,submitAccess,init,toggleTeam,toggleNotes,newNote,selectNote,saveNote,deleteNote,exportNote,getCredentialData,getLocalIdentity};
 })();

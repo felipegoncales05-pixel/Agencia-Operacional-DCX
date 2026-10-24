@@ -23,13 +23,26 @@
 </main>
 </div>
 <section aria-label="Central DCX" class="playerWorkspacePane dcxWorkspace" data-workspace="dcx" id="workspaceDCX">
+<div class="dcxPlayerDashboardShell">
+
+<aside class="dcxFieldSidebar" aria-label="Ferramentas de campo">
+  <div class="dcxFieldSidebarBrand"><span>DCX</span><small>FIELD // TOOLS</small></div>
+  <div class="dcxWorkspaceGrid dcxFieldSidebarTools">
+    <button class="dcxFieldTool dcxModuleCard live" id="dcxOpenNotes" type="button"><span class="dcxModuleIcon">✎</span><div><b>ANOTAÇÕES</b><small>BLOCO DE CAMPO</small></div></button>
+    <button class="dcxFieldTool dcxModuleCard live" id="dcxOpenTeamChannel" type="button"><span class="dcxModuleIcon">#</span><div><b>CANAL</b><small>EQUIPE // COMMS</small></div></button>
+    <button class="dcxFieldTool dcxModuleCard live" id="dcxOpenSettings" type="button"><span class="dcxModuleIcon">⚙</span><div><b>CONFIG</b><small>TERMINAL</small></div></button>
+  </div>
+  <div class="dcxFieldSidebarStatus"><i></i><span>DCX NETWORK</span><b>ONLINE</b></div>
+</aside>
+
 <div class="dcxPlayerDashboard">
-<section class="dcxDashHero" aria-label="Centro de Operações DCX">
+<section class="dcxDashHero" id="dcxDashHeroArt" aria-label="Centro de Operações DCX">
+  <div class="dcxDashHeroShade"></div>
   <div class="dcxDashHeroCopy">
     <div class="dcxDashKicker"><span>DCX</span><b>// CENTRO DE OPERAÇÕES</b></div>
-    <div class="eyebrow">TERMINAL DO OPERADOR // REDE INTERNA</div>
-    <h1>MESMAS PESSOAS.<br/><span>NOVAS HISTÓRIAS.</span></h1>
-    <p>Comunicação, inteligência e ferramentas de campo da DCX reunidas em uma única HUD operacional.</p>
+    <div class="eyebrow" id="dcxDashHeroEyebrow">DCX // CRÔNICAS DO TEMPO</div>
+    <h1 id="dcxDashHeroTitle">CRÔNICAS DO TEMPO</h1>
+    <p id="dcxDashHeroSubtitle">Operações, comunicação e arquivos da DCX em uma única central.</p>
     <div class="dcxDashHeroActions">
       <button class="btn accent" type="button" data-dcx-open="yumiya">ABRIR YUMIYA <span>→</span></button>
       <button class="btn" type="button" data-dcx-open="handouts">VER HANDOUTS</button>
@@ -66,16 +79,13 @@
 </button>
 </div>
 
-<section class="dcxDashToolsPanel">
-<header class="dcxDashPanelHead"><div><span class="dcxDashPanelIcon">⌘</span><b>FERRAMENTAS DE CAMPO</b></div><small>ACESSO RÁPIDO // OPERADOR</small></header>
-<div class="dcxWorkspaceGrid dcxDashTools">
-<button class="dcxModuleCard live" id="dcxOpenNotes" type="button"><span class="dcxModuleIcon">✎</span><div><small>BLOCO DE CAMPO</small><b>ANOTAÇÕES</b><p>Registre informações importantes e mantenha suas notas da operação.</p></div><em class="dcxModuleState">ABRIR</em></button>
-<button class="dcxModuleCard live" id="dcxOpenTeamChannel" type="button"><span class="dcxModuleIcon">#</span><div><small>COMUNICAÇÃO DE CAMPO</small><b>CANAL DA EQUIPE</b><p>Conversa em tempo real entre operadores da mesma equipe.</p></div><em class="dcxModuleState">ABRIR</em></button>
-<button class="dcxModuleCard live" id="dcxOpenSettings" type="button"><span class="dcxModuleIcon">⚙</span><div><small>PREFERÊNCIAS LOCAIS</small><b>CONFIGURAÇÕES</b><p>Densidade da HUD e vinte e duas paletas visuais do terminal.</p></div><em class="dcxModuleState">PERSONALIZAR</em></button>
-</div>
+<section class="dcxDashTeamsPanel">
+<header class="dcxDashPanelHead"><div><span class="dcxDashPanelIcon">▦</span><b>EQUIPES</b></div><button class="dcxDashTextBtn" type="button" data-dcx-open="team">VER TODAS →</button></header>
+<div class="dcxDashTeams" id="dcxDashTeams"><div class="dcxDashTeamsEmpty">SINCRONIZANDO EQUIPES...</div></div>
 </section>
 
-<footer class="dcxDashFooter"><span><i></i> DCX NETWORK // CONEXÃO SEGURA</span><b>PLAYER HUB // CYBER TACTICAL V1</b></footer>
+<footer class="dcxDashFooter"><span><i></i> DCX NETWORK // CONEXÃO SEGURA</span><b>PLAYER HUB // CYBER TACTICAL</b></footer>
+</div>
 </div>
 </section>
 </div>

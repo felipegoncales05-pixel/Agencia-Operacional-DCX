@@ -69,7 +69,19 @@ function openCredential(pid){ensureCredentialModal();const d=playerData(pid||get
 window.DCX=window.DCX||{};window.DCX.QOL=window.DCX.QOL||{};window.DCX.QOL.openCredential=openCredential;
 function ensureIdentityChip(){if($('qolIdentityChip'))return;const actions=document.querySelector('.top .actions');if(!actions)return;actions.insertAdjacentHTML('afterbegin','<button class="qolIdentityChip" id="qolIdentityChip" type="button" title="Abrir Credenciais DCX"><span class="qolIdentityAvatar" id="qolIdentityAvatar">DCX</span><span class="qolIdentityMeta"><b id="qolIdentityName">AGENTE</b><small id="qolIdentityPid">P-—</small></span><i class="qolConn" id="qolIdentityConn"></i></button>');$('qolIdentityChip').onclick=()=>openCredential(getIdentity().playerId);updateIdentityChip()}
 function updateIdentityChip(){const i=getIdentity(),pic=avatar(i.playerId);if($('qolIdentityName'))$('qolIdentityName').textContent=i.name||'AGENTE';if($('qolIdentityPid'))$('qolIdentityPid').textContent=i.playerId||'P-—';if($('qolIdentityAvatar'))$('qolIdentityAvatar').innerHTML=pic?`<img alt="" src="${pic}">`:esc(initials(i.name));const m=String($('mode')?.textContent||'OFFLINE').toUpperCase(),c=$('qolIdentityConn');if(c){c.className='qolConn '+(m.includes('ONLINE')||m.includes('CONECT')?'online':m.includes('SYNC')?'sync':'')}}
-function injectCredentialCard(){const g=document.querySelector('.dcxWorkspaceGrid');if(!g||$('dcxOpenCredentials'))return;const ref=$('dcxOpenSettings');const html=`<button class="dcxModuleCard live" id="dcxOpenCredentials" type="button"><span class="dcxModuleIcon">ID</span><div><small>IDENTIDADE DO OPERADOR</small><b>CREDENCIAIS DCX</b><p>Abra seu crachá e consulte as credenciais públicas de outros operadores.</p></div><em class="dcxModuleState">ABRIR CRACHÁ</em></button>`;ref?.insertAdjacentHTML('beforebegin',html)||g.insertAdjacentHTML('beforeend',html);$('dcxOpenCredentials').onclick=()=>openCredential(getIdentity().playerId)}
+function injectCredentialCard(){
+  const g=document.querySelector('.dcxFieldSidebarTools')||document.querySelector('.dcxWorkspaceGrid');
+  if(!g||$('dcxOpenCredentials'))return;
+  const sidebar=g.classList.contains('dcxFieldSidebarTools');
+  const ref=g.querySelector('#dcxOpenSettings');
+  const html=sidebar
+    ? `<button class="dcxFieldTool dcxModuleCard live" id="dcxOpenCredentials" type="button" aria-label="Abrir Credenciais DCX" title="Abra seu crachá e consulte as credenciais públicas de outros operadores."><span class="dcxModuleIcon">ID</span><div><b>CRACHÁ</b><small>CREDENCIAIS</small></div></button>`
+    : `<button class="dcxModuleCard live" id="dcxOpenCredentials" type="button"><span class="dcxModuleIcon">ID</span><div><small>IDENTIDADE DO OPERADOR</small><b>CREDENCIAIS DCX</b><p>Abra seu crachá e consulte as credenciais públicas de outros operadores.</p></div><em class="dcxModuleState">ABRIR CRACHÁ</em></button>`;
+  // insertAdjacentHTML returns undefined: using || here rendered the same card twice.
+  if(ref)ref.insertAdjacentHTML('beforebegin',html);
+  else g.insertAdjacentHTML('beforeend',html);
+  $('dcxOpenCredentials').onclick=()=>openCredential(getIdentity().playerId);
+}
 function teamCredentialClicks(){document.addEventListener('click',e=>{const direct=e.target.closest?.('#dcxOpenCredentials,#qolIdentityChip');if(direct){e.preventDefault();e.stopPropagation();openCredential(getIdentity().playerId);return}},true);document.addEventListener('click',e=>{const m=e.target.closest?.('[data-credential-pid]');if(m)openCredential(m.dataset.credentialPid)});document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target?.matches?.('[data-credential-pid]')){e.preventDefault();openCredential(e.target.dataset.credentialPid)}})}
 function applyHiddenModules(){
   const hidden=new Set(Array.isArray(pq.hiddenModules)?pq.hiddenModules:[]);

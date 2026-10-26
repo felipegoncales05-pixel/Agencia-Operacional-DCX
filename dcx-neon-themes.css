@@ -1,0 +1,244 @@
+html[data-player-theme="night-city-gold"]{--neo-theme:1;--neo-bg:#07090b;--neo-bg1:#0e1114;--neo-panel:#11171c;--neo-panel2:#1c242a;--neo-text:#f2f1e7;--neo-muted:#abb4a5;--neo-accent:#e6eb58;--neo-line:#48503b;--neo-glow:1;--cyan:#e6eb58;--blue:#65d8f3;--gold:#efc56b;--red:#f17d8c;--green:#83d9b6;--violet:#b9a0ec;--bg:#07090b;--panel:#11171c;--panel2:#1c242a;--line:#48503b;--text:#f2f1e7;--muted:#abb4a5;--dcx-cyber-bg:#07090b;--dcx-cyber-surface:#11171c;--dcx-cyber-surface-2:#1c242a;--ps-bg0:#07090b;--ps-bg1:#0e1114;--ps-panel:#11171c;--ps-panel2:#1c242a;--ps-line:#48503b;--ps-line2:#8b9153;--ps-text:#f2f1e7;--ps-muted:#abb4a5;--ps-accent:#e6eb58;--ps-accent2:#65d8f3;--ps-good:#83d9b6;--ps-warn:#efc56b;--ps-danger:#f17d8c;--ps-violet:#b9a0ec}
+
+html[data-km-theme="night-city-gold"]{--neo-theme:1;--neo-bg:#07090b;--neo-bg1:#0e1114;--neo-panel:#11171c;--neo-panel2:#1c242a;--neo-text:#f2f1e7;--neo-muted:#abb4a5;--neo-accent:#e6eb58;--neo-line:#48503b;--neo-glow:1;--cyan:#e6eb58;--blue:#65d8f3;--gold:#efc56b;--red:#f17d8c;--green:#83d9b6;--violet:#b9a0ec;--bg:#07090b;--panel:#11171c;--panel2:#1c242a;--line:#48503b;--text:#f2f1e7;--muted:#abb4a5;--dcx-cyber-bg:#07090b;--dcx-cyber-surface:#11171c;--dcx-cyber-surface-2:#1c242a;--km-bg0:#07090b;--km-bg1:#0e1114;--km-panel:#11171c;--km-panel2:#1c242a;--km-line:#48503b;--km-line2:#8b9153;--km-text:#f2f1e7;--km-muted:#abb4a5;--km-accent:#e6eb58;--km-accent2:#65d8f3;--km-good:#83d9b6;--km-warn:#efc56b;--km-danger:#f17d8c}
+
+html[data-player-theme="edgerunner-pulse"]{--neo-theme:1;--neo-bg:#080910;--neo-bg1:#100d1b;--neo-panel:#161523;--neo-panel2:#211a30;--neo-text:#f8effa;--neo-muted:#baa8c6;--neo-accent:#ff73c6;--neo-line:#513c64;--neo-glow:1;--cyan:#ff73c6;--blue:#62e0f4;--gold:#f8d36e;--red:#ff637d;--green:#7ddabb;--violet:#c799fc;--bg:#080910;--panel:#161523;--panel2:#211a30;--line:#513c64;--text:#f8effa;--muted:#baa8c6;--dcx-cyber-bg:#080910;--dcx-cyber-surface:#161523;--dcx-cyber-surface-2:#211a30;--ps-bg0:#080910;--ps-bg1:#100d1b;--ps-panel:#161523;--ps-panel2:#211a30;--ps-line:#513c64;--ps-line2:#95507e;--ps-text:#f8effa;--ps-muted:#baa8c6;--ps-accent:#ff73c6;--ps-accent2:#62e0f4;--ps-good:#7ddabb;--ps-warn:#f8d36e;--ps-danger:#ff637d;--ps-violet:#c799fc}
+
+html[data-km-theme="edgerunner-pulse"]{--neo-theme:1;--neo-bg:#080910;--neo-bg1:#100d1b;--neo-panel:#161523;--neo-panel2:#211a30;--neo-text:#f8effa;--neo-muted:#baa8c6;--neo-accent:#ff73c6;--neo-line:#513c64;--neo-glow:1;--cyan:#ff73c6;--blue:#62e0f4;--gold:#f8d36e;--red:#ff637d;--green:#7ddabb;--violet:#c799fc;--bg:#080910;--panel:#161523;--panel2:#211a30;--line:#513c64;--text:#f8effa;--muted:#baa8c6;--dcx-cyber-bg:#080910;--dcx-cyber-surface:#161523;--dcx-cyber-surface-2:#211a30;--km-bg0:#080910;--km-bg1:#100d1b;--km-panel:#161523;--km-panel2:#211a30;--km-line:#513c64;--km-line2:#95507e;--km-text:#f8effa;--km-muted:#baa8c6;--km-accent:#ff73c6;--km-accent2:#62e0f4;--km-good:#7ddabb;--km-warn:#f8d36e;--km-danger:#ff637d}
+
+html[data-player-theme="chrome-ghost"]{--neo-theme:1;--neo-bg:#060a11;--neo-bg1:#0d1620;--neo-panel:#101e28;--neo-panel2:#192935;--neo-text:#e4f5fb;--neo-muted:#9bbdcb;--neo-accent:#7dd7ef;--neo-line:#2e566a;--neo-glow:1;--cyan:#7dd7ef;--blue:#e18be8;--gold:#e7c978;--red:#ed7f92;--green:#8cd4b1;--violet:#b69ae8;--bg:#060a11;--panel:#101e28;--panel2:#192935;--line:#2e566a;--text:#e4f5fb;--muted:#9bbdcb;--dcx-cyber-bg:#060a11;--dcx-cyber-surface:#101e28;--dcx-cyber-surface-2:#192935;--ps-bg0:#060a11;--ps-bg1:#0d1620;--ps-panel:#101e28;--ps-panel2:#192935;--ps-line:#2e566a;--ps-line2:#4c8db0;--ps-text:#e4f5fb;--ps-muted:#9bbdcb;--ps-accent:#7dd7ef;--ps-accent2:#e18be8;--ps-good:#8cd4b1;--ps-warn:#e7c978;--ps-danger:#ed7f92;--ps-violet:#b69ae8}
+
+html[data-km-theme="chrome-ghost"]{--neo-theme:1;--neo-bg:#060a11;--neo-bg1:#0d1620;--neo-panel:#101e28;--neo-panel2:#192935;--neo-text:#e4f5fb;--neo-muted:#9bbdcb;--neo-accent:#7dd7ef;--neo-line:#2e566a;--neo-glow:1;--cyan:#7dd7ef;--blue:#e18be8;--gold:#e7c978;--red:#ed7f92;--green:#8cd4b1;--violet:#b69ae8;--bg:#060a11;--panel:#101e28;--panel2:#192935;--line:#2e566a;--text:#e4f5fb;--muted:#9bbdcb;--dcx-cyber-bg:#060a11;--dcx-cyber-surface:#101e28;--dcx-cyber-surface-2:#192935;--km-bg0:#060a11;--km-bg1:#0d1620;--km-panel:#101e28;--km-panel2:#192935;--km-line:#2e566a;--km-line2:#4c8db0;--km-text:#e4f5fb;--km-muted:#9bbdcb;--km-accent:#7dd7ef;--km-accent2:#e18be8;--km-good:#8cd4b1;--km-warn:#e7c978;--km-danger:#ed7f92}
+
+html[data-player-theme="glitch-red"]{--neo-theme:1;--neo-bg:#0c080a;--neo-bg1:#160d12;--neo-panel:#1c111a;--neo-panel2:#271824;--neo-text:#f8edf0;--neo-muted:#c4a7ae;--neo-accent:#ff627c;--neo-line:#603440;--neo-glow:1;--cyan:#ff627c;--blue:#68e5cc;--gold:#efc36a;--red:#ff627c;--green:#77dab0;--violet:#c7a0ee;--bg:#0c080a;--panel:#1c111a;--panel2:#271824;--line:#603440;--text:#f8edf0;--muted:#c4a7ae;--dcx-cyber-bg:#0c080a;--dcx-cyber-surface:#1c111a;--dcx-cyber-surface-2:#271824;--ps-bg0:#0c080a;--ps-bg1:#160d12;--ps-panel:#1c111a;--ps-panel2:#271824;--ps-line:#603440;--ps-line2:#a95062;--ps-text:#f8edf0;--ps-muted:#c4a7ae;--ps-accent:#ff627c;--ps-accent2:#68e5cc;--ps-good:#77dab0;--ps-warn:#efc36a;--ps-danger:#ff627c;--ps-violet:#c7a0ee}
+
+html[data-km-theme="glitch-red"]{--neo-theme:1;--neo-bg:#0c080a;--neo-bg1:#160d12;--neo-panel:#1c111a;--neo-panel2:#271824;--neo-text:#f8edf0;--neo-muted:#c4a7ae;--neo-accent:#ff627c;--neo-line:#603440;--neo-glow:1;--cyan:#ff627c;--blue:#68e5cc;--gold:#efc36a;--red:#ff627c;--green:#77dab0;--violet:#c7a0ee;--bg:#0c080a;--panel:#1c111a;--panel2:#271824;--line:#603440;--text:#f8edf0;--muted:#c4a7ae;--dcx-cyber-bg:#0c080a;--dcx-cyber-surface:#1c111a;--dcx-cyber-surface-2:#271824;--km-bg0:#0c080a;--km-bg1:#160d12;--km-panel:#1c111a;--km-panel2:#271824;--km-line:#603440;--km-line2:#a95062;--km-text:#f8edf0;--km-muted:#c4a7ae;--km-accent:#ff627c;--km-accent2:#68e5cc;--km-good:#77dab0;--km-warn:#efc36a;--km-danger:#ff627c}
+
+html[data-player-theme="synthwave-dusk"]{--neo-theme:1;--neo-bg:#090913;--neo-bg1:#141023;--neo-panel:#1a1930;--neo-panel2:#26243e;--neo-text:#f2effd;--neo-muted:#b1a5d0;--neo-accent:#b69aff;--neo-line:#514370;--neo-glow:1;--cyan:#b69aff;--blue:#ff93c0;--gold:#e9c476;--red:#eb7c9e;--green:#81d1bd;--violet:#bd95f6;--bg:#090913;--panel:#1a1930;--panel2:#26243e;--line:#514370;--text:#f2effd;--muted:#b1a5d0;--dcx-cyber-bg:#090913;--dcx-cyber-surface:#1a1930;--dcx-cyber-surface-2:#26243e;--ps-bg0:#090913;--ps-bg1:#141023;--ps-panel:#1a1930;--ps-panel2:#26243e;--ps-line:#514370;--ps-line2:#7861aa;--ps-text:#f2effd;--ps-muted:#b1a5d0;--ps-accent:#b69aff;--ps-accent2:#ff93c0;--ps-good:#81d1bd;--ps-warn:#e9c476;--ps-danger:#eb7c9e;--ps-violet:#bd95f6}
+
+html[data-km-theme="synthwave-dusk"]{--neo-theme:1;--neo-bg:#090913;--neo-bg1:#141023;--neo-panel:#1a1930;--neo-panel2:#26243e;--neo-text:#f2effd;--neo-muted:#b1a5d0;--neo-accent:#b69aff;--neo-line:#514370;--neo-glow:1;--cyan:#b69aff;--blue:#ff93c0;--gold:#e9c476;--red:#eb7c9e;--green:#81d1bd;--violet:#bd95f6;--bg:#090913;--panel:#1a1930;--panel2:#26243e;--line:#514370;--text:#f2effd;--muted:#b1a5d0;--dcx-cyber-bg:#090913;--dcx-cyber-surface:#1a1930;--dcx-cyber-surface-2:#26243e;--km-bg0:#090913;--km-bg1:#141023;--km-panel:#1a1930;--km-panel2:#26243e;--km-line:#514370;--km-line2:#7861aa;--km-text:#f2effd;--km-muted:#b1a5d0;--km-accent:#b69aff;--km-accent2:#ff93c0;--km-good:#81d1bd;--km-warn:#e9c476;--km-danger:#eb7c9e}
+
+html[data-player-theme="acid-signal"]{--neo-theme:1;--neo-bg:#080d0a;--neo-bg1:#0d1811;--neo-panel:#132218;--neo-panel2:#1c2e23;--neo-text:#ecf8ed;--neo-muted:#a8c3ac;--neo-accent:#b6f271;--neo-line:#3e6842;--neo-glow:1;--cyan:#b6f271;--blue:#65dfb4;--gold:#e8d177;--red:#ea8394;--green:#b1ea78;--violet:#c2a5e7;--bg:#080d0a;--panel:#132218;--panel2:#1c2e23;--line:#3e6842;--text:#ecf8ed;--muted:#a8c3ac;--dcx-cyber-bg:#080d0a;--dcx-cyber-surface:#132218;--dcx-cyber-surface-2:#1c2e23;--ps-bg0:#080d0a;--ps-bg1:#0d1811;--ps-panel:#132218;--ps-panel2:#1c2e23;--ps-line:#3e6842;--ps-line2:#62955d;--ps-text:#ecf8ed;--ps-muted:#a8c3ac;--ps-accent:#b6f271;--ps-accent2:#65dfb4;--ps-good:#b1ea78;--ps-warn:#e8d177;--ps-danger:#ea8394;--ps-violet:#c2a5e7}
+
+html[data-km-theme="acid-signal"]{--neo-theme:1;--neo-bg:#080d0a;--neo-bg1:#0d1811;--neo-panel:#132218;--neo-panel2:#1c2e23;--neo-text:#ecf8ed;--neo-muted:#a8c3ac;--neo-accent:#b6f271;--neo-line:#3e6842;--neo-glow:1;--cyan:#b6f271;--blue:#65dfb4;--gold:#e8d177;--red:#ea8394;--green:#b1ea78;--violet:#c2a5e7;--bg:#080d0a;--panel:#132218;--panel2:#1c2e23;--line:#3e6842;--text:#ecf8ed;--muted:#a8c3ac;--dcx-cyber-bg:#080d0a;--dcx-cyber-surface:#132218;--dcx-cyber-surface-2:#1c2e23;--km-bg0:#080d0a;--km-bg1:#0d1811;--km-panel:#132218;--km-panel2:#1c2e23;--km-line:#3e6842;--km-line2:#62955d;--km-text:#ecf8ed;--km-muted:#a8c3ac;--km-accent:#b6f271;--km-accent2:#65dfb4;--km-good:#b1ea78;--km-warn:#e8d177;--km-danger:#ea8394}
+
+html[data-player-theme="hologram-violet"]{--neo-theme:1;--neo-bg:#080a11;--neo-bg1:#0f1121;--neo-panel:#171b2b;--neo-panel2:#21263d;--neo-text:#f0f1fe;--neo-muted:#aab4d0;--neo-accent:#a7a9ff;--neo-line:#424e79;--neo-glow:1;--cyan:#a7a9ff;--blue:#69d9fa;--gold:#eac878;--red:#ee829b;--green:#83dabc;--violet:#b7a4ff;--bg:#080a11;--panel:#171b2b;--panel2:#21263d;--line:#424e79;--text:#f0f1fe;--muted:#aab4d0;--dcx-cyber-bg:#080a11;--dcx-cyber-surface:#171b2b;--dcx-cyber-surface-2:#21263d;--ps-bg0:#080a11;--ps-bg1:#0f1121;--ps-panel:#171b2b;--ps-panel2:#21263d;--ps-line:#424e79;--ps-line2:#7a78b0;--ps-text:#f0f1fe;--ps-muted:#aab4d0;--ps-accent:#a7a9ff;--ps-accent2:#69d9fa;--ps-good:#83dabc;--ps-warn:#eac878;--ps-danger:#ee829b;--ps-violet:#b7a4ff}
+
+html[data-km-theme="hologram-violet"]{--neo-theme:1;--neo-bg:#080a11;--neo-bg1:#0f1121;--neo-panel:#171b2b;--neo-panel2:#21263d;--neo-text:#f0f1fe;--neo-muted:#aab4d0;--neo-accent:#a7a9ff;--neo-line:#424e79;--neo-glow:1;--cyan:#a7a9ff;--blue:#69d9fa;--gold:#eac878;--red:#ee829b;--green:#83dabc;--violet:#b7a4ff;--bg:#080a11;--panel:#171b2b;--panel2:#21263d;--line:#424e79;--text:#f0f1fe;--muted:#aab4d0;--dcx-cyber-bg:#080a11;--dcx-cyber-surface:#171b2b;--dcx-cyber-surface-2:#21263d;--km-bg0:#080a11;--km-bg1:#0f1121;--km-panel:#171b2b;--km-panel2:#21263d;--km-line:#424e79;--km-line2:#7a78b0;--km-text:#f0f1fe;--km-muted:#aab4d0;--km-accent:#a7a9ff;--km-accent2:#69d9fa;--km-good:#83dabc;--km-warn:#eac878;--km-danger:#ee829b}
+
+html[data-player-theme="blackout-comfort"]{--neo-theme:1;--neo-bg:#0b0d10;--neo-bg1:#111419;--neo-panel:#171b21;--neo-panel2:#202630;--neo-text:#e1e7ec;--neo-muted:#adb9c5;--neo-accent:#9fbcd4;--neo-line:#3b4754;--neo-glow:0;--cyan:#9fbcd4;--blue:#b9a5d7;--gold:#d2bc87;--red:#d68a9c;--green:#9bcab2;--violet:#b6abd5;--bg:#0b0d10;--panel:#171b21;--panel2:#202630;--line:#3b4754;--text:#e1e7ec;--muted:#adb9c5;--dcx-cyber-bg:#0b0d10;--dcx-cyber-surface:#171b21;--dcx-cyber-surface-2:#202630;--ps-bg0:#0b0d10;--ps-bg1:#111419;--ps-panel:#171b21;--ps-panel2:#202630;--ps-line:#3b4754;--ps-line2:#607180;--ps-text:#e1e7ec;--ps-muted:#adb9c5;--ps-accent:#9fbcd4;--ps-accent2:#b9a5d7;--ps-good:#9bcab2;--ps-warn:#d2bc87;--ps-danger:#d68a9c;--ps-violet:#b6abd5}
+
+html[data-km-theme="blackout-comfort"]{--neo-theme:1;--neo-bg:#0b0d10;--neo-bg1:#111419;--neo-panel:#171b21;--neo-panel2:#202630;--neo-text:#e1e7ec;--neo-muted:#adb9c5;--neo-accent:#9fbcd4;--neo-line:#3b4754;--neo-glow:0;--cyan:#9fbcd4;--blue:#b9a5d7;--gold:#d2bc87;--red:#d68a9c;--green:#9bcab2;--violet:#b6abd5;--bg:#0b0d10;--panel:#171b21;--panel2:#202630;--line:#3b4754;--text:#e1e7ec;--muted:#adb9c5;--dcx-cyber-bg:#0b0d10;--dcx-cyber-surface:#171b21;--dcx-cyber-surface-2:#202630;--km-bg0:#0b0d10;--km-bg1:#111419;--km-panel:#171b21;--km-panel2:#202630;--km-line:#3b4754;--km-line2:#607180;--km-text:#e1e7ec;--km-muted:#adb9c5;--km-accent:#9fbcd4;--km-accent2:#b9a5d7;--km-good:#9bcab2;--km-warn:#d2bc87;--km-danger:#d68a9c}
+
+/* Neon palette layers affect both dashboards; preserve semantic warning states. */
+
+html[data-player-theme="night-city-gold"] body,
+html[data-km-theme="night-city-gold"] body,
+html[data-player-theme="edgerunner-pulse"] body,
+html[data-km-theme="edgerunner-pulse"] body,
+html[data-player-theme="chrome-ghost"] body,
+html[data-km-theme="chrome-ghost"] body,
+html[data-player-theme="glitch-red"] body,
+html[data-km-theme="glitch-red"] body,
+html[data-player-theme="synthwave-dusk"] body,
+html[data-km-theme="synthwave-dusk"] body,
+html[data-player-theme="acid-signal"] body,
+html[data-km-theme="acid-signal"] body,
+html[data-player-theme="hologram-violet"] body,
+html[data-km-theme="hologram-violet"] body,
+html[data-player-theme="blackout-comfort"] body,
+html[data-km-theme="blackout-comfort"] body{background:radial-gradient(ellipse 65% 35% at 12% -7%,color-mix(in srgb,var(--neo-accent) 7%,transparent),transparent 70%),linear-gradient(180deg,var(--neo-bg),var(--neo-bg1) 58%,var(--neo-bg))!important;color:var(--neo-text)!important}
+
+html[data-player-theme="night-city-gold"] body::after,
+html[data-km-theme="night-city-gold"] body::after,
+html[data-player-theme="edgerunner-pulse"] body::after,
+html[data-km-theme="edgerunner-pulse"] body::after,
+html[data-player-theme="chrome-ghost"] body::after,
+html[data-km-theme="chrome-ghost"] body::after,
+html[data-player-theme="glitch-red"] body::after,
+html[data-km-theme="glitch-red"] body::after,
+html[data-player-theme="synthwave-dusk"] body::after,
+html[data-km-theme="synthwave-dusk"] body::after,
+html[data-player-theme="acid-signal"] body::after,
+html[data-km-theme="acid-signal"] body::after,
+html[data-player-theme="hologram-violet"] body::after,
+html[data-km-theme="hologram-violet"] body::after,
+html[data-player-theme="blackout-comfort"] body::after,
+html[data-km-theme="blackout-comfort"] body::after{opacity:.19!important;background-image:linear-gradient(color-mix(in srgb,var(--neo-accent) 4%,transparent) 1px,transparent 1px),linear-gradient(90deg,color-mix(in srgb,var(--neo-accent) 4%,transparent) 1px,transparent 1px)!important}
+
+html[data-player-theme="night-city-gold"] :is(.top,.roomBar,.dcxPanel,.adminPanel,.dcxWorkspaceHero,.kmCommandHero,.dcxMissionsHero,.dcxCharactersIntro),
+html[data-km-theme="night-city-gold"] :is(.top,.roomBar,.dcxPanel,.adminPanel,.dcxWorkspaceHero,.kmCommandHero,.dcxMissionsHero,.dcxCharactersIntro),
+html[data-player-theme="edgerunner-pulse"] :is(.top,.roomBar,.dcxPanel,.adminPanel,.dcxWorkspaceHero,.kmCommandHero,.dcxMissionsHero,.dcxCharactersIntro),
+html[data-km-theme="edgerunner-pulse"] :is(.top,.roomBar,.dcxPanel,.adminPanel,.dcxWorkspaceHero,.kmCommandHero,.dcxMissionsHero,.dcxCharactersIntro),
+html[data-player-theme="chrome-ghost"] :is(.top,.roomBar,.dcxPanel,.adminPanel,.dcxWorkspaceHero,.kmCommandHero,.dcxMissionsHero,.dcxCharactersIntro),
+html[data-km-theme="chrome-ghost"] :is(.top,.roomBar,.dcxPanel,.adminPanel,.dcxWorkspaceHero,.kmCommandHero,.dcxMissionsHero,.dcxCharactersIntro),
+html[data-player-theme="glitch-red"] :is(.top,.roomBar,.dcxPanel,.adminPanel,.dcxWorkspaceHero,.kmCommandHero,.dcxMissionsHero,.dcxCharactersIntro),
+html[data-km-theme="glitch-red"] :is(.top,.roomBar,.dcxPanel,.adminPanel,.dcxWorkspaceHero,.kmCommandHero,.dcxMissionsHero,.dcxCharactersIntro),
+html[data-player-theme="synthwave-dusk"] :is(.top,.roomBar,.dcxPanel,.adminPanel,.dcxWorkspaceHero,.kmCommandHero,.dcxMissionsHero,.dcxCharactersIntro),
+html[data-km-theme="synthwave-dusk"] :is(.top,.roomBar,.dcxPanel,.adminPanel,.dcxWorkspaceHero,.kmCommandHero,.dcxMissionsHero,.dcxCharactersIntro),
+html[data-player-theme="acid-signal"] :is(.top,.roomBar,.dcxPanel,.adminPanel,.dcxWorkspaceHero,.kmCommandHero,.dcxMissionsHero,.dcxCharactersIntro),
+html[data-km-theme="acid-signal"] :is(.top,.roomBar,.dcxPanel,.adminPanel,.dcxWorkspaceHero,.kmCommandHero,.dcxMissionsHero,.dcxCharactersIntro),
+html[data-player-theme="hologram-violet"] :is(.top,.roomBar,.dcxPanel,.adminPanel,.dcxWorkspaceHero,.kmCommandHero,.dcxMissionsHero,.dcxCharactersIntro),
+html[data-km-theme="hologram-violet"] :is(.top,.roomBar,.dcxPanel,.adminPanel,.dcxWorkspaceHero,.kmCommandHero,.dcxMissionsHero,.dcxCharactersIntro),
+html[data-player-theme="blackout-comfort"] :is(.top,.roomBar,.dcxPanel,.adminPanel,.dcxWorkspaceHero,.kmCommandHero,.dcxMissionsHero,.dcxCharactersIntro),
+html[data-km-theme="blackout-comfort"] :is(.top,.roomBar,.dcxPanel,.adminPanel,.dcxWorkspaceHero,.kmCommandHero,.dcxMissionsHero,.dcxCharactersIntro){background:linear-gradient(145deg,var(--neo-panel2),var(--neo-bg))!important;border-color:var(--neo-line)!important;color:var(--neo-text)!important}
+
+html[data-player-theme="night-city-gold"] :is(.playerWorkspaceTab,.kmWorkspaceTab,.dcxMissionTile,.dcxCharacterCard,.dcxStoryModule,.dcxStoryInfoColumns>section,.kmStudioEditor,.kmStudioSidebar,.kmStudioEntry,.dcxModuleCard,.kmCommandGrid button,.dcxFieldTool),
+html[data-km-theme="night-city-gold"] :is(.playerWorkspaceTab,.kmWorkspaceTab,.dcxMissionTile,.dcxCharacterCard,.dcxStoryModule,.dcxStoryInfoColumns>section,.kmStudioEditor,.kmStudioSidebar,.kmStudioEntry,.dcxModuleCard,.kmCommandGrid button,.dcxFieldTool),
+html[data-player-theme="edgerunner-pulse"] :is(.playerWorkspaceTab,.kmWorkspaceTab,.dcxMissionTile,.dcxCharacterCard,.dcxStoryModule,.dcxStoryInfoColumns>section,.kmStudioEditor,.kmStudioSidebar,.kmStudioEntry,.dcxModuleCard,.kmCommandGrid button,.dcxFieldTool),
+html[data-km-theme="edgerunner-pulse"] :is(.playerWorkspaceTab,.kmWorkspaceTab,.dcxMissionTile,.dcxCharacterCard,.dcxStoryModule,.dcxStoryInfoColumns>section,.kmStudioEditor,.kmStudioSidebar,.kmStudioEntry,.dcxModuleCard,.kmCommandGrid button,.dcxFieldTool),
+html[data-player-theme="chrome-ghost"] :is(.playerWorkspaceTab,.kmWorkspaceTab,.dcxMissionTile,.dcxCharacterCard,.dcxStoryModule,.dcxStoryInfoColumns>section,.kmStudioEditor,.kmStudioSidebar,.kmStudioEntry,.dcxModuleCard,.kmCommandGrid button,.dcxFieldTool),
+html[data-km-theme="chrome-ghost"] :is(.playerWorkspaceTab,.kmWorkspaceTab,.dcxMissionTile,.dcxCharacterCard,.dcxStoryModule,.dcxStoryInfoColumns>section,.kmStudioEditor,.kmStudioSidebar,.kmStudioEntry,.dcxModuleCard,.kmCommandGrid button,.dcxFieldTool),
+html[data-player-theme="glitch-red"] :is(.playerWorkspaceTab,.kmWorkspaceTab,.dcxMissionTile,.dcxCharacterCard,.dcxStoryModule,.dcxStoryInfoColumns>section,.kmStudioEditor,.kmStudioSidebar,.kmStudioEntry,.dcxModuleCard,.kmCommandGrid button,.dcxFieldTool),
+html[data-km-theme="glitch-red"] :is(.playerWorkspaceTab,.kmWorkspaceTab,.dcxMissionTile,.dcxCharacterCard,.dcxStoryModule,.dcxStoryInfoColumns>section,.kmStudioEditor,.kmStudioSidebar,.kmStudioEntry,.dcxModuleCard,.kmCommandGrid button,.dcxFieldTool),
+html[data-player-theme="synthwave-dusk"] :is(.playerWorkspaceTab,.kmWorkspaceTab,.dcxMissionTile,.dcxCharacterCard,.dcxStoryModule,.dcxStoryInfoColumns>section,.kmStudioEditor,.kmStudioSidebar,.kmStudioEntry,.dcxModuleCard,.kmCommandGrid button,.dcxFieldTool),
+html[data-km-theme="synthwave-dusk"] :is(.playerWorkspaceTab,.kmWorkspaceTab,.dcxMissionTile,.dcxCharacterCard,.dcxStoryModule,.dcxStoryInfoColumns>section,.kmStudioEditor,.kmStudioSidebar,.kmStudioEntry,.dcxModuleCard,.kmCommandGrid button,.dcxFieldTool),
+html[data-player-theme="acid-signal"] :is(.playerWorkspaceTab,.kmWorkspaceTab,.dcxMissionTile,.dcxCharacterCard,.dcxStoryModule,.dcxStoryInfoColumns>section,.kmStudioEditor,.kmStudioSidebar,.kmStudioEntry,.dcxModuleCard,.kmCommandGrid button,.dcxFieldTool),
+html[data-km-theme="acid-signal"] :is(.playerWorkspaceTab,.kmWorkspaceTab,.dcxMissionTile,.dcxCharacterCard,.dcxStoryModule,.dcxStoryInfoColumns>section,.kmStudioEditor,.kmStudioSidebar,.kmStudioEntry,.dcxModuleCard,.kmCommandGrid button,.dcxFieldTool),
+html[data-player-theme="hologram-violet"] :is(.playerWorkspaceTab,.kmWorkspaceTab,.dcxMissionTile,.dcxCharacterCard,.dcxStoryModule,.dcxStoryInfoColumns>section,.kmStudioEditor,.kmStudioSidebar,.kmStudioEntry,.dcxModuleCard,.kmCommandGrid button,.dcxFieldTool),
+html[data-km-theme="hologram-violet"] :is(.playerWorkspaceTab,.kmWorkspaceTab,.dcxMissionTile,.dcxCharacterCard,.dcxStoryModule,.dcxStoryInfoColumns>section,.kmStudioEditor,.kmStudioSidebar,.kmStudioEntry,.dcxModuleCard,.kmCommandGrid button,.dcxFieldTool),
+html[data-player-theme="blackout-comfort"] :is(.playerWorkspaceTab,.kmWorkspaceTab,.dcxMissionTile,.dcxCharacterCard,.dcxStoryModule,.dcxStoryInfoColumns>section,.kmStudioEditor,.kmStudioSidebar,.kmStudioEntry,.dcxModuleCard,.kmCommandGrid button,.dcxFieldTool),
+html[data-km-theme="blackout-comfort"] :is(.playerWorkspaceTab,.kmWorkspaceTab,.dcxMissionTile,.dcxCharacterCard,.dcxStoryModule,.dcxStoryInfoColumns>section,.kmStudioEditor,.kmStudioSidebar,.kmStudioEntry,.dcxModuleCard,.kmCommandGrid button,.dcxFieldTool){background:linear-gradient(155deg,var(--neo-panel2),var(--neo-panel))!important;border-color:var(--neo-line)!important;color:var(--neo-text)!important}
+
+html[data-player-theme="night-city-gold"] :is(.dcxMissionTile:hover,.dcxStoryModule:hover,.kmStudioEntry.selected,.playerWorkspaceTab.active,.kmWorkspaceTab.active,.dcxModuleCard:hover,.kmCommandGrid button:hover),
+html[data-km-theme="night-city-gold"] :is(.dcxMissionTile:hover,.dcxStoryModule:hover,.kmStudioEntry.selected,.playerWorkspaceTab.active,.kmWorkspaceTab.active,.dcxModuleCard:hover,.kmCommandGrid button:hover),
+html[data-player-theme="edgerunner-pulse"] :is(.dcxMissionTile:hover,.dcxStoryModule:hover,.kmStudioEntry.selected,.playerWorkspaceTab.active,.kmWorkspaceTab.active,.dcxModuleCard:hover,.kmCommandGrid button:hover),
+html[data-km-theme="edgerunner-pulse"] :is(.dcxMissionTile:hover,.dcxStoryModule:hover,.kmStudioEntry.selected,.playerWorkspaceTab.active,.kmWorkspaceTab.active,.dcxModuleCard:hover,.kmCommandGrid button:hover),
+html[data-player-theme="chrome-ghost"] :is(.dcxMissionTile:hover,.dcxStoryModule:hover,.kmStudioEntry.selected,.playerWorkspaceTab.active,.kmWorkspaceTab.active,.dcxModuleCard:hover,.kmCommandGrid button:hover),
+html[data-km-theme="chrome-ghost"] :is(.dcxMissionTile:hover,.dcxStoryModule:hover,.kmStudioEntry.selected,.playerWorkspaceTab.active,.kmWorkspaceTab.active,.dcxModuleCard:hover,.kmCommandGrid button:hover),
+html[data-player-theme="glitch-red"] :is(.dcxMissionTile:hover,.dcxStoryModule:hover,.kmStudioEntry.selected,.playerWorkspaceTab.active,.kmWorkspaceTab.active,.dcxModuleCard:hover,.kmCommandGrid button:hover),
+html[data-km-theme="glitch-red"] :is(.dcxMissionTile:hover,.dcxStoryModule:hover,.kmStudioEntry.selected,.playerWorkspaceTab.active,.kmWorkspaceTab.active,.dcxModuleCard:hover,.kmCommandGrid button:hover),
+html[data-player-theme="synthwave-dusk"] :is(.dcxMissionTile:hover,.dcxStoryModule:hover,.kmStudioEntry.selected,.playerWorkspaceTab.active,.kmWorkspaceTab.active,.dcxModuleCard:hover,.kmCommandGrid button:hover),
+html[data-km-theme="synthwave-dusk"] :is(.dcxMissionTile:hover,.dcxStoryModule:hover,.kmStudioEntry.selected,.playerWorkspaceTab.active,.kmWorkspaceTab.active,.dcxModuleCard:hover,.kmCommandGrid button:hover),
+html[data-player-theme="acid-signal"] :is(.dcxMissionTile:hover,.dcxStoryModule:hover,.kmStudioEntry.selected,.playerWorkspaceTab.active,.kmWorkspaceTab.active,.dcxModuleCard:hover,.kmCommandGrid button:hover),
+html[data-km-theme="acid-signal"] :is(.dcxMissionTile:hover,.dcxStoryModule:hover,.kmStudioEntry.selected,.playerWorkspaceTab.active,.kmWorkspaceTab.active,.dcxModuleCard:hover,.kmCommandGrid button:hover),
+html[data-player-theme="hologram-violet"] :is(.dcxMissionTile:hover,.dcxStoryModule:hover,.kmStudioEntry.selected,.playerWorkspaceTab.active,.kmWorkspaceTab.active,.dcxModuleCard:hover,.kmCommandGrid button:hover),
+html[data-km-theme="hologram-violet"] :is(.dcxMissionTile:hover,.dcxStoryModule:hover,.kmStudioEntry.selected,.playerWorkspaceTab.active,.kmWorkspaceTab.active,.dcxModuleCard:hover,.kmCommandGrid button:hover),
+html[data-player-theme="blackout-comfort"] :is(.dcxMissionTile:hover,.dcxStoryModule:hover,.kmStudioEntry.selected,.playerWorkspaceTab.active,.kmWorkspaceTab.active,.dcxModuleCard:hover,.kmCommandGrid button:hover),
+html[data-km-theme="blackout-comfort"] :is(.dcxMissionTile:hover,.dcxStoryModule:hover,.kmStudioEntry.selected,.playerWorkspaceTab.active,.kmWorkspaceTab.active,.dcxModuleCard:hover,.kmCommandGrid button:hover){border-color:var(--neo-accent)!important;box-shadow:0 0 0 1px color-mix(in srgb,var(--neo-accent) 12%,transparent),0 10px 28px #0006!important}
+
+html[data-player-theme="night-city-gold"] :is(.dcxStoryMissionHero,.kmStudioHero),
+html[data-km-theme="night-city-gold"] :is(.dcxStoryMissionHero,.kmStudioHero),
+html[data-player-theme="edgerunner-pulse"] :is(.dcxStoryMissionHero,.kmStudioHero),
+html[data-km-theme="edgerunner-pulse"] :is(.dcxStoryMissionHero,.kmStudioHero),
+html[data-player-theme="chrome-ghost"] :is(.dcxStoryMissionHero,.kmStudioHero),
+html[data-km-theme="chrome-ghost"] :is(.dcxStoryMissionHero,.kmStudioHero),
+html[data-player-theme="glitch-red"] :is(.dcxStoryMissionHero,.kmStudioHero),
+html[data-km-theme="glitch-red"] :is(.dcxStoryMissionHero,.kmStudioHero),
+html[data-player-theme="synthwave-dusk"] :is(.dcxStoryMissionHero,.kmStudioHero),
+html[data-km-theme="synthwave-dusk"] :is(.dcxStoryMissionHero,.kmStudioHero),
+html[data-player-theme="acid-signal"] :is(.dcxStoryMissionHero,.kmStudioHero),
+html[data-km-theme="acid-signal"] :is(.dcxStoryMissionHero,.kmStudioHero),
+html[data-player-theme="hologram-violet"] :is(.dcxStoryMissionHero,.kmStudioHero),
+html[data-km-theme="hologram-violet"] :is(.dcxStoryMissionHero,.kmStudioHero),
+html[data-player-theme="blackout-comfort"] :is(.dcxStoryMissionHero,.kmStudioHero),
+html[data-km-theme="blackout-comfort"] :is(.dcxStoryMissionHero,.kmStudioHero){border-color:var(--neo-line)!important;background-color:var(--neo-panel)!important}
+
+html[data-player-theme="night-city-gold"] :is(.tag,.eyebrow,.dcxMissionsKicker,.dcxCharactersIntro small,.dcxStoryMissionHero>small,.kmStudioHero>small,.dcxStoryModule>span,.kmStudioEntryText span,.dcxMissionTileAction,.dcxMissionBack),
+html[data-km-theme="night-city-gold"] :is(.tag,.eyebrow,.dcxMissionsKicker,.dcxCharactersIntro small,.dcxStoryMissionHero>small,.kmStudioHero>small,.dcxStoryModule>span,.kmStudioEntryText span,.dcxMissionTileAction,.dcxMissionBack),
+html[data-player-theme="edgerunner-pulse"] :is(.tag,.eyebrow,.dcxMissionsKicker,.dcxCharactersIntro small,.dcxStoryMissionHero>small,.kmStudioHero>small,.dcxStoryModule>span,.kmStudioEntryText span,.dcxMissionTileAction,.dcxMissionBack),
+html[data-km-theme="edgerunner-pulse"] :is(.tag,.eyebrow,.dcxMissionsKicker,.dcxCharactersIntro small,.dcxStoryMissionHero>small,.kmStudioHero>small,.dcxStoryModule>span,.kmStudioEntryText span,.dcxMissionTileAction,.dcxMissionBack),
+html[data-player-theme="chrome-ghost"] :is(.tag,.eyebrow,.dcxMissionsKicker,.dcxCharactersIntro small,.dcxStoryMissionHero>small,.kmStudioHero>small,.dcxStoryModule>span,.kmStudioEntryText span,.dcxMissionTileAction,.dcxMissionBack),
+html[data-km-theme="chrome-ghost"] :is(.tag,.eyebrow,.dcxMissionsKicker,.dcxCharactersIntro small,.dcxStoryMissionHero>small,.kmStudioHero>small,.dcxStoryModule>span,.kmStudioEntryText span,.dcxMissionTileAction,.dcxMissionBack),
+html[data-player-theme="glitch-red"] :is(.tag,.eyebrow,.dcxMissionsKicker,.dcxCharactersIntro small,.dcxStoryMissionHero>small,.kmStudioHero>small,.dcxStoryModule>span,.kmStudioEntryText span,.dcxMissionTileAction,.dcxMissionBack),
+html[data-km-theme="glitch-red"] :is(.tag,.eyebrow,.dcxMissionsKicker,.dcxCharactersIntro small,.dcxStoryMissionHero>small,.kmStudioHero>small,.dcxStoryModule>span,.kmStudioEntryText span,.dcxMissionTileAction,.dcxMissionBack),
+html[data-player-theme="synthwave-dusk"] :is(.tag,.eyebrow,.dcxMissionsKicker,.dcxCharactersIntro small,.dcxStoryMissionHero>small,.kmStudioHero>small,.dcxStoryModule>span,.kmStudioEntryText span,.dcxMissionTileAction,.dcxMissionBack),
+html[data-km-theme="synthwave-dusk"] :is(.tag,.eyebrow,.dcxMissionsKicker,.dcxCharactersIntro small,.dcxStoryMissionHero>small,.kmStudioHero>small,.dcxStoryModule>span,.kmStudioEntryText span,.dcxMissionTileAction,.dcxMissionBack),
+html[data-player-theme="acid-signal"] :is(.tag,.eyebrow,.dcxMissionsKicker,.dcxCharactersIntro small,.dcxStoryMissionHero>small,.kmStudioHero>small,.dcxStoryModule>span,.kmStudioEntryText span,.dcxMissionTileAction,.dcxMissionBack),
+html[data-km-theme="acid-signal"] :is(.tag,.eyebrow,.dcxMissionsKicker,.dcxCharactersIntro small,.dcxStoryMissionHero>small,.kmStudioHero>small,.dcxStoryModule>span,.kmStudioEntryText span,.dcxMissionTileAction,.dcxMissionBack),
+html[data-player-theme="hologram-violet"] :is(.tag,.eyebrow,.dcxMissionsKicker,.dcxCharactersIntro small,.dcxStoryMissionHero>small,.kmStudioHero>small,.dcxStoryModule>span,.kmStudioEntryText span,.dcxMissionTileAction,.dcxMissionBack),
+html[data-km-theme="hologram-violet"] :is(.tag,.eyebrow,.dcxMissionsKicker,.dcxCharactersIntro small,.dcxStoryMissionHero>small,.kmStudioHero>small,.dcxStoryModule>span,.kmStudioEntryText span,.dcxMissionTileAction,.dcxMissionBack),
+html[data-player-theme="blackout-comfort"] :is(.tag,.eyebrow,.dcxMissionsKicker,.dcxCharactersIntro small,.dcxStoryMissionHero>small,.kmStudioHero>small,.dcxStoryModule>span,.kmStudioEntryText span,.dcxMissionTileAction,.dcxMissionBack),
+html[data-km-theme="blackout-comfort"] :is(.tag,.eyebrow,.dcxMissionsKicker,.dcxCharactersIntro small,.dcxStoryMissionHero>small,.kmStudioHero>small,.dcxStoryModule>span,.kmStudioEntryText span,.dcxMissionTileAction,.dcxMissionBack){color:var(--neo-accent)!important}
+
+html[data-player-theme="night-city-gold"] :is(.dcxMissionsHero p,.dcxCharactersIntro p,.dcxMissionTileInfo>span,.dcxCharacterMeta p,.dcxStoryModule small,.kmStudioEntryText small),
+html[data-km-theme="night-city-gold"] :is(.dcxMissionsHero p,.dcxCharactersIntro p,.dcxMissionTileInfo>span,.dcxCharacterMeta p,.dcxStoryModule small,.kmStudioEntryText small),
+html[data-player-theme="edgerunner-pulse"] :is(.dcxMissionsHero p,.dcxCharactersIntro p,.dcxMissionTileInfo>span,.dcxCharacterMeta p,.dcxStoryModule small,.kmStudioEntryText small),
+html[data-km-theme="edgerunner-pulse"] :is(.dcxMissionsHero p,.dcxCharactersIntro p,.dcxMissionTileInfo>span,.dcxCharacterMeta p,.dcxStoryModule small,.kmStudioEntryText small),
+html[data-player-theme="chrome-ghost"] :is(.dcxMissionsHero p,.dcxCharactersIntro p,.dcxMissionTileInfo>span,.dcxCharacterMeta p,.dcxStoryModule small,.kmStudioEntryText small),
+html[data-km-theme="chrome-ghost"] :is(.dcxMissionsHero p,.dcxCharactersIntro p,.dcxMissionTileInfo>span,.dcxCharacterMeta p,.dcxStoryModule small,.kmStudioEntryText small),
+html[data-player-theme="glitch-red"] :is(.dcxMissionsHero p,.dcxCharactersIntro p,.dcxMissionTileInfo>span,.dcxCharacterMeta p,.dcxStoryModule small,.kmStudioEntryText small),
+html[data-km-theme="glitch-red"] :is(.dcxMissionsHero p,.dcxCharactersIntro p,.dcxMissionTileInfo>span,.dcxCharacterMeta p,.dcxStoryModule small,.kmStudioEntryText small),
+html[data-player-theme="synthwave-dusk"] :is(.dcxMissionsHero p,.dcxCharactersIntro p,.dcxMissionTileInfo>span,.dcxCharacterMeta p,.dcxStoryModule small,.kmStudioEntryText small),
+html[data-km-theme="synthwave-dusk"] :is(.dcxMissionsHero p,.dcxCharactersIntro p,.dcxMissionTileInfo>span,.dcxCharacterMeta p,.dcxStoryModule small,.kmStudioEntryText small),
+html[data-player-theme="acid-signal"] :is(.dcxMissionsHero p,.dcxCharactersIntro p,.dcxMissionTileInfo>span,.dcxCharacterMeta p,.dcxStoryModule small,.kmStudioEntryText small),
+html[data-km-theme="acid-signal"] :is(.dcxMissionsHero p,.dcxCharactersIntro p,.dcxMissionTileInfo>span,.dcxCharacterMeta p,.dcxStoryModule small,.kmStudioEntryText small),
+html[data-player-theme="hologram-violet"] :is(.dcxMissionsHero p,.dcxCharactersIntro p,.dcxMissionTileInfo>span,.dcxCharacterMeta p,.dcxStoryModule small,.kmStudioEntryText small),
+html[data-km-theme="hologram-violet"] :is(.dcxMissionsHero p,.dcxCharactersIntro p,.dcxMissionTileInfo>span,.dcxCharacterMeta p,.dcxStoryModule small,.kmStudioEntryText small),
+html[data-player-theme="blackout-comfort"] :is(.dcxMissionsHero p,.dcxCharactersIntro p,.dcxMissionTileInfo>span,.dcxCharacterMeta p,.dcxStoryModule small,.kmStudioEntryText small),
+html[data-km-theme="blackout-comfort"] :is(.dcxMissionsHero p,.dcxCharactersIntro p,.dcxMissionTileInfo>span,.dcxCharacterMeta p,.dcxStoryModule small,.kmStudioEntryText small){color:var(--neo-muted)!important}
+
+html[data-player-theme="night-city-gold"] :is(.dcxCharacterMeta h2,.dcxMissionTileInfo strong,.dcxMissionsHero h1,.dcxCharactersIntro h1,.dcxStoryMissionHero h1,.kmStudioHero h1,.dcxStorySectionHeading h2),
+html[data-km-theme="night-city-gold"] :is(.dcxCharacterMeta h2,.dcxMissionTileInfo strong,.dcxMissionsHero h1,.dcxCharactersIntro h1,.dcxStoryMissionHero h1,.kmStudioHero h1,.dcxStorySectionHeading h2),
+html[data-player-theme="edgerunner-pulse"] :is(.dcxCharacterMeta h2,.dcxMissionTileInfo strong,.dcxMissionsHero h1,.dcxCharactersIntro h1,.dcxStoryMissionHero h1,.kmStudioHero h1,.dcxStorySectionHeading h2),
+html[data-km-theme="edgerunner-pulse"] :is(.dcxCharacterMeta h2,.dcxMissionTileInfo strong,.dcxMissionsHero h1,.dcxCharactersIntro h1,.dcxStoryMissionHero h1,.kmStudioHero h1,.dcxStorySectionHeading h2),
+html[data-player-theme="chrome-ghost"] :is(.dcxCharacterMeta h2,.dcxMissionTileInfo strong,.dcxMissionsHero h1,.dcxCharactersIntro h1,.dcxStoryMissionHero h1,.kmStudioHero h1,.dcxStorySectionHeading h2),
+html[data-km-theme="chrome-ghost"] :is(.dcxCharacterMeta h2,.dcxMissionTileInfo strong,.dcxMissionsHero h1,.dcxCharactersIntro h1,.dcxStoryMissionHero h1,.kmStudioHero h1,.dcxStorySectionHeading h2),
+html[data-player-theme="glitch-red"] :is(.dcxCharacterMeta h2,.dcxMissionTileInfo strong,.dcxMissionsHero h1,.dcxCharactersIntro h1,.dcxStoryMissionHero h1,.kmStudioHero h1,.dcxStorySectionHeading h2),
+html[data-km-theme="glitch-red"] :is(.dcxCharacterMeta h2,.dcxMissionTileInfo strong,.dcxMissionsHero h1,.dcxCharactersIntro h1,.dcxStoryMissionHero h1,.kmStudioHero h1,.dcxStorySectionHeading h2),
+html[data-player-theme="synthwave-dusk"] :is(.dcxCharacterMeta h2,.dcxMissionTileInfo strong,.dcxMissionsHero h1,.dcxCharactersIntro h1,.dcxStoryMissionHero h1,.kmStudioHero h1,.dcxStorySectionHeading h2),
+html[data-km-theme="synthwave-dusk"] :is(.dcxCharacterMeta h2,.dcxMissionTileInfo strong,.dcxMissionsHero h1,.dcxCharactersIntro h1,.dcxStoryMissionHero h1,.kmStudioHero h1,.dcxStorySectionHeading h2),
+html[data-player-theme="acid-signal"] :is(.dcxCharacterMeta h2,.dcxMissionTileInfo strong,.dcxMissionsHero h1,.dcxCharactersIntro h1,.dcxStoryMissionHero h1,.kmStudioHero h1,.dcxStorySectionHeading h2),
+html[data-km-theme="acid-signal"] :is(.dcxCharacterMeta h2,.dcxMissionTileInfo strong,.dcxMissionsHero h1,.dcxCharactersIntro h1,.dcxStoryMissionHero h1,.kmStudioHero h1,.dcxStorySectionHeading h2),
+html[data-player-theme="hologram-violet"] :is(.dcxCharacterMeta h2,.dcxMissionTileInfo strong,.dcxMissionsHero h1,.dcxCharactersIntro h1,.dcxStoryMissionHero h1,.kmStudioHero h1,.dcxStorySectionHeading h2),
+html[data-km-theme="hologram-violet"] :is(.dcxCharacterMeta h2,.dcxMissionTileInfo strong,.dcxMissionsHero h1,.dcxCharactersIntro h1,.dcxStoryMissionHero h1,.kmStudioHero h1,.dcxStorySectionHeading h2),
+html[data-player-theme="blackout-comfort"] :is(.dcxCharacterMeta h2,.dcxMissionTileInfo strong,.dcxMissionsHero h1,.dcxCharactersIntro h1,.dcxStoryMissionHero h1,.kmStudioHero h1,.dcxStorySectionHeading h2),
+html[data-km-theme="blackout-comfort"] :is(.dcxCharacterMeta h2,.dcxMissionTileInfo strong,.dcxMissionsHero h1,.dcxCharactersIntro h1,.dcxStoryMissionHero h1,.kmStudioHero h1,.dcxStorySectionHeading h2){color:var(--neo-text)!important}
+
+html[data-player-theme="night-city-gold"] :is(.kmStudioForm input,.kmStudioForm textarea,.kmStudioActionEdit,.kmStudioActionDelete),
+html[data-km-theme="night-city-gold"] :is(.kmStudioForm input,.kmStudioForm textarea,.kmStudioActionEdit,.kmStudioActionDelete),
+html[data-player-theme="edgerunner-pulse"] :is(.kmStudioForm input,.kmStudioForm textarea,.kmStudioActionEdit,.kmStudioActionDelete),
+html[data-km-theme="edgerunner-pulse"] :is(.kmStudioForm input,.kmStudioForm textarea,.kmStudioActionEdit,.kmStudioActionDelete),
+html[data-player-theme="chrome-ghost"] :is(.kmStudioForm input,.kmStudioForm textarea,.kmStudioActionEdit,.kmStudioActionDelete),
+html[data-km-theme="chrome-ghost"] :is(.kmStudioForm input,.kmStudioForm textarea,.kmStudioActionEdit,.kmStudioActionDelete),
+html[data-player-theme="glitch-red"] :is(.kmStudioForm input,.kmStudioForm textarea,.kmStudioActionEdit,.kmStudioActionDelete),
+html[data-km-theme="glitch-red"] :is(.kmStudioForm input,.kmStudioForm textarea,.kmStudioActionEdit,.kmStudioActionDelete),
+html[data-player-theme="synthwave-dusk"] :is(.kmStudioForm input,.kmStudioForm textarea,.kmStudioActionEdit,.kmStudioActionDelete),
+html[data-km-theme="synthwave-dusk"] :is(.kmStudioForm input,.kmStudioForm textarea,.kmStudioActionEdit,.kmStudioActionDelete),
+html[data-player-theme="acid-signal"] :is(.kmStudioForm input,.kmStudioForm textarea,.kmStudioActionEdit,.kmStudioActionDelete),
+html[data-km-theme="acid-signal"] :is(.kmStudioForm input,.kmStudioForm textarea,.kmStudioActionEdit,.kmStudioActionDelete),
+html[data-player-theme="hologram-violet"] :is(.kmStudioForm input,.kmStudioForm textarea,.kmStudioActionEdit,.kmStudioActionDelete),
+html[data-km-theme="hologram-violet"] :is(.kmStudioForm input,.kmStudioForm textarea,.kmStudioActionEdit,.kmStudioActionDelete),
+html[data-player-theme="blackout-comfort"] :is(.kmStudioForm input,.kmStudioForm textarea,.kmStudioActionEdit,.kmStudioActionDelete),
+html[data-km-theme="blackout-comfort"] :is(.kmStudioForm input,.kmStudioForm textarea,.kmStudioActionEdit,.kmStudioActionDelete){border-color:var(--neo-line)!important;background:var(--neo-bg)!important;color:var(--neo-text)!important}
+
+html[data-player-theme="night-city-gold"] :is(.dcxStoryModule,.dcxMissionTile,.kmStudioActionEdit,.kmStudioActionDelete):focus-visible,
+html[data-km-theme="night-city-gold"] :is(.dcxStoryModule,.dcxMissionTile,.kmStudioActionEdit,.kmStudioActionDelete):focus-visible,
+html[data-player-theme="edgerunner-pulse"] :is(.dcxStoryModule,.dcxMissionTile,.kmStudioActionEdit,.kmStudioActionDelete):focus-visible,
+html[data-km-theme="edgerunner-pulse"] :is(.dcxStoryModule,.dcxMissionTile,.kmStudioActionEdit,.kmStudioActionDelete):focus-visible,
+html[data-player-theme="chrome-ghost"] :is(.dcxStoryModule,.dcxMissionTile,.kmStudioActionEdit,.kmStudioActionDelete):focus-visible,
+html[data-km-theme="chrome-ghost"] :is(.dcxStoryModule,.dcxMissionTile,.kmStudioActionEdit,.kmStudioActionDelete):focus-visible,
+html[data-player-theme="glitch-red"] :is(.dcxStoryModule,.dcxMissionTile,.kmStudioActionEdit,.kmStudioActionDelete):focus-visible,
+html[data-km-theme="glitch-red"] :is(.dcxStoryModule,.dcxMissionTile,.kmStudioActionEdit,.kmStudioActionDelete):focus-visible,
+html[data-player-theme="synthwave-dusk"] :is(.dcxStoryModule,.dcxMissionTile,.kmStudioActionEdit,.kmStudioActionDelete):focus-visible,
+html[data-km-theme="synthwave-dusk"] :is(.dcxStoryModule,.dcxMissionTile,.kmStudioActionEdit,.kmStudioActionDelete):focus-visible,
+html[data-player-theme="acid-signal"] :is(.dcxStoryModule,.dcxMissionTile,.kmStudioActionEdit,.kmStudioActionDelete):focus-visible,
+html[data-km-theme="acid-signal"] :is(.dcxStoryModule,.dcxMissionTile,.kmStudioActionEdit,.kmStudioActionDelete):focus-visible,
+html[data-player-theme="hologram-violet"] :is(.dcxStoryModule,.dcxMissionTile,.kmStudioActionEdit,.kmStudioActionDelete):focus-visible,
+html[data-km-theme="hologram-violet"] :is(.dcxStoryModule,.dcxMissionTile,.kmStudioActionEdit,.kmStudioActionDelete):focus-visible,
+html[data-player-theme="blackout-comfort"] :is(.dcxStoryModule,.dcxMissionTile,.kmStudioActionEdit,.kmStudioActionDelete):focus-visible,
+html[data-km-theme="blackout-comfort"] :is(.dcxStoryModule,.dcxMissionTile,.kmStudioActionEdit,.kmStudioActionDelete):focus-visible{outline:2px solid var(--neo-accent)!important;outline-offset:2px}
+
+html[data-player-theme="blackout-comfort"] body::after,html[data-km-theme="blackout-comfort"] body::after{opacity:0!important}
+
+html[data-player-theme="blackout-comfort"] :is(.brand,.tag,.eyebrow),html[data-km-theme="blackout-comfort"] :is(.brand,.tag,.eyebrow){text-shadow:none!important}
+
+html[data-player-theme="blackout-comfort"] :is(.btn,.dcxMissionTile,.dcxStoryModule),html[data-km-theme="blackout-comfort"] :is(.btn,.kmStudioEntry,.kmCommandGrid button){transition:none!important;animation:none!important}
+
+/* Theme swatches shared by both Settings selectors. */
+
+.dcxNeonThemeChoice .settingsSwatch i:first-child,.dcxNeonThemeChoice .kmThemeSwatch i:first-child{background:var(--dcx-choice-bg)!important}.dcxNeonThemeChoice .settingsSwatch i:nth-child(2),.dcxNeonThemeChoice .kmThemeSwatch i:nth-child(2){background:var(--dcx-choice-accent)!important}.dcxNeonThemeChoice .settingsSwatch i:nth-child(3),.dcxNeonThemeChoice .kmThemeSwatch i:nth-child(3){background:var(--dcx-choice-alt)!important}
+
+/* Make editing and deletion obvious without crowding the mission/character editor. */
+
+.kmStudioEntry{display:grid;gap:11px;min-width:0;padding:13px;border:1px solid #315269;border-radius:12px;background:#081c28}
+
+.kmStudioEntry.selected{border-color:var(--cyan,#78d7f5);box-shadow:inset 3px 0 0 var(--cyan,#78d7f5)}
+
+.kmStudioEntryText{min-width:0;display:grid;gap:5px}.kmStudioEntryText span,.kmStudioEntryText small{font:800 8px/1.4 ui-monospace,monospace;color:var(--muted,#8facbf);overflow-wrap:anywhere}.kmStudioEntryText b{font:900 12px/1.4 ui-monospace,monospace;color:var(--text,#e9faff);overflow-wrap:anywhere}
+
+.kmStudioEntryActions{display:grid;grid-template-columns:1fr 1fr;gap:7px}.kmStudioEntryActions button{cursor:pointer;min-height:35px;border:1px solid #355c6d;border-radius:7px;background:#0c2631;color:#b9e4f5;font:900 9px ui-monospace,monospace;padding:8px 5px}.kmStudioEntryActions .kmStudioActionEdit:hover{border-color:var(--cyan,#67dcff);color:var(--cyan,#67dcff)}.kmStudioEntryActions .kmStudioActionDelete{border-color:#664052;color:#f4aab9}.kmStudioEntryActions .kmStudioActionDelete:hover{border-color:#e58399;background:#32151d;color:#ffd8e1}
+
+.kmStudioEntryActions button:focus-visible{outline:2px solid var(--cyan,#67dcff);outline-offset:2px}
+
+@media(max-width:560px){.kmStudioEntryActions{grid-template-columns:1fr 1fr}.dcxNeonThemeChoice .settingsThemeText small{line-height:1.45}}

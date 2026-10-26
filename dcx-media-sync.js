@@ -56,6 +56,15 @@ async function uploadAdminAvatar(id,type,file){
   ctx=context();if(!ctx||ctx.uid!==ADMIN_UID)throw new Error('Somente o Keymaster pode alterar esta credencial.');const npc=type==='npc'||String(id).startsWith('NPC-'),branch=npc?'npcPublic':'public',pic=await avatarData(file);
   await ctx.db.ref(`rooms/${ctx.room}/dcx/credentials/${branch}/${id}`).update({id,playerId:npc?null:id,ownerUid:ADMIN_UID,avatarDataUrl:pic.dataUrl,active:true,updatedAt:firebase.database.ServerValue.TIMESTAMP});return pic
 }
+async function saveAdminAvatarFraming(id,type,settings){
+ ctx=context();if(!ctx||ctx.uid!==ADMIN_UID)throw new Error('Somente o Keymaster pode alterar a foto pública.');
+ const npc=type==='npc'||String(id).startsWith('NPC-'),branch=npc?'npcPublic':'public';
+ const imageFrame=window.DCX?.ImageTools?.normalize(settings);
+ await ctx.db.ref('rooms/'+ctx.room+'/dcx/credentials/'+branch+'/'+id).update({
+  imageFrame,updatedAt:firebase.database.ServerValue.TIMESTAMP
+ });
+ return imageFrame;
+}
 async function removeAdminAvatar(id,type){ctx=context();if(!ctx||ctx.uid!==ADMIN_UID)throw new Error('Somente o Keymaster pode remover esta foto.');const npc=type==='npc'||String(id).startsWith('NPC-'),branch=npc?'npcPublic':'public';await ctx.db.ref(`rooms/${ctx.room}/dcx/credentials/${branch}/${id}/avatarDataUrl`).remove();await ctx.db.ref(`rooms/${ctx.room}/dcx/credentials/${branch}/${id}`).update({updatedAt:firebase.database.ServerValue.TIMESTAMP})}
 function snapshot(){return window.DCX?.Admin?.getSnapshot?.()||{operators:{},teams:{}}}
 function resolvePlayer(raw){raw=String(raw||'').trim();const ops=snapshot().operators||{};if(ops[raw])return raw;const q=raw.toLowerCase();return Object.entries(ops).find(([id,o])=>String(o?.identity?.name||o?.name||id).toLowerCase()===q)?.[0]||''}
@@ -136,6 +145,6 @@ function bindKeymasterHandout(){
 }
 async function boot(){ctx=context();if(!ctx)return false;await startCredentialListeners();if(role()==='player')attachPlayerHandouts();else{bindKeymasterHandout();attachHostHandoutHistory()}return true}
 function tick(){const c=context();if(!c)return;if(!ctx||ctx.uid!==c.uid||ctx.room!==c.room){ctx=c;startCredentialListeners();if(role()==='player')attachPlayerHandouts();else{bindKeymasterHandout();attachHostHandoutHistory()}}else if(role()==='player'){const t=currentTeam();if(t!==teamId)attachPlayerHandouts()}}
-window.DCX=window.DCX||{};window.DCX.Media={getAvatarUrl,credentialMeta,uploadOwnAvatar,removeOwnAvatar,uploadAdminAvatar,removeAdminAvatar,sendHandoutFromForm,refreshHandouts:attachPlayerHandouts,showHandoutReader,refreshHandoutHistory:attachHostHandoutHistory};
+window.DCX=window.DCX||{};window.DCX.Media={getAvatarUrl,credentialMeta,saveAdminAvatarFraming,uploadOwnAvatar,removeOwnAvatar,uploadAdminAvatar,removeAdminAvatar,sendHandoutFromForm,refreshHandouts:attachPlayerHandouts,showHandoutReader,refreshHandoutHistory:attachHostHandoutHistory};
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{boot();initTimer=setInterval(tick,1800)},{once:true});else{boot();initTimer=setInterval(tick,1800)}
 })();

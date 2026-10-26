@@ -80,7 +80,7 @@ async function publish(mutator){
  if(!c)throw new Error('Keymaster desconectado do Firebase.');
  if(c.uid!==ADMIN_UID)throw new Error('Esta sessão não possui permissão de Keymaster.');
  // Keep a single write for queue, current item and transport state.
- const next=normalize(mutator(structuredClone?structuredClone(state):JSON.parse(JSON.stringify(state))));
+ const next=normalize(mutator(typeof structuredClone==='function'?structuredClone(state):JSON.parse(JSON.stringify(state))));
  next.revision=Date.now();next.updatedAt=firebase.database.ServerValue.TIMESTAMP;
  await c.db.ref('rooms/'+c.room+'/dcx/soundtrack').set(next);
 }

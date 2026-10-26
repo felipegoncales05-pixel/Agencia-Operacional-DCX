@@ -1,11 +1,11 @@
 (()=>{
 'use strict';
-const ADMIN_UID='luVVp67PW7c53fs6dstTDNE46Nz1';
+const ADMIN_UID='1uVVp67PW7c53fs6dstTDNE46Nz1';
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const role=()=>/keymaster\.html$/i.test(location.pathname)?'host':'player';
 const roomFallback=()=>new URLSearchParams(location.search).get('room')||localStorage.getItem('oph-room')||window.OPH_CONFIG?.defaultRoom||'FRIA-01';
-let ctx=null,publicCreds={},npcCreds={},avatarUrls={},handouts={},handoutAcks={},handoutRefs=[],ackRefs=new Map(),teamId='',initTimer=null,credRefs=[],hostHandouts={},hostHandoutAcks={},hostHandoutRef=null,hostAckRef=null;
+let ctx=null,publicCreds={},npcCreds={},avatarUrls={},handouts={},handoutAcks={},handoutRefs=[],ackRefs=new Map(),teamId='',handoutSubscriptionKey='',initTimer=null,credRefs=[],hostHandouts={},hostHandoutAcks={},hostHandoutRef=null,hostAckRef=null;
 function identity(){
   try{const room=roomFallback(),d=JSON.parse(localStorage.getItem('oph-yumiya-identity-'+room)||'null');if(d?.playerId)return{playerId:d.playerId,name:d.name||localStorage.getItem('oph-name')||'AGENTE',room}}catch{}
   const p=window.DCX?.Player?.getLocalIdentity?.();
@@ -103,7 +103,13 @@ async function sendHandoutFromForm(){
   let targetId='all';if(type==='player'){targetId=resolvePlayer(raw);if(!targetId)throw new Error('Player não encontrado. Use P-ID ou nome exato.')}if(type==='team'){targetId=resolveTeam(raw);if(!targetId)throw new Error('Equipe não encontrada. Use ID, nome ou codinome exato.')}
   const id=`H-${Date.now()}-${Math.random().toString(36).slice(2,7).toUpperCase()}`,inline=file?await prepareInlineFile(file):null,rawBody=textContent||(!file&&!externalUrl?description:'');
   const meta={id,title,description,targetType:type,targetId,fileName:inline?.fileName||(externalUrl?'LINK EXTERNO':rawBody?'TEXTO INTERNO':'HANDOUT'),fileType:inline?.fileType||(externalUrl?'text/uri-list':rawBody?'text/plain':''),fileSize:inline?.fileSize||0,dataUrl:inline?.dataUrl||null,textContent:rawBody||null,externalUrl:externalUrl||null,storedMode:inline?.storedMode||(externalUrl?'external-link':rawBody?'rtdb-raw-text':'metadata'),createdAt:firebase.database.ServerValue.TIMESTAMP,createdBy:'KEYMASTER',typography:window.DCX?.FontStudio?.readHandout?.()||null,archived:false};
-  const dest=type==='all'?`handouts/public/${id}`:type==='player'?`handouts/players/${targetId}/${id}`:`handouts/teams/${targetId}/${id}`;await ctx.db.ref(`rooms/${ctx.room}/dcx/${dest}`).set(meta);return meta
+  const dest=type==='all'?`handouts/public/${id}`:type==='player'?`handouts/players/${targetId}/${id}`:`handouts/teams/${targetId}/${id}`;
+  const ref=ctx.db.ref(`rooms/${ctx.room}/dcx/${dest}`);
+  await ref.set(meta);
+  // Confirm that the expected record can be read back before claiming delivery.
+  const check=await ref.once('value');
+  if(check.child('id').val()!==id)throw new Error('A publicação não foi confirmada pelo Firebase.');
+  return meta
 }
 function decodeTextDataUrl(dataUrl){
   try{const [head,body='']=String(dataUrl||'').split(',',2);if(!/^data:/i.test(head))return'';if(/;base64/i.test(head)){const bin=atob(body),bytes=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);return new TextDecoder('utf-8').decode(bytes)}return decodeURIComponent(body)}catch{return''}
@@ -141,30 +147,72 @@ function attachHostHandoutHistory(){if(role()!=='host'||!ctx)return;if(hostHando
 
 function fmtSize(n){n=Number(n)||0;if(!n)return'LINK';if(n<1024)return`${n} B`;if(n<1048576)return`${(n/1024).toFixed(1)} KB`;return`${(n/1048576).toFixed(1)} MB`}
 function fmtDate(ts){try{return new Intl.DateTimeFormat('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}).format(new Date(Number(ts)||Date.now()))}catch{return''}}
-function cleanupHandoutRefs(){handoutRefs.forEach(r=>{try{r.off()}catch{}});handoutRefs=[];for(const r of ackRefs.values())try{r.off()}catch{};ackRefs.clear()}
+function cleanupHandoutRefs(){handoutSubscriptionKey='';handoutRefs.forEach(r=>{try{r.off()}catch{}});handoutRefs=[];for(const r of ackRefs.values())try{r.off()}catch{};ackRefs.clear()}
 function mergeHandoutSource(kind,obj){for(const k of Object.keys(handouts))if(handouts[k]._source===kind)delete handouts[k];for(const [id,v] of Object.entries(obj||{}))handouts[id]=Object.assign({},v,{id:v?.id||id,_source:kind});bindAckRefs();renderHandouts()}
-function bindAckRefs(){if(!ctx)return;const pid=identity().playerId;if(!pid)return;for(const id of Object.keys(handouts)){if(ackRefs.has(id))continue;const r=ctx.db.ref(`rooms/${ctx.room}/dcx/handoutAcks/${id}/${pid}`);r.on('value',s=>{handoutAcks[id]=s.val()||{};renderHandouts()});ackRefs.set(id,r)}}
+function bindAckRefs(){if(!ctx)return;const pid=identity().playerId;if(!pid)return;
+  for(const [id,ref] of ackRefs){if(!handouts[id]){ref.off();ackRefs.delete(id);delete handoutAcks[id]}}
+  for(const id of Object.keys(handouts)){if(ackRefs.has(id))continue;const r=ctx.db.ref(`rooms/${ctx.room}/dcx/handoutAcks/${id}/${pid}`);r.on('value',s=>{handoutAcks[id]=s.val()||{};renderHandouts()});ackRefs.set(id,r)}}
 function currentTeam(){const i=identity();return window.DCX?.Player?.getCredentialData?.(i.playerId)?.teamId||''}
 function attachPlayerHandouts(){
-  if(role()!=='player'||!ctx)return;const pid=identity().playerId;if(!pid)return;const nt=currentTeam();if(handoutRefs.length&&nt===teamId)return;cleanupHandoutRefs();handouts={};handoutAcks={};teamId=nt;
+  if(role()!=='player'||!ctx)return;
+  const pid=identity().playerId;if(!pid)return;
+  const nt=currentTeam(),key=ctx.room+'|'+ctx.uid+'|'+pid+'|'+nt;
+  if(handoutRefs.length&&key===handoutSubscriptionKey)return;
+  cleanupHandoutRefs();handouts={};handoutAcks={};teamId=nt;handoutSubscriptionKey=key;
   const base=ctx.db.ref(`rooms/${ctx.room}/dcx/handouts`),r1=base.child('public'),r2=base.child(`players/${pid}`);r1.on('value',s=>mergeHandoutSource('public',s.val()||{}),e=>handoutError(e));r2.on('value',s=>mergeHandoutSource('player',s.val()||{}),e=>handoutError(e));handoutRefs.push(r1,r2);if(teamId){const r3=base.child(`teams/${teamId}`);r3.on('value',s=>mergeHandoutSource('team',s.val()||{}),e=>handoutError(e));handoutRefs.push(r3)}renderHandouts()
 }
-function handoutError(e){console.error('[DCX HANDOUT]',e);const b=$('dcxHandoutStatus');if(b){b.textContent=String(e?.code||'ERRO').toUpperCase();b.classList.add('error')}}
+function handoutError(e){console.error('[DCX HANDOUT]',e);renderHandouts();const b=$('dcxHandoutStatus');if(b){b.textContent=String(e?.code||'ERRO').toUpperCase();b.classList.add('error')}}
 function handoutList(){return Object.values(handouts).filter(h=>!h.archived).sort((a,b)=>(Number(b.createdAt)||0)-(Number(a.createdAt)||0))}
 function renderHandouts(){
   if(role()!=='player')return;const panel=$('dcxHandoutsPanel');if(!panel)return;let box=$('dcxHandoutRuntime');if(!box){const content=panel.querySelector('.dcxLocalPanelContent');if(!content)return;content.innerHTML=`<div class="localModuleHero"><div><span class="tag">PLAYER // CAIXA DE DOCUMENTOS</span><h2>ARQUIVOS DA OPERAÇÃO</h2><p>Handouts publicados pelo Keymaster para você, sua equipe ou toda a operação.</p></div><span class="localOnlyPill" id="dcxHandoutStatus">ONLINE // RTDB</span></div><div class="localToolbar" id="dcxHandoutFilters"><button class="btn active" data-hfilter="all" type="button">TODOS</button><button class="btn" data-hfilter="new" type="button">NOVOS</button><button class="btn" data-hfilter="confirmed" type="button">CONFIRMADOS</button></div><div id="dcxHandoutRuntime"></div>`;box=$('dcxHandoutRuntime');$('dcxHandoutFilters')?.addEventListener('click',e=>{const b=e.target.closest('[data-hfilter]');if(!b)return;panel.dataset.handoutFilter=b.dataset.hfilter;document.querySelectorAll('#dcxHandoutFilters [data-hfilter]').forEach(x=>x.classList.toggle('active',x===b));renderHandouts()})}
-  const filter=panel.dataset.handoutFilter||'all',all=handoutList(),arr=all.filter(h=>filter==='all'||filter==='new'?!handoutAcks[h.id]?.viewedAt:filter==='confirmed'?!!handoutAcks[h.id]?.confirmedAt:true),newCount=all.filter(h=>!handoutAcks[h.id]?.viewedAt).length,state=$('dcxOpenHandouts')?.querySelector('.dcxModuleState');if(state)state.textContent=newCount?`${newCount} NOVO${newCount===1?'':'S'}`:'ABRIR';if(!arr.length){box.innerHTML=`<div class="localEmptyState"><b>${filter==='new'?'NENHUM HANDOUT NOVO':filter==='confirmed'?'NENHUM HANDOUT CONFIRMADO':'NENHUM HANDOUT RECEBIDO'}</b><small>Os documentos publicados pelo Keymaster aparecerão aqui.</small></div>`;return}
+  const filter=panel.dataset.handoutFilter||'all',all=handoutList(),arr=all.filter(h=>filter==='all'?true:filter==='new'?!handoutAcks[h.id]?.viewedAt:filter==='confirmed'?!!handoutAcks[h.id]?.confirmedAt:true),newCount=all.filter(h=>!handoutAcks[h.id]?.viewedAt).length,state=$('dcxOpenHandouts')?.querySelector('.dcxModuleState');if(state)state.textContent=newCount?`${newCount} NOVO${newCount===1?'':'S'}`:'ABRIR';if(!arr.length){box.innerHTML=`<div class="localEmptyState"><b>${filter==='new'?'NENHUM HANDOUT NOVO':filter==='confirmed'?'NENHUM HANDOUT CONFIRMADO':'NENHUM HANDOUT RECEBIDO'}</b><small>Os documentos publicados pelo Keymaster aparecerão aqui.</small></div>`;return}
   box.innerHTML=`<div class="dcxHandoutList">${arr.map(h=>{const a=handoutAcks[h.id]||{},status=a.confirmedAt?'CONFIRMADO':a.viewedAt?'VISUALIZADO':'NOVO',kind=h.externalUrl?'LINK':h.storedMode==='rtdb-text'?'TEXTO':'IMAGEM';return`<article class="dcxHandoutItem ${status.toLowerCase()}"><div class="dcxHandoutIcon">▤</div><div class="dcxHandoutMeta"><span>${esc(h.targetType==='team'?'EQUIPE':h.targetType==='player'?'DIRETO':'GERAL')} // ${esc(status)} // ${esc(kind)}</span><b>${esc(h.title||'HANDOUT')}</b><p>${esc(h.description||'Sem descrição.')}</p><small>${esc(h.fileName||'HANDOUT')} · ${esc(fmtSize(h.fileSize))} · ${esc(fmtDate(h.createdAt))}</small></div><div class="dcxHandoutActions"><button class="btn gold" data-handout-open="${esc(h.id)}" type="button">ABRIR</button>${a.confirmedAt?'':`<button class="btn" data-handout-confirm="${esc(h.id)}" type="button">CONFIRMAR</button>`}</div></article>`}).join('')}</div>`;box.querySelectorAll('[data-handout-open]').forEach(b=>b.onclick=()=>openHandout(b.dataset.handoutOpen));box.querySelectorAll('[data-handout-confirm]').forEach(b=>b.onclick=()=>confirmHandout(b.dataset.handoutConfirm))
 }
 async function ack(id,patch){ctx=context();const pid=identity().playerId;if(!ctx||!pid)return;return ctx.db.ref(`rooms/${ctx.room}/dcx/handoutAcks/${id}/${pid}`).update(Object.assign({},patch,{playerId:pid,updatedAt:firebase.database.ServerValue.TIMESTAMP}))}
 function dataUrlToObjectUrl(dataUrl){const [head,body]=String(dataUrl||'').split(',',2);if(!head||body==null)throw new Error('Handout inválido.');const mime=(head.match(/^data:([^;,]+)/)||[])[1]||'application/octet-stream',base64=/;base64/i.test(head),bin=base64?atob(body):decodeURIComponent(body),arr=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);return URL.createObjectURL(new Blob([arr],{type:mime}))}
 async function openHandout(id){const h=handouts[id];if(!h)return;try{await showHandoutReader(h,{ackView:true})}catch(e){alert('Falha ao abrir Handout: '+(e?.message||e))}}
 async function confirmHandout(id){try{await ack(id,{viewedAt:handoutAcks[id]?.viewedAt||firebase.database.ServerValue.TIMESTAMP,confirmedAt:firebase.database.ServerValue.TIMESTAMP})}catch(e){alert('Falha ao confirmar Handout: '+(e?.message||e))}}
-function bindKeymasterHandout(){
-  if(role()!=='host')return;const btn=$('kmHandoutSend');if(!btn||btn.dataset.noStorageBound==='2')return;btn.dataset.noStorageBound='2';btn.disabled=false;btn.classList.add('kmHandoutSendLive');btn.innerHTML='<b>ENVIAR AOS JOGADORES</b><small>TEXTO / IMAGEM / LINK // RTDB</small>';btn.title='Enviar texto puro, imagem leve ou link externo pelo RTDB';btn.addEventListener('click',async()=>{if(btn.disabled)return;btn.disabled=true;const old=btn.innerHTML;btn.innerHTML='<b>ENVIANDO...</b><small>RTDB</small>';try{const h=await sendHandoutFromForm();alert(`Handout enviado: ${h.title}`);$('kmHandoutClear')?.click();if($('kmHandoutExternalUrl'))$('kmHandoutExternalUrl').value='';if($('kmHandoutBody'))$('kmHandoutBody').value=''}catch(e){console.error(e);alert('Falha ao enviar Handout: '+(e?.message||e))}finally{btn.disabled=false;btn.innerHTML=old}});$('kmHandoutClear')?.addEventListener('click',()=>{if($('kmHandoutBody'))$('kmHandoutBody').value='';if($('kmHandoutExternalUrl'))$('kmHandoutExternalUrl').value=''})
+function handoutSendStatus(message,failed=false){
+  const status=$('kmHandoutDeliveryStatus');
+  if(!status)return;
+  status.textContent=message;
+  status.dataset.status=failed?'error':'success';
 }
+function bindKeymasterHandout(){
+  if(role()!=='host')return;
+  const btn=$('kmHandoutSend');
+  if(!btn||btn.dataset.noStorageBound==='3')return;
+  btn.dataset.noStorageBound='3';
+  btn.disabled=false;
+  btn.classList.add('kmHandoutSendLive');
+  btn.innerHTML='<b>ENVIAR AOS JOGADORES</b><small>TEXTO / IMAGEM / LINK // RTDB</small>';
+  btn.title='Publicar Handout para todos, equipe ou operador no Firebase';
+  btn.addEventListener('click',async()=>{
+    if(btn.disabled)return;
+    btn.disabled=true;
+    const previous=btn.innerHTML;
+    btn.innerHTML='<b>PUBLICANDO...</b><small>AGUARDANDO FIREBASE</small>';
+    handoutSendStatus('Enviando e verificando publicação...');
+    try{
+      const handout=await sendHandoutFromForm();
+      handoutSendStatus('PUBLICADO NO FIREBASE: '+handout.title+' · '+(handout.targetType==='all'?'TODOS':handout.targetType==='team'?'EQUIPE':'OPERADOR'));
+      $('kmHandoutClear')?.click();
+      if($('kmHandoutExternalUrl'))$('kmHandoutExternalUrl').value='';
+      if($('kmHandoutBody'))$('kmHandoutBody').value='';
+    }catch(error){
+      console.error('[DCX HANDOUT] Publicação',error);
+      const hint=String(error?.code||'').includes('permission')?' Verifique as regras do Realtime Database.':'';
+      handoutSendStatus('FALHA NO ENVIO: '+(error?.message||error)+hint,true);
+    }finally{btn.disabled=false;btn.innerHTML=previous}
+  });
+  $('kmHandoutClear')?.addEventListener('click',()=>{
+    if($('kmHandoutBody'))$('kmHandoutBody').value='';
+    if($('kmHandoutExternalUrl'))$('kmHandoutExternalUrl').value='';
+  });
+}
+
 async function boot(){ctx=context();if(!ctx)return false;await startCredentialListeners();if(role()==='player')attachPlayerHandouts();else{bindKeymasterHandout();attachHostHandoutHistory()}return true}
-function tick(){const c=context();if(!c)return;if(!ctx||ctx.uid!==c.uid||ctx.room!==c.room){ctx=c;startCredentialListeners();if(role()==='player')attachPlayerHandouts();else{bindKeymasterHandout();attachHostHandoutHistory()}}else if(role()==='player'){const t=currentTeam();if(t!==teamId)attachPlayerHandouts()}}
+function tick(){const c=context();if(!c)return;if(!ctx||ctx.uid!==c.uid||ctx.room!==c.room){ctx=c;startCredentialListeners();if(role()==='player')attachPlayerHandouts();else{bindKeymasterHandout();attachHostHandoutHistory()}}else if(role()==='player'){attachPlayerHandouts()}}
 window.DCX=window.DCX||{};window.DCX.Media={getAvatarUrl,credentialMeta,saveAdminAvatarFraming,saveAdminAvatarLink,uploadOwnAvatar,removeOwnAvatar,uploadAdminAvatar,removeAdminAvatar,sendHandoutFromForm,refreshHandouts:attachPlayerHandouts,showHandoutReader,refreshHandoutHistory:attachHostHandoutHistory};
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{boot();initTimer=setInterval(tick,1800)},{once:true});else{boot();initTimer=setInterval(tick,1800)}
 })();

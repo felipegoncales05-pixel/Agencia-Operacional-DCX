@@ -121,3 +121,40 @@ button.dcxModuleCard.live:hover{transform:translateY(-1px)!important;border-colo
 @media(max-width:1180px){.dcxPlayerDashboardShell{grid-template-columns:150px minmax(0,1fr)!important}.dcxDashTeams{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 @media(max-width:850px){.dcxPlayerDashboardShell{grid-template-columns:1fr!important}.dcxFieldSidebar{position:static!important;min-height:0!important}.dcxFieldSidebarTools.dcxWorkspaceGrid{grid-template-columns:repeat(4,minmax(0,1fr))!important}.dcxFieldSidebarStatus{display:none!important}.dcxFieldTool.dcxModuleCard{min-height:54px!important}.dcxFieldTool div small{display:none!important}}
 @media(max-width:620px){.dcxFieldSidebarTools.dcxWorkspaceGrid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.dcxDashTeams{grid-template-columns:1fr!important}}
+
+/* DCX // Missions hub: each operation keeps its own independent stage content. */
+#dcxMissionsOverview[hidden],
+#workspaceGolpe [data-mission-content][hidden]{display:none!important}
+.dcxMissionsOverview{padding:18px 0 34px;display:grid;gap:16px;min-width:0}
+.dcxMissionsHero{position:relative;overflow:hidden;display:flex;justify-content:space-between;align-items:center;gap:24px;min-width:0;padding:clamp(24px,4vw,44px);border:1px solid #305467;border-radius:18px;background:radial-gradient(circle at 88% 20%,#123344 0,#071925 42%,#040e16 90%);box-shadow:0 20px 48px #0005}
+.dcxMissionsKicker{display:block;color:#74d9f4;font:900 9px/1.4 ui-monospace,monospace;letter-spacing:.16em}
+.dcxMissionsHero h1{margin:12px 0;font:1000 clamp(36px,6vw,64px)/1 ui-monospace,monospace;letter-spacing:.03em;color:#e8faff}
+.dcxMissionsHero p{max-width:620px;margin:0;color:#9cb5c3;font:12px/1.7 ui-monospace,monospace}
+.dcxMissionsHeroSeal{width:122px;height:122px;flex:0 0 122px;display:grid;align-content:center;place-items:center;gap:8px;border:1px solid #4d8598;border-radius:50%;color:#7addf8;font:1000 32px/1 ui-monospace,monospace;background:#061822;box-shadow:inset 0 0 35px #5fd4ff10}
+.dcxMissionsHeroSeal span{font:850 7px ui-monospace,monospace;letter-spacing:.08em;color:#759aa9}
+.dcxMissionsList{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:12px}
+.dcxMissionTile{appearance:none;display:grid;grid-template-columns:60px minmax(0,1fr) auto;align-items:center;gap:18px;min-width:0;min-height:132px;width:100%;padding:22px;border:1px solid #32556a;border-radius:16px;background:linear-gradient(145deg,#0b1e2b,#061017);color:#d9f1fa;text-align:left;cursor:pointer;transition:border-color .17s ease,transform .17s ease,box-shadow .17s ease}
+.dcxMissionTile:hover{transform:translateY(-2px);border-color:#6ad9f5;box-shadow:0 12px 32px #0006}
+.dcxMissionTile:focus-visible,.dcxMissionBack:focus-visible{outline:2px solid #7de0ff;outline-offset:3px}
+.dcxMissionTileIcon{width:58px;height:58px;display:grid;place-items:center;border:1px solid #396f88;border-radius:13px;color:#84dfff;background:#0e2b3a;font:1000 28px/1 ui-monospace,monospace}
+.dcxMissionTileInfo{display:grid;gap:8px;min-width:0}
+.dcxMissionTileInfo small{font:900 8px/1.4 ui-monospace,monospace;letter-spacing:.13em;color:#75cce3}
+.dcxMissionTileInfo strong{font:1000 clamp(15px,2.2vw,22px)/1.2 ui-monospace,monospace;color:#edfbff;overflow-wrap:break-word}
+.dcxMissionTileInfo>span{font:10px/1.55 ui-monospace,monospace;color:#94b2c1;overflow-wrap:break-word}
+.dcxMissionTileAction{justify-self:end;display:flex;align-items:center;gap:10px;white-space:nowrap;color:#8fe5ff;font:900 9px/1.2 ui-monospace,monospace}
+.dcxMissionTileAction b{font-size:20px;font-weight:700}
+.dcxMissionDetail{min-width:0;padding-top:12px}
+.dcxMissionDetailHead{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;border:1px solid #254557;border-radius:12px;background:#071722}
+.dcxMissionBack{appearance:none;cursor:pointer;border:1px solid #35647a;background:#0a2431;color:#93e5ff;border-radius:9px;padding:10px 12px;font:900 10px/1.2 ui-monospace,monospace}
+.dcxMissionBack:hover{border-color:#78dfff;background:#103445}
+.dcxMissionDetailHead>div{display:grid;gap:4px;text-align:right}
+.dcxMissionDetailHead small{font:850 8px/1.2 ui-monospace,monospace;letter-spacing:.1em;color:#75a9ba}
+.dcxMissionDetailHead strong{font:900 12px/1.2 ui-monospace,monospace;color:#e0f7ff}
+@media(max-width:720px){
+ .dcxMissionsHeroSeal{display:none}
+ .dcxMissionTile{grid-template-columns:48px minmax(0,1fr);gap:12px;padding:16px;min-height:0}
+ .dcxMissionTileIcon{width:46px;height:46px;font-size:22px}
+ .dcxMissionTileAction{grid-column:2;justify-self:start}
+ .dcxMissionDetailHead>div{text-align:left}
+}
+@media(prefers-reduced-motion:reduce){.dcxMissionTile{transition:none}.dcxMissionTile:hover{transform:none}}

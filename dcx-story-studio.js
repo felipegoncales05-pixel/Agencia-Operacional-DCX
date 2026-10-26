@@ -13,7 +13,7 @@ const safeUrl=value=>{
   if(/^(?!\/|\.\/|.*\.\.)[a-z0-9_-][a-z0-9_./%-]*\.(png|jpe?g|gif|webp|avif)(\?[^<>"']*)?$/i.test(value0))return value0;
   return '';
 };
-const defaultOperation=()=>({id:'operacao-h',title:'Cair em uma Fria',code:'OPERAÇÃO H',summary:'Extração de H-01 na RAIN, investigação do N-02 e planejamento de campo.',imageUrl:'',status:'published',objectives:['Recuperar H-01 preservando a cápsula criogênica.','Evitar uma crise diplomática e proteger os civis.'],preparations:[]});
+const defaultOperation=()=>({id:'operacao-h',title:'Caindo em uma Fria',code:'OPERAÇÃO H',summary:'Extração de H-01 na RAIN, investigação do N-02 e planejamento de campo.',imageUrl:'',status:'published',objectives:['Recuperar H-01 preservando a cápsula criogênica.','Evitar uma crise diplomática e proteger os civis.'],preparations:[]});
 function normalize(raw){
  const d=raw&&typeof raw==='object'?raw:{};
  const operations=Array.isArray(d.operations)?d.operations.filter(Boolean).map(op=>({
@@ -131,11 +131,11 @@ function renderPrepInputs(items){
  '<label>DESCRIÇÃO<textarea data-prep-description rows="2" maxlength="600">'+esc(p.description)+'</textarea></label>'+
  '<label class="kmStudioCheckbox"><input type="checkbox" data-prep-done '+(p.done?'checked':'')+'> CONCLUÍDA</label></div>').join('');
 }
-function readPrepInputs(){
+function readPrepInputs(keepEmpty=false){
  return [...document.querySelectorAll('#kmStudioPrepRows .kmStudioPrepRow')].map(row=>({
   id:row.dataset.prepId,title:clean(row.querySelector('[data-prep-title]')?.value,120),
   description:clean(row.querySelector('[data-prep-description]')?.value,600),done:!!row.querySelector('[data-prep-done]')?.checked
- })).filter(p=>p.title);
+ })).filter(p=>keepEmpty||p.title);
 }
 function loadOp(){
  const op=studio.operations.find(v=>v.id===opEditing)||{id:'',title:'',code:'',summary:'',imageUrl:'',status:'draft',objectives:[],preparations:[]};
@@ -182,7 +182,7 @@ async function saveOperation(){
  const item={id:opEditing||id('mission'),title,code,summary:clean($('kmStudioOpSummary')?.value,1200),
   imageUrl,status:$('kmStudioOpPublic')?.checked?'published':'draft',
   objectives:String($('kmStudioOpObjectives')?.value||'').split('\n').map(x=>clean(x,240)).filter(Boolean),
-  preparations:readPrepInputs()};
+  preparations:readPrepInputs().filter(p=>p.title)};
  const operations=studio.operations.filter(v=>v.id!==item.id).concat(item);
  if(await publish({...studio,operations},'MISSÃO SALVA E SINCRONIZADA')){
   opEditing=item.id;opDirty=false;renderHost();
@@ -225,13 +225,13 @@ function bindHost(){
  $('kmStudioCharSave')?.addEventListener('click',saveCharacter);
  $('kmStudioCharDelete')?.addEventListener('click',deleteCharacter);
  $('kmStudioAddPrep')?.addEventListener('click',()=>{
-  const current=readPrepInputs();current.push({id:id('prep'),title:'',description:'',done:false});
+  const current=readPrepInputs(true);current.push({id:id('prep'),title:'',description:'',done:false});
   renderPrepInputs(current);opDirty=true;
   document.querySelector('#kmStudioPrepRows .kmStudioPrepRow:last-child [data-prep-title]')?.focus();
  });
  $('kmStudioPrepRows')?.addEventListener('click',e=>{
   const remove=e.target.closest('[data-remove-prep]');if(!remove)return;
-  const list=readPrepInputs().filter(p=>p.id!==remove.dataset.removePrep);
+  const list=readPrepInputs(true).filter(p=>p.id!==remove.dataset.removePrep);
   renderPrepInputs(list);opDirty=true;
  });
  $('kmStudioOperations')?.addEventListener('click',e=>{const b=e.target.closest('[data-edit-op]');if(b)selectOp(b.dataset.editOp)});

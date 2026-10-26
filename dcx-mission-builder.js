@@ -17,7 +17,7 @@ function readEditor(){
  const form=$('kmMissionModuleForm');if(!form)return collected;
  const item={...now,title:clean($('kmMissionModuleTitle')?.value,120),
  subtitle:clean($('kmMissionModuleSubtitle')?.value,160),body:clean($('kmMissionModuleBody')?.value,6500),
- imageUrl:clean($('kmMissionModuleImage')?.value,1900),symbol:clean($('kmMissionModuleSymbol')?.value,16),
+ imageUrl:clean($('kmMissionModuleImage')?.value,1900),imageFrame:window.DCX?.ImageTools?.read('kmMissionModuleImage'),symbol:clean($('kmMissionModuleSymbol')?.value,16),
  type:$('kmMissionModuleType')?.value||'briefing',published:!!$('kmMissionModulePublished')?.checked,
  options:String($('kmMissionModuleOptions')?.value||'').split('\n').map(x=>clean(x,180)).filter(Boolean)};
  return collected.map(m=>m.id===item.id?item:m);
@@ -34,6 +34,7 @@ function loadModule(){
  $('kmMissionModuleSubtitle').value=m.subtitle||'';
  $('kmMissionModuleBody').value=m.body||'';
  $('kmMissionModuleImage').value=m.imageUrl||'';
+ window.DCX?.ImageTools?.attach('kmMissionModuleImage',m.imageFrame);
  $('kmMissionModuleSymbol').innerHTML=symbolOptions(m.symbol||'◎');
  $('kmMissionModuleType').value=m.type||'briefing';
  $('kmMissionModulePublished').checked=m.published!==false;
@@ -49,7 +50,7 @@ function renderEditor(op){
 function readModules(){saveEditing();return active?.modules||[]}
 function addModule(){
  saveEditing();
- const m={id:uid(),title:'Novo módulo',subtitle:'',body:'',imageUrl:'',symbol:'◎',type:'briefing',published:true,options:[]};
+ const m={id:uid(),title:'Novo módulo',subtitle:'',body:'',imageUrl:'',imageFrame:{},symbol:'◎',type:'briefing',published:true,options:[]};
  active??={modules:[]};active.modules.push(m);selectedModule=m.id;moduleRows();loadModule();dirty=true;markDirty();
 }
 function markDirty(){const form=$('kmStudioOpForm');form?.dispatchEvent(new Event('input',{bubbles:true}))}
@@ -91,9 +92,8 @@ function showModule(missionId,moduleId){
  $('dcxModuleModalType').textContent=m.subtitle||m.type.toUpperCase();
  $('dcxModuleModalBody').textContent=m.body||'Sem informações adicionais.';
  const image=$('dcxModuleModalImage');image.replaceChildren();
- if(m.imageUrl&&/^(https?:\/\/|[a-zA-Z0-9_.-]+\/)/.test(m.imageUrl)){
-  const img=document.createElement('img');img.src=m.imageUrl;img.alt=m.title;img.loading='lazy';image.append(img);image.hidden=false;
- }else image.hidden=true;
+ const framed=window.DCX?.ImageTools?.frame(m.imageUrl,m.imageFrame,m.title,'dcxMissionModalImg');
+ if(framed){image.innerHTML=framed;image.hidden=false}else image.hidden=true;
  const actions=$('dcxModuleModalActions');actions.innerHTML='';
  if(m.type==='preparations'){
   const local=loadLocal(localKey(op.id));

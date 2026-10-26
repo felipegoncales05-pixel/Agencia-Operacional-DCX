@@ -13,7 +13,7 @@ const safeUrl=value=>{
   if(/^(?!\/|\.\/|.*\.\.)[a-z0-9_-][a-z0-9_./%-]*\.(png|jpe?g|gif|webp|avif)(\?[^<>"']*)?$/i.test(value0))return value0;
   return '';
 };
-const defaultOperation=()=>({id:'operacao-h',title:'Caindo em uma Fria',code:'OPERAÇÃO H',summary:'Extração de H-01 na RAIN, investigação do N-02 e planejamento de campo.',imageUrl:'',status:'published',objectives:['Recuperar H-01 preservando a cápsula criogênica.','Evitar uma crise diplomática e proteger os civis.'],preparations:[]});
+const defaultOperation=()=>({id:'operacao-h',title:'Caindo em uma Fria',code:'OPERAÇÃO H',summary:'Extração de H-01 na RAIN, investigação do N-02 e planejamento de campo.',imageUrl:'',status:'published',objectives:['Recuperar H-01 preservando a cápsula criogênica.','Evitar uma crise diplomática e proteger os civis.'],preparations:[],modules:[]});
 function normalize(raw){
  const d=raw&&typeof raw==='object'?raw:{};
  const operations=Array.isArray(d.operations)?d.operations.filter(Boolean).map(op=>({
@@ -21,7 +21,17 @@ function normalize(raw){
    summary:clean(op.summary,1200),imageUrl:safeUrl(op.imageUrl),
    status:op.status==='draft'?'draft':'published',
    objectives:Array.isArray(op.objectives)?op.objectives.map(v=>clean(v,240)).filter(Boolean):[],
-   preparations:Array.isArray(op.preparations)?op.preparations.filter(Boolean).map(p=>({id:clean(p.id,64),title:clean(p.title,120),description:clean(p.description,600),done:!!p.done})).filter(p=>p.id&&p.title):[]
+   preparations:Array.isArray(op.preparations)?op.preparations.filter(Boolean).map(p=>({
+    id:clean(p.id,64),title:clean(p.title,120),description:clean(p.description,600),done:!!p.done,
+    symbol:clean(p.symbol,16),interaction:['view','local','request'].includes(p.interaction)?p.interaction:'view'
+   })).filter(p=>p.id&&p.title):[],
+   modules:Array.isArray(op.modules)?op.modules.filter(Boolean).map(m=>({
+    id:clean(m.id,64),title:clean(m.title,120),subtitle:clean(m.subtitle,160),
+    body:clean(m.body,6500),imageUrl:safeUrl(m.imageUrl),symbol:clean(m.symbol,16),
+    type:['briefing','intel','preparations','choice'].includes(m.type)?m.type:'briefing',
+    published:m.published!==false,
+    options:Array.isArray(m.options)?m.options.map(v=>clean(v,180)).filter(Boolean):[]
+   })).filter(m=>m.id&&m.title):[]
  })).filter(op=>op.id&&op.title):[];
  // Only add legacy mission to rooms without a saved catalog; explicit deletions persist.
  if(!Array.isArray(d.operations))operations.unshift(defaultOperation());
@@ -29,7 +39,7 @@ function normalize(raw){
    id:clean(ch.id,64),name:clean(ch.name,100),lore:clean(ch.lore,5000),
    imageUrl:safeUrl(ch.imageUrl),status:ch.status==='draft'?'draft':'published'
  })).filter(ch=>ch.id&&ch.name):[];
- return {version:1,operations,characters:chars};
+ return {version:2,operations,characters:chars};
 }
 let studio=normalize(null),opEditing='operacao-h',charEditing=null,opDirty=false,charDirty=false;
 let currentMission='operacao-h';
@@ -78,7 +88,7 @@ const stageModules=[
 ];
 function prepMarkup(op){
  return (op.preparations||[]).length?op.preparations.map((p,i)=>
-   '<div class="dcxStoryPrep '+(p.done?'isDone':'')+'"><span>'+String(i+1).padStart(2,'0')+'</span><div><b>'+esc(p.title)+'</b><p>'+esc(p.description)+'</p></div><em>'+ (p.done?'CONCLUÍDA':'PENDENTE')+'</em></div>').join(''):'<p class="dcxStoryMuted">As preparações desta missão ainda não foram personalizadas.</p>';
+   '<div class="dcxStoryPrep '+(p.done?'isDone':'')+'"><span>'+esc(p.symbol||String(i+1).padStart(2,'0'))+'</span><div><b>'+esc(p.title)+'</b><p>'+esc(p.description)+'</p></div><em>'+ (p.done?'CONCLUÍDA':'PENDENTE')+'</em></div>').join(''):'<p class="dcxStoryMuted">As preparações desta missão ainda não foram personalizadas.</p>';
 }
 function objectiveMarkup(op){return op.objectives.length?op.objectives.map((x,i)=>'<li><span>'+String(i+1).padStart(2,'0')+'</span>'+esc(x)+'</li>').join(''):'<li>Objetivos ainda não definidos.</li>'}
 function heroMarkup(op){
@@ -99,6 +109,7 @@ function renderMission(missionId){
    '<div class="dcxStorySectionHeading"><div><small>OPERAÇÃO // MÓDULOS</small><h2>ARQUIVOS DA MISSÃO</h2></div><span>07 SETORES</span></div>'+
    '<div class="dcxStoryModules">'+stageModules.map(m=>
     '<button class="dcxStoryModule" type="button" data-story-stage="'+m.index+'"><span>'+m.icon+'</span><div><b>'+m.title+'</b><small>'+m.desc+'</small></div><em>ABRIR ›</em></button>').join('')+'</div>'+
+   (window.DCX?.MissionBuilder?.moduleGrid?.(op,true)||'')+
    '<div class="dcxStoryInfoColumns"><section><h3>OBJETIVOS</h3><ol>'+objectiveMarkup(op)+'</ol></section>'+
    '<section><h3>PREPARAÇÕES ADICIONAIS</h3>'+prepMarkup(op)+'</section></div>';
    const detail=$('dcxMissionDetail');if(detail){detail.querySelector('.dcxMissionDetailHead strong').textContent=op.title}
@@ -106,7 +117,8 @@ function renderMission(missionId){
    dynamic.innerHTML='<header class="dcxMissionDetailHead"><button class="dcxMissionBack" type="button">‹ TODAS AS MISSÕES</button><div><small>MISSÕES // '+esc(op.code||'ARQUIVO DCX')+'</small><strong>'+esc(op.title)+'</strong></div></header>'+
     heroMarkup(op)+'<div class="dcxStoryInfoColumns dcxStoryDynamicColumns">'+
     '<section><h3>OBJETIVOS</h3><ol>'+objectiveMarkup(op)+'</ol></section>'+
-    '<section><h3>PREPARAÇÕES <small>'+op.preparations.filter(p=>p.done).length+'/'+op.preparations.length+' CONCLUÍDAS</small></h3>'+prepMarkup(op)+'</section></div>';
+    '<section><h3>PREPARAÇÕES <small>'+op.preparations.filter(p=>p.done).length+'/'+op.preparations.length+' CONCLUÍDAS</small></h3>'+prepMarkup(op)+'</section></div>'+ 
+    (window.DCX?.MissionBuilder?.moduleGrid?.(op,false)||'');
  }
 }
 function renderPlayer(){
@@ -138,19 +150,29 @@ function hostCharacters(){
 }
 function renderPrepInputs(items){
  const box=$('kmStudioPrepRows');if(!box)return;
- box.innerHTML=(items||[]).map((p,i)=>'<div class="kmStudioPrepRow" data-prep-id="'+esc(p.id)+'"><div class="kmStudioPrepRowHead"><strong>PREPARAÇÃO '+(i+1)+'</strong><button type="button" data-remove-prep="'+esc(p.id)+'">REMOVER</button></div>'+
+ box.innerHTML=(items||[]).map((p,i)=>'<div class="kmStudioPrepRow" data-prep-id="'+esc(p.id)+'">'+
+ '<div class="kmStudioPrepRowHead"><strong>PREPARAÇÃO '+(i+1)+'</strong><button type="button" data-remove-prep="'+esc(p.id)+'">REMOVER</button></div>'+
  '<label>NOME<input data-prep-title maxlength="120" value="'+esc(p.title)+'" required></label>'+
  '<label>DESCRIÇÃO<textarea data-prep-description rows="2" maxlength="600">'+esc(p.description)+'</textarea></label>'+
- '<label class="kmStudioCheckbox"><input type="checkbox" data-prep-done '+(p.done?'checked':'')+'> CONCLUÍDA</label></div>').join('');
+ '<div class="kmStudioFieldPair"><label>SÍMBOLO<select data-prep-symbol>'+
+ (window.DCX?.MissionBuilder?.symbolOptions?.(p.symbol)||'<option value="◎">◎ OBJETIVO</option>')+
+ '</select></label><label>INTERAÇÃO DO JOGADOR<select data-prep-interaction>'+
+ '<option value="view" '+(p.interaction==='view'||!p.interaction?'selected':'')+'>SOMENTE LEITURA</option>'+
+ '<option value="local" '+(p.interaction==='local'?'selected':'')+'>CHECKLIST PESSOAL</option>'+
+ '<option value="request" '+(p.interaction==='request'?'selected':'')+'>SOLICITAR AO KEYMASTER</option>'+
+ '</select></label></div>'+
+ '<label class="kmStudioCheckbox"><input type="checkbox" data-prep-done '+(p.done?'checked':'')+'> CONCLUÍDA (KEYMASTER)</label></div>').join('');
 }
 function readPrepInputs(keepEmpty=false){
  return [...document.querySelectorAll('#kmStudioPrepRows .kmStudioPrepRow')].map(row=>({
   id:row.dataset.prepId,title:clean(row.querySelector('[data-prep-title]')?.value,120),
-  description:clean(row.querySelector('[data-prep-description]')?.value,600),done:!!row.querySelector('[data-prep-done]')?.checked
+  description:clean(row.querySelector('[data-prep-description]')?.value,600),done:!!row.querySelector('[data-prep-done]')?.checked,
+  symbol:clean(row.querySelector('[data-prep-symbol]')?.value,16),
+  interaction:row.querySelector('[data-prep-interaction]')?.value||'view'
  })).filter(p=>keepEmpty||p.title);
 }
 function loadOp(){
- const op=studio.operations.find(v=>v.id===opEditing)||{id:'',title:'',code:'',summary:'',imageUrl:'',status:'draft',objectives:[],preparations:[]};
+ const op=studio.operations.find(v=>v.id===opEditing)||{id:'',title:'',code:'',summary:'',imageUrl:'',status:'draft',objectives:[],preparations:[],modules:[]};
  if($('kmStudioOpTitle'))$('kmStudioOpTitle').value=op.title;
  if($('kmStudioOpCode'))$('kmStudioOpCode').value=op.code;
  if($('kmStudioOpSummary'))$('kmStudioOpSummary').value=op.summary;
@@ -159,6 +181,7 @@ function loadOp(){
  if($('kmStudioOpObjectives'))$('kmStudioOpObjectives').value=op.objectives.join('\n');
  if($('kmStudioOpDelete'))$('kmStudioOpDelete').hidden=!opEditing;
  renderPrepInputs(op.preparations);
+ window.DCX?.MissionBuilder?.renderEditor?.(op);
  opDirty=false;
 }
 function loadChar(){
@@ -200,7 +223,8 @@ async function saveOperation(){
  const item={id:opEditing||id('mission'),title,code,summary:clean($('kmStudioOpSummary')?.value,1200),
   imageUrl,status:$('kmStudioOpPublic')?.checked?'published':'draft',
   objectives:String($('kmStudioOpObjectives')?.value||'').split('\n').map(x=>clean(x,240)).filter(Boolean),
-  preparations:readPrepInputs().filter(p=>p.title)};
+  preparations:readPrepInputs().filter(p=>p.title),
+  modules:window.DCX?.MissionBuilder?.readModules?.()||[]};
  const operations=studio.operations.some(v=>v.id===item.id)
   ?studio.operations.map(v=>v.id===item.id?item:v)
   :[...studio.operations,item];
@@ -254,7 +278,7 @@ function bindHost(){
  $('kmStudioCharSave')?.addEventListener('click',saveCharacter);
  $('kmStudioCharDelete')?.addEventListener('click',()=>deleteCharacter());
  $('kmStudioAddPrep')?.addEventListener('click',()=>{
-  const current=readPrepInputs(true);current.push({id:id('prep'),title:'',description:'',done:false});
+  const current=readPrepInputs(true);current.push({id:id('prep'),title:'',description:'',done:false,symbol:'◎',interaction:'view'});
   renderPrepInputs(current);opDirty=true;
   document.querySelector('#kmStudioPrepRows .kmStudioPrepRow:last-child [data-prep-title]')?.focus();
  });
@@ -323,6 +347,19 @@ function init(){
  else{bindPlayer();renderPlayer()}
 }
 window.DCX=window.DCX||{};
-window.DCX.StoryStudio={renderMission,get operations(){return studio.operations.slice()},get characters(){return studio.characters.slice()}};
+window.DCX.StoryStudio={
+ renderMission,
+ async completePreparation(missionId,prepId){
+  if(!host)return false;
+  const op=studio.operations.find(v=>v.id===missionId);
+  if(!op||!op.preparations.some(p=>p.id===prepId))return false;
+  const operations=studio.operations.map(v=>v.id!==missionId?v:{...v,preparations:v.preparations.map(p=>p.id===prepId?{...p,done:true}:p)});
+  const success=await publish({...studio,operations},'PREPARAÇÃO VALIDADA PELO KEYMASTER');
+  if(success)renderHost();
+  return success;
+ },
+ get operations(){return studio.operations.slice()},
+ get characters(){return studio.characters.slice()}
+};
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();

@@ -138,7 +138,7 @@ function readPrepInputs(){
  })).filter(p=>p.title);
 }
 function loadOp(){
- const op=studio.operations.find(v=>v.id===opEditing)||defaultOperation();
+ const op=studio.operations.find(v=>v.id===opEditing)||{id:'',title:'',code:'',summary:'',imageUrl:'',status:'draft',objectives:[],preparations:[]};
  if($('kmStudioOpTitle'))$('kmStudioOpTitle').value=op.title;
  if($('kmStudioOpCode'))$('kmStudioOpCode').value=op.code;
  if($('kmStudioOpSummary'))$('kmStudioOpSummary').value=op.summary;

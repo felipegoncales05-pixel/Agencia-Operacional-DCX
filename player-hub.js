@@ -1,14 +1,36 @@
 (()=>{
   const $=id=>document.getElementById(id);
   const STORE='oph-player-workspace-v2';
-  let current='golpe';
+  // Keep the old "golpe" route working for users who saved it locally.
+  let current='missions';
+  function missionSections(){
+    return [...document.querySelectorAll('#workspaceGolpe [data-mission-content]')];
+  }
+  function openMission(id){
+    const sections=missionSections();
+    const chosen=sections.find(section=>section.dataset.missionContent===id);
+    if(!chosen)return false;
+    const overview=$('dcxMissionsOverview');
+    if(overview)overview.hidden=true;
+    sections.forEach(section=>{section.hidden=section!==chosen});
+    switchWorkspace('missions');
+    chosen.querySelector('.dcxMissionBack')?.focus();
+    return true;
+  }
+  function showMissionList(save=true){
+    const overview=$('dcxMissionsOverview');
+    if(overview)overview.hidden=false;
+    missionSections().forEach(section=>{section.hidden=true});
+    switchWorkspace('missions',save);
+    return true;
+  }
 
   function switchWorkspace(name,save=true){
-    name=name==='dcx'?'dcx':'golpe';
+    name=name==='dcx'?'dcx':'missions';
     current=name;
-    $('workspaceGolpe')?.classList.toggle('active',name==='golpe');
+    $('workspaceGolpe')?.classList.toggle('active',name==='missions');
     $('workspaceDCX')?.classList.toggle('active',name==='dcx');
-    $('workspaceTabGolpe')?.classList.toggle('active',name==='golpe');
+    $('workspaceTabGolpe')?.classList.toggle('active',name==='missions');
     $('workspaceTabDCX')?.classList.toggle('active',name==='dcx');
     document.body.dataset.playerWorkspace=name;
     if(save){try{localStorage.setItem(STORE,name)}catch{}}
@@ -46,7 +68,16 @@
   }
 
   function bind(){
-    $('workspaceTabGolpe')?.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();switchWorkspace('golpe')});
+    $('workspaceTabGolpe')?.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();showMissionList()});
+    document.querySelectorAll('[data-mission-open]').forEach(button=>button.addEventListener('click',e=>{
+      e.preventDefault();
+      openMission(button.dataset.missionOpen);
+    }));
+    document.querySelectorAll('.dcxMissionBack').forEach(button=>button.addEventListener('click',e=>{
+      e.preventDefault();
+      showMissionList();
+      $('dcxMissionOperationH')?.focus();
+    }));
     $('workspaceTabDCX')?.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();switchWorkspace('dcx')});
     $('dcxOpenYumiya')?.addEventListener('click',e=>{e.preventDefault();call(()=>window.OPHPlayer?.toggleYumiyaChat?.(true),'YUMIYA')});
     $('dcxOpenTeam')?.addEventListener('click',e=>{e.preventDefault();call(()=>window.DCX?.Player?.toggleTeam?.(true),'EQUIPE')});
@@ -56,7 +87,8 @@
   function init(){
     document.body.classList.add('player-hub-ready');
     bind();
-    let stored='golpe';try{stored=localStorage.getItem(STORE)||'golpe'}catch{}
+    let stored='missions';try{stored=localStorage.getItem(STORE)||'missions'}catch{}
+    showMissionList(false);
     switchWorkspace(stored,false);
     const unread=$('yumiyaUnread');
     if(unread)new MutationObserver(syncUnread).observe(unread,{subtree:true,childList:true,attributes:true,characterData:true});
@@ -70,6 +102,6 @@
   }
 
   window.DCX=window.DCX||{};
-  window.DCX.PlayerHub={switchWorkspace,openModule,syncCyberDashboard,get current(){return current}};
+  window.DCX.PlayerHub={switchWorkspace,openMission,showMissionList,openModule,syncCyberDashboard,get current(){return current}};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();

@@ -5,7 +5,7 @@
 
 .playerWorkspaceBar{
   display:grid!important;
-  grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
   gap:10px!important;
   padding:10px 0 0!important;
   width:100%!important;
@@ -158,3 +158,6 @@ button.dcxModuleCard.live:hover{transform:translateY(-1px)!important;border-colo
  .dcxMissionDetailHead>div{text-align:left}
 }
 @media(prefers-reduced-motion:reduce){.dcxMissionTile{transition:none}.dcxMissionTile:hover{transform:none}}
+
+/* Three workspaces, without overflowing small screens. */
+@media(max-width:650px){.playerWorkspaceBar{gap:5px!important}.playerWorkspaceTab{padding:10px 8px!important}.playerWorkspaceTab b{font-size:clamp(10px,2.7vw,16px)!important;overflow-wrap:anywhere}.playerWorkspaceTab small{font-size:7px!important}.playerWorkspaceTab span{display:none!important}}

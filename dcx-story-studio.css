@@ -29,3 +29,38 @@
 @media(max-width:1080px){.dcxStoryModules{grid-template-columns:repeat(2,minmax(0,1fr))}.kmStudioLayout{grid-template-columns:1fr}.kmCommandGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:760px){.dcxCharacterGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.dcxStoryInfoColumns{grid-template-columns:1fr}.dcxStoryMissionTile{grid-template-columns:52px minmax(0,1fr)}.dcxStoryTileArt{width:52px;height:52px}.dcxStoryMissionTile .dcxMissionTileAction{grid-column:2;justify-self:start}}
 @media(max-width:520px){.dcxCharacterGrid,.dcxStoryModules{grid-template-columns:1fr}.kmCommandGrid{grid-template-columns:1fr}.dcxStoryModule{padding:14px}.dcxCharactersIntro{padding:20px}}
+
+/* Modular mission creator */
+.kmMissionBuilder,.kmMissionInbox{border:1px solid color-mix(in srgb,var(--cyan,#78dafa) 32%,#263c4c);border-radius:16px;padding:16px;margin-top:12px;background:color-mix(in srgb,var(--panel,#071923) 88%,transparent)}
+.kmMissionTip{font:10px/1.65 ui-monospace,monospace;color:var(--muted,#a6b8c8)}
+.kmMissionBuilderLayout{display:grid;grid-template-columns:minmax(175px,.85fr) minmax(0,1.65fr);gap:12px;margin-top:12px}
+.kmMissionModuleList{display:grid;align-content:start;gap:8px}
+.kmMissionModuleLine{display:grid;gap:7px;border:1px solid #315367;border-radius:12px;padding:12px;background:#0b202b;min-width:0}
+.kmMissionModuleLine.selected{border-color:var(--cyan,#7dd8ef);box-shadow:inset 3px 0 0 var(--cyan,#7dd8ef)}
+.kmMissionModuleLine>div:first-child{display:grid;grid-template-columns:30px minmax(0,1fr);gap:4px 8px}
+.kmMissionModuleLine>div:first-child span{grid-row:span 2;font-size:23px;color:var(--cyan,#7dd8ef)}
+.kmMissionModuleLine b{font:900 11px monospace;color:var(--text,#eaf7ff);overflow-wrap:anywhere}
+.kmMissionModuleLine small{font:8px monospace;color:var(--muted,#9baebb)}
+.kmMissionModuleLine>div:last-child{display:flex;flex-wrap:wrap;gap:5px}
+.kmMissionModuleLine button,.kmMissionInboxItem button{cursor:pointer;min-height:31px;border:1px solid #376379;border-radius:7px;background:#122936;color:#c7efff;font:900 9px monospace;padding:7px}
+.kmMissionModuleLine button:hover,.kmMissionInboxItem button:hover{border-color:var(--cyan,#71dafa)}
+.kmMissionModuleForm{background:#06141f;padding:15px;border:1px solid #244a5b;border-radius:12px}
+.kmStudioFieldPair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.kmStudioForm select{width:100%;min-width:0;background:#071824;color:var(--text,#eaf7ff);padding:10px;border:1px solid #355a6f;border-radius:8px}
+.kmMissionInboxItem{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;border:1px solid #35596a;border-radius:11px;padding:13px;margin:8px 0;background:#0b2029}
+.kmMissionInboxItem div:first-child{display:grid;gap:6px}.kmMissionInboxItem b{color:#e4f6ff;font:900 11px monospace}.kmMissionInboxItem small,.kmMissionInboxItem p{color:#9fc9da;font:10px/1.5 monospace;margin:0}
+.kmMissionInboxItem div:last-child{display:flex;gap:8px}
+.dcxMissionModal[hidden],.kmMissionModuleForm[hidden],#kmMissionOptionWrap[hidden]{display:none!important}
+.dcxMissionModal{position:fixed;inset:0;z-index:4000;display:grid;place-items:center;padding:18px;background:rgba(1,6,13,.89);backdrop-filter:blur(12px)}
+.dcxMissionModalCard{width:min(760px,100%);max-height:90vh;overflow:auto;background:linear-gradient(140deg,#0c2431,#05131d);border:1px solid var(--cyan,#5e9ab5);border-radius:18px;box-shadow:0 20px 80px #000c;color:var(--text,#e7faff);padding:clamp(16px,3vw,28px)}
+.dcxMissionModalCard header{display:flex;justify-content:space-between;gap:15px;align-items:start}.dcxMissionModalCard header>div{flex:1;min-width:0}.dcxMissionModalCard header small{display:block;color:var(--cyan,#75dafa);font:900 9px monospace}.dcxMissionModalCard header span{display:block;font-size:26px;margin-top:8px;color:var(--cyan,#75dafa)}
+.dcxMissionModalCard header h2{font:1000 clamp(21px,3vw,33px)/1.2 monospace;margin:10px 0}.dcxMissionModalCard header p{font:11px monospace;color:var(--muted,#abc)}
+.dcxMissionModalCard header button{background:#132d39;border:1px solid #426679;border-radius:8px;color:#d9faff;cursor:pointer;font:900 20px monospace;padding:5px 13px}
+.dcxMissionModalBody{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.85 monospace;color:var(--text,#e7faff);margin:20px 0}
+.dcxMissionModalImage{margin:16px 0}.dcxMissionModalImage img{max-width:100%;max-height:300px;object-fit:contain;border:1px solid #365b6a;border-radius:12px}
+.dcxMissionModalActions{display:grid;gap:8px}.dcxMissionModalActions button,.dcxMissionPrepAction button{background:#102937;color:#a7e9ff;border:1px solid #47849a;border-radius:9px;padding:11px;font:900 10px monospace;cursor:pointer}
+.dcxMissionModalActions button:hover{border-color:var(--cyan,#75dafa);color:#fff}.dcxMissionModalActions button:disabled{opacity:.5}
+.dcxMissionPrepAction{display:flex;flex-wrap:wrap;align-items:center;gap:14px;border:1px solid #2e4e5b;border-radius:11px;padding:12px}.dcxMissionPrepAction>span{font-size:20px;color:var(--cyan,#78e1fb)}
+.dcxMissionPrepAction>div{flex:1;min-width:150px}.dcxMissionPrepAction b{font:900 11px monospace}.dcxMissionPrepAction p{font:10px/1.6 monospace}.dcxMissionPrepAction small{font:8px monospace;color:var(--muted,#abc)}.dcxMissionPrepAction strong{color:#7fe4bc}.dcxMissionChoiceIntro{font:11px/1.6 monospace;color:var(--muted,#abc)}
+#dcxModuleModalStatus{color:var(--cyan,#7ae6ff);font:900 10px monospace}
+@media(max-width:810px){.kmMissionBuilderLayout{grid-template-columns:1fr}.kmStudioFieldPair{grid-template-columns:1fr}}

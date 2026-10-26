@@ -5,10 +5,14 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clamp=(x,min,max,def)=>Math.min(max,Math.max(min,Number.isFinite(Number(x))?Number(x):def));
 const safeUrl=value=>{
- const str=String(value||'').trim().slice(0,1900);
+ const raw=String(value||'').trim();
+ // Uploaded credential photos can be sizable data URLs: do not truncate them.
+ if(/^data:image\/(?:png|jpeg|gif|webp);base64,/i.test(raw))
+  return raw.length<=750000 && /^data:image\/(?:png|jpeg|gif|webp);base64,[a-z0-9+/=]+$/i.test(raw)?raw:'';
+ const str=raw.slice(0,1900);
+ if(raw.length>1900)return '';
  if(/^https?:\/\/[^\s"'<>]+$/i.test(str))return str;
  if(/^(?!\/|\.\/|.*\.\.)[a-z0-9_-][a-z0-9_./%-]*\.(png|jpe?g|gif|webp|avif)(\?[^<>"']*)?$/i.test(str))return str;
- if(/^data:image\/(?:png|jpeg|gif|webp);base64,[a-z0-9+/=]+$/i.test(str))return str;
  return '';
 };
 const normalize=value=>{
@@ -33,7 +37,8 @@ const frames=new Map();
 const inputId=id=>$(id);
 function updateUi(entry){
  const {root,urlId}=entry;
- const url=safeUrl(inputId(urlId)?.value);
+ const entered=String(inputId(urlId)?.value||'').trim();
+ const url=entered?safeUrl(entered):safeUrl(entry.fallbackUrl);
  const current=normalize({
   fit:root.querySelector('[data-image-fit]')?.value,
   x:root.querySelector('[data-image-x]')?.value,
@@ -59,7 +64,7 @@ function updateUi(entry){
   if(label)label.textContent=current[key]+(key==='zoom'||key==='dim'?'%':'');
  }
  const warning=root.querySelector('.dcxFramingWarning');
- if(warning)warning.hidden=!(inputId(urlId)?.value?.trim()&&!url);
+ if(warning)warning.hidden=!(entered&&!safeUrl(entered));
 }
 function read(urlId){
  const v=frames.get(urlId);
@@ -78,7 +83,7 @@ function set(urlId,settings){
  }
  updateUi(entry);
 }
-function attach(urlId,settings){
+function attach(urlId,settings,fallbackUrl=''){
  const holder=document.querySelector('[data-image-editor-for="'+urlId+'"]');
  const input=inputId(urlId);
  if(!holder||!input)return;
@@ -124,7 +129,7 @@ function attach(urlId,settings){
  if(frames.get(urlId)?.input!==input){
   input.addEventListener('input',()=>{const entry=frames.get(urlId);if(entry?.input===input)updateUi(entry)});
  }
- const entry={root:holder,input,urlId};
+ const entry={root:holder,input,urlId,fallbackUrl};
  frames.set(urlId,entry);
  if(settings!==undefined)set(urlId,settings);else updateUi(entry);
 }

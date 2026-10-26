@@ -8,11 +8,53 @@ function rt(){return window.OPH?.Realtime}
 function context(){const r=rt(),auth=r?.getFirebaseAuth?.(),database=r?.getFirebaseDatabase?.();if(!auth?.currentUser||!database)return null;return{auth,db:database,room:r?.getRoom?.()||new URLSearchParams(location.search).get('room')||window.OPH_CONFIG?.defaultRoom||'FRIA-01'}}
 function toast(t){const e=$('toast');if(!e)return;e.textContent=t;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),1800)}
 function clean(v,max){return String(v||'').trim().replace(/\s+/g,' ').slice(0,max)}
-function applyPlayerDashboard(v){state={...defaults,...(v||{})};const eyebrow=$('dcxDashHeroEyebrow'),title=$('dcxDashHeroTitle'),subtitle=$('dcxDashHeroSubtitle'),art=$('dcxDashHeroArt');if(eyebrow)eyebrow.textContent=state.eyebrow||defaults.eyebrow;if(title)title.textContent=state.title||defaults.title;if(subtitle)subtitle.textContent=state.subtitle||defaults.subtitle;if(art){
- const markup=window.DCX?.ImageTools?.frame(state.imageUrl,state.imageFrame,'Capa da Central de Operações','dcxDashHeroFramed');
- art.style.backgroundImage='none';art.innerHTML=markup+(markup?'<div class="dcxImageDim" style="opacity:'+((window.DCX?.ImageTools?.normalize(state.imageFrame).dim||0)/100)+'"></div>':'');
- art.classList.toggle('hasImage',!!markup);
-}}
+function applyPlayerDashboard(v){
+ state={...defaults,...(v||{})};
+ const eyebrow=$('dcxDashHeroEyebrow'),title=$('dcxDashHeroTitle'),subtitle=$('dcxDashHeroSubtitle'),art=$('dcxDashHeroArt');
+ if(eyebrow)eyebrow.textContent=state.eyebrow||defaults.eyebrow;
+ if(title)title.textContent=state.title||defaults.title;
+ if(subtitle)subtitle.textContent=state.subtitle||defaults.subtitle;
+ if(!art)return;
+ // The hero contains the title, description, shortcuts, and system metrics.
+ // Never replace art.innerHTML: that deletes those controls and their listeners.
+ let media=art.querySelector(':scope > .dcxDashHeroMedia');
+ if(!media){
+  media=document.createElement('div');
+  media.className='dcxDashHeroMedia';
+  media.setAttribute('aria-hidden','true');
+  art.prepend(media);
+ }
+ const raw=String(state.imageUrl||'').trim();
+ const src=window.DCX?.ImageTools?.safeUrl?.(raw)||'';
+ let img=media.querySelector(':scope > img');
+ if(!src){
+  if(img){img.remove();img=null}
+  media.querySelector('.dcxImageDim')?.remove();
+  art.classList.remove('hasImage');
+  return;
+ }
+ if(!img){
+  img=document.createElement('img');
+  img.className='dcxDashHeroFramed dcxFramedImage';
+  img.alt='';
+  img.decoding='async';
+  img.loading='eager';
+  media.prepend(img);
+ }
+ // Keep the same img element and src while other Firebase state updates arrive.
+ // Recreating it repeatedly caused flicker, transient blank frames and refetches.
+ if(img.getAttribute('src')!==src){
+  art.classList.remove('hasImage');
+  img.onload=()=>{if(img.isConnected&&img.getAttribute('src')===src)art.classList.add('hasImage')};
+  img.onerror=()=>{if(img.isConnected&&img.getAttribute('src')===src)art.classList.remove('hasImage')};
+  img.src=src;
+ }
+ img.style.cssText=window.DCX?.ImageTools?.style?.(state.imageFrame)||'object-fit:cover;object-position:50% 50%;';
+ let dim=media.querySelector(':scope > .dcxImageDim');
+ if(!dim){dim=document.createElement('div');dim.className='dcxImageDim';media.append(dim)}
+ dim.style.opacity=String((window.DCX?.ImageTools?.normalize?.(state.imageFrame)?.dim||0)/100);
+ if(img.complete&&img.naturalWidth>0)art.classList.add('hasImage');
+}
 function openKm(tab){if(tab==='polls'){window.DCX?.Polls?.openAdmin?.();return}window.DCX?.Admin?.switchTab?.(tab)}
 function hostHtml(){return [
 '<div class="kmCommandHero"><div><span class="tag">DCX // KEYMASTER COMMAND</span><h1>CENTRO DE OPERAÇÕES</h1><p>Atalhos das funções reais do Keymaster, status da sala e controle visual do terminal dos jogadores.</p></div><div class="kmCommandSignal"><i></i><b>LINK ADMINISTRATIVO</b><small id="kmCommandRoom">SALA // —</small></div></div>',

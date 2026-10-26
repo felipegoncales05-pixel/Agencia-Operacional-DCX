@@ -112,7 +112,10 @@ function renderMission(missionId){
 function renderPlayer(){
  playerOperations();playerCharacters();
  const openDetail=$('dcxMissionDetail');
- if(openDetail&&!openDetail.hidden)renderMission('operacao-h');
+ if(openDetail&&!openDetail.hidden){
+  if(studio.operations.some(op=>op.id==='operacao-h'&&op.status==='published'))renderMission('operacao-h');
+  else window.DCX?.PlayerHub?.showMissionList?.();
+ }
  if($('dcxMissionDynamic')&&!$('dcxMissionDynamic').hidden)renderMission(currentMission);
 }
 function hostOperations(){

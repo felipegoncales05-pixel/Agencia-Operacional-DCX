@@ -3,7 +3,7 @@
 'use strict';
 const $=id=>document.getElementById(id);
 const HOST=/keymaster\.html$/i.test(location.pathname);
-const ADMIN_UID='1uVVp67PW7c53fs6dstTDNE46Nz1';
+const ADMIN_UID='luVVp67PW7c53fs6dstTDNE46Nz1';
 const STORE='dcx-player-soundtrack-v1';
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clip=(value,min,max,def)=>Number.isFinite(Number(value))?Math.max(min,Math.min(max,Math.round(Number(value)))):def;

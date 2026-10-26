@@ -1,0 +1,37 @@
+/* Shared DCX image framing controls. Content remains an image URL plus optional frame settings. */
+.dcxImageEditor{display:grid;gap:12px;margin:10px 0 18px;padding:14px;border:1px solid color-mix(in srgb,var(--cyan,#69d9ff) 28%,#233c4d);border-radius:14px;background:color-mix(in srgb,var(--panel,#0b1823) 92%,#102433)}
+.dcxFramingHead{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+.dcxFramingHead b{font:950 10px/1.3 ui-monospace,monospace;color:var(--text,#ebfaff)}
+.dcxFramingHead small{font:9px/1.4 ui-monospace,monospace;color:var(--muted,#9db9c9)}
+.dcxFramingPreviewSet{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,.9fr) minmax(0,.55fr);gap:9px;align-items:center}
+.dcxFramingPreview{position:relative;isolation:isolate;overflow:hidden;border:1px solid color-mix(in srgb,var(--cyan,#69d9ff) 36%,#203747);border-radius:10px;background:var(--bg,#07131a);min-width:0;display:grid;place-items:center;cursor:grab;touch-action:none;user-select:none}
+.dcxFramingPreview:active{cursor:grabbing}.dcxFramingPreview img,.dcxFramedImage{display:block;width:100%;height:100%;object-fit:cover;user-select:none}
+.dcxFramingPreview img{position:absolute;inset:0;pointer-events:none}
+.dcxFramingPrimary{aspect-ratio:16/9}.dcxFramingCard{aspect-ratio:4/3}.dcxFramingPortrait{aspect-ratio:4/5}
+.dcxFramingDim{position:absolute;inset:0;background:#000;pointer-events:none;z-index:1;opacity:0}
+.dcxFramingEmpty{position:relative;z-index:2;color:var(--muted,#9cb8c7);font:800 8px/1.5 ui-monospace,monospace;text-align:center;padding:9px}
+.dcxFramingControls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.dcxFramingControls label{display:grid;gap:5px;min-width:0;font:800 9px/1.3 ui-monospace,monospace;color:var(--muted,#abc)}
+.dcxFramingControls label b{color:var(--cyan,#8bddf7)}
+.dcxFramingControls select{min-width:0;max-width:100%;width:100%;background:var(--bg,#08151e);border:1px solid var(--line,#345468);color:var(--text,#eafaff);padding:9px;border-radius:9px;font:9px ui-monospace,monospace}
+.dcxFramingControls input[type=range]{width:100%;margin:5px 0;accent-color:var(--cyan,#72dafa)}
+.dcxFramingReset{border:1px solid var(--line,#345468);background:var(--panel2,#102434);color:var(--text,#ebfaff);padding:9px;border-radius:9px;cursor:pointer;font:850 9px ui-monospace,monospace}
+.dcxFramingWarning{color:#faa5af;font:10px/1.4 ui-monospace,monospace}
+.dcxFramedImage{pointer-events:none}
+.dcxStoryTileArt,.dcxCharacterArt,.kmCredentialPhoto,.kmCredMiniAvatar,.kmNpcCredPhoto,.qolCredPhoto{position:relative;isolation:isolate}
+.dcxImageDim{position:absolute;inset:0;z-index:2;background:#000;pointer-events:none}
+.dcxStoryHeroArt{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden;border-radius:inherit}
+.dcxStoryHeroArt>.dcxFramedImage{position:absolute;inset:0}
+.dcxStoryMissionHero{position:relative;isolation:isolate;overflow:hidden;background-image:none!important}
+.dcxStoryMissionHero>:not(.dcxStoryHeroArt){position:relative;z-index:2}
+.dcxStoryHeroArt:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(4,13,21,.82),rgba(4,13,21,.25));pointer-events:none}
+#dcxDashHeroArt{position:relative;isolation:isolate;overflow:hidden}
+#dcxDashHeroArt>.dcxFramedImage{position:absolute;inset:0}
+#dcxDashHeroArt>.dcxImageDim{z-index:2}
+.dcxMissionModalImage{position:relative;overflow:hidden;aspect-ratio:16/9;border-radius:12px;background:#071722}
+.dcxMissionModalImage>.dcxFramedImage{position:absolute;inset:0;width:100%;height:100%;max-height:none;max-width:none;object-fit:cover;border:0;border-radius:0}
+.kmCredentialPhoto>.dcxFramedImage,.kmCredMiniAvatar>.dcxFramedImage,.kmNpcCredPhoto>.dcxFramedImage,.qolCredPhoto>.dcxFramedImage{position:absolute;inset:0}
+.kmCredentialPhoto>.dcxImageDim,.kmNpcCredPhoto>.dcxImageDim,.qolCredPhoto>.dcxImageDim{z-index:2}
+.dcxCharacterArt>.dcxFramedImage,.dcxStoryTileArt>.dcxFramedImage{position:absolute;inset:0;width:100%;height:100%}
+@media(max-width:650px){.dcxFramingPreviewSet{grid-template-columns:1.5fr .9fr}.dcxFramingPortrait{display:none}.dcxFramingControls{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){.dcxFramingPreview img,.dcxFramedImage{transition:none!important}}

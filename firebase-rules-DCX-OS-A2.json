@@ -118,6 +118,10 @@
                 ".write": "auth != null && (auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1' || $playerId === root.child('rooms').child($room).child('requests').child(auth.uid).child('identity').child('playerId').val())"
               }
             }
+          },
+          "soundtrack": {
+            ".read": "auth != null",
+            ".write": "auth != null && auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1'"
           }
         }
       }

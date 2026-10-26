@@ -7,12 +7,17 @@
     return [...document.querySelectorAll('#workspaceGolpe [data-mission-content]')];
   }
   function openMission(id){
-    const sections=missionSections();
-    const chosen=sections.find(section=>section.dataset.missionContent===id);
-    if(!chosen)return false;
+    const chosen=id==='operacao-h'?$('dcxMissionDetail'):$('dcxMissionDynamic');
+    const known=window.DCX?.StoryStudio?.operations?.some(op=>op.id===id&&op.status==='published');
+    if(!chosen||!known)return false;
     const overview=$('dcxMissionsOverview');
     if(overview)overview.hidden=true;
-    sections.forEach(section=>{section.hidden=section!==chosen});
+    missionSections().forEach(section=>{section.hidden=section!==chosen});
+    if(id==='operacao-h'){
+      $('dcxMissionLegacyArchive').hidden=true;
+      $('dcxStoryLegacyModules').hidden=false;
+    }
+    window.DCX?.StoryStudio?.renderMission?.(id);
     switchWorkspace('missions');
     chosen.querySelector('.dcxMissionBack')?.focus();
     return true;
@@ -21,17 +26,20 @@
     const overview=$('dcxMissionsOverview');
     if(overview)overview.hidden=false;
     missionSections().forEach(section=>{section.hidden=true});
+    const dynamic=$('dcxMissionDynamic');if(dynamic)dynamic.hidden=true;
     switchWorkspace('missions',save);
     return true;
   }
 
   function switchWorkspace(name,save=true){
-    name=name==='dcx'?'dcx':'missions';
+    name=['dcx','characters'].includes(name)?name:'missions';
     current=name;
     $('workspaceGolpe')?.classList.toggle('active',name==='missions');
     $('workspaceDCX')?.classList.toggle('active',name==='dcx');
+    $('workspaceCharacters')?.classList.toggle('active',name==='characters');
     $('workspaceTabGolpe')?.classList.toggle('active',name==='missions');
     $('workspaceTabDCX')?.classList.toggle('active',name==='dcx');
+    $('workspaceTabCharacters')?.classList.toggle('active',name==='characters');
     document.body.dataset.playerWorkspace=name;
     if(save){try{localStorage.setItem(STORE,name)}catch{}}
     if(name==='dcx')syncUnread();
@@ -69,16 +77,16 @@
 
   function bind(){
     $('workspaceTabGolpe')?.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();showMissionList()});
-    document.querySelectorAll('[data-mission-open]').forEach(button=>button.addEventListener('click',e=>{
-      e.preventDefault();
-      openMission(button.dataset.missionOpen);
-    }));
-    document.querySelectorAll('.dcxMissionBack').forEach(button=>button.addEventListener('click',e=>{
-      e.preventDefault();
-      showMissionList();
-      $('dcxMissionOperationH')?.focus();
-    }));
+    $('dcxMissionsList')?.addEventListener('click',e=>{
+      const button=e.target.closest('[data-mission-open]');
+      if(button){e.preventDefault();openMission(button.dataset.missionOpen)}
+    });
+    $('workspaceGolpe')?.addEventListener('click',e=>{
+      if(!e.target.closest('.dcxMissionBack:not(#dcxStoryLegacyToMenu)'))return;
+      e.preventDefault();showMissionList();$('dcxMissionsList')?.querySelector('button')?.focus();
+    });
     $('workspaceTabDCX')?.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();switchWorkspace('dcx')});
+    $('workspaceTabCharacters')?.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();switchWorkspace('characters')});
     $('dcxOpenYumiya')?.addEventListener('click',e=>{e.preventDefault();call(()=>window.OPHPlayer?.toggleYumiyaChat?.(true),'YUMIYA')});
     $('dcxOpenTeam')?.addEventListener('click',e=>{e.preventDefault();call(()=>window.DCX?.Player?.toggleTeam?.(true),'EQUIPE')});
     $('dcxOpenNotes')?.addEventListener('click',e=>{e.preventDefault();call(()=>window.DCX?.Player?.toggleNotes?.(true),'ANOTACOES')});

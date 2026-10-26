@@ -34,12 +34,12 @@ function normalize(raw){
    })).filter(m=>m.id&&m.title):[]
  })).filter(op=>op.id&&op.title):[];
  // Only add legacy mission to rooms without a saved catalog; explicit deletions persist.
- if(!Array.isArray(d.operations))operations.unshift(defaultOperation());
+ if(!Array.isArray(d.operations)&&d.catalogInitialized!==true)operations.unshift(defaultOperation());
  const chars=Array.isArray(d.characters)?d.characters.filter(Boolean).map(ch=>({
    id:clean(ch.id,64),name:clean(ch.name,100),lore:clean(ch.lore,5000),
    imageUrl:safeUrl(ch.imageUrl),status:ch.status==='draft'?'draft':'published'
  })).filter(ch=>ch.id&&ch.name):[];
- return {version:2,operations,characters:chars};
+ return {version:2,catalogInitialized:true,operations,characters:chars};
 }
 let studio=normalize(null),opEditing='operacao-h',charEditing=null,opDirty=false,charDirty=false;
 let currentMission='operacao-h';

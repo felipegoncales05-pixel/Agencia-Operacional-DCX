@@ -35,3 +35,13 @@
 .dcxCharacterArt>.dcxFramedImage,.dcxStoryTileArt>.dcxFramedImage{position:absolute;inset:0;width:100%;height:100%}
 @media(max-width:650px){.dcxFramingPreviewSet{grid-template-columns:1.5fr .9fr}.dcxFramingPortrait{display:none}.dcxFramingControls{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){.dcxFramingPreview img,.dcxFramedImage{transition:none!important}}
+
+/* Hero regression fix: image is a background layer; never replaces live dashboard content. */
+#dcxDashHeroArt{position:relative!important;isolation:isolate;overflow:hidden}
+#dcxDashHeroArt>.dcxDashHeroMedia{position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+#dcxDashHeroArt>.dcxDashHeroMedia>.dcxDashHeroFramed{position:absolute;inset:0;width:100%;height:100%;display:block}
+#dcxDashHeroArt>.dcxDashHeroMedia>.dcxImageDim{position:absolute;inset:0;pointer-events:none;z-index:1}
+#dcxDashHeroArt>.dcxDashHeroShade{z-index:1!important;pointer-events:none}
+#dcxDashHeroArt>.dcxDashHeroCopy,
+#dcxDashHeroArt>.dcxDashSystem{position:relative;z-index:3!important}
+#dcxDashHeroArt:has(.dcxDashHeroMedia) .dcxDashHeroCopy{visibility:visible!important}

@@ -13,7 +13,9 @@ function openKm(tab){if(tab==='polls'){window.DCX?.Polls?.openAdmin?.();return}w
 function hostHtml(){return [
 '<div class="kmCommandHero"><div><span class="tag">DCX // KEYMASTER COMMAND</span><h1>CENTRO DE OPERAÇÕES</h1><p>Atalhos das funções reais do Keymaster, status da sala e controle visual do terminal dos jogadores.</p></div><div class="kmCommandSignal"><i></i><b>LINK ADMINISTRATIVO</b><small id="kmCommandRoom">SALA // —</small></div></div>',
 '<div class="kmCommandGrid">',
-'<button data-km-open="operation"><span>⌁</span><b>OPERAÇÃO</b><small>Foco, eventos e controles do golpe.</small></button>',
+'<button data-km-open="missions"><span>⌁</span><b>MISSÕES</b><small>Criar operações e preparações.</small></button>',
+'<button data-km-open="characters"><span>◈</span><b>PERSONAGENS</b><small>Dossiês, lore e imagens.</small></button>',
+'<button data-km-open="operation"><span>H</span><b>OPERAÇÃO H</b><small>Etapas e controles originais.</small></button>',
 '<button data-km-open="players"><span>◎</span><b>PLAYER DATA</b><small id="kmDashPlayers">0 PARTICIPANTES</small></button>',
 '<button data-km-open="teams"><span>▦</span><b>EQUIPES</b><small id="kmDashTeams">0 EQUIPES</small></button>',
 '<button data-km-open="handouts"><span>▤</span><b>HANDOUTS</b><small id="kmDashHandouts">0 PUBLICADOS</small></button>',

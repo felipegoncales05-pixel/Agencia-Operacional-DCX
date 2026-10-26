@@ -18,7 +18,7 @@ function normalize(raw){
  const d=raw&&typeof raw==='object'?raw:{};
  const operations=Array.isArray(d.operations)?d.operations.filter(Boolean).map(op=>({
    id:clean(op.id,64),title:clean(op.title,100),code:clean(op.code,50),
-   summary:clean(op.summary,1200),imageUrl:safeUrl(op.imageUrl),
+   summary:clean(op.summary,1200),imageUrl:safeUrl(op.imageUrl),imageFrame:window.DCX?.ImageTools?.normalize(op.imageFrame),
    status:op.status==='draft'?'draft':'published',
    objectives:Array.isArray(op.objectives)?op.objectives.map(v=>clean(v,240)).filter(Boolean):[],
    preparations:Array.isArray(op.preparations)?op.preparations.filter(Boolean).map(p=>({
@@ -27,7 +27,7 @@ function normalize(raw){
    })).filter(p=>p.id&&p.title):[],
    modules:Array.isArray(op.modules)?op.modules.filter(Boolean).map(m=>({
     id:clean(m.id,64),title:clean(m.title,120),subtitle:clean(m.subtitle,160),
-    body:clean(m.body,6500),imageUrl:safeUrl(m.imageUrl),symbol:clean(m.symbol,16),
+    body:clean(m.body,6500),imageUrl:safeUrl(m.imageUrl),imageFrame:window.DCX?.ImageTools?.normalize(m.imageFrame),symbol:clean(m.symbol,16),
     type:['briefing','intel','preparations','choice'].includes(m.type)?m.type:'briefing',
     published:m.published!==false,
     options:Array.isArray(m.options)?m.options.map(v=>clean(v,180)).filter(Boolean):[]
@@ -37,7 +37,7 @@ function normalize(raw){
  if(!Array.isArray(d.operations)&&d.catalogInitialized!==true)operations.unshift(defaultOperation());
  const chars=Array.isArray(d.characters)?d.characters.filter(Boolean).map(ch=>({
    id:clean(ch.id,64),name:clean(ch.name,100),lore:clean(ch.lore,5000),
-   imageUrl:safeUrl(ch.imageUrl),status:ch.status==='draft'?'draft':'published'
+   imageUrl:safeUrl(ch.imageUrl),imageFrame:window.DCX?.ImageTools?.normalize(ch.imageFrame),status:ch.status==='draft'?'draft':'published'
  })).filter(ch=>ch.id&&ch.name):[];
  return {version:2,catalogInitialized:true,operations,characters:chars};
 }
@@ -58,23 +58,22 @@ async function publish(next,ok){
    studio=normalize(next);notify(ok);return true;
  }catch(err){console.error('STORY STUDIO // PUBLICAÇÃO',err);notify('FALHA AO SINCRONIZAR — CONFIRA O FIREBASE');return false}
 }
-function imageMarkup(url,alt,cls){
- const safe=safeUrl(url);
- return safe?'<img class="'+cls+'" loading="lazy" src="'+esc(safe)+'" alt="'+esc(alt)+'">':'<span class="dcxStoryImageFallback" aria-hidden="true">DCX</span>';
+function imageMarkup(url,alt,cls,frame){
+ const markup=window.DCX?.ImageTools?.frame(url,frame,alt,cls);return markup||'<span class="dcxStoryImageFallback" aria-hidden="true">DCX</span>';
 }
 function statusLabel(o){return o.status==='draft'?'RASCUNHO':'PUBLICADA'}
 function playerOperations(){
  const list=$('dcxMissionsList');if(!list)return;
  const visible=studio.operations.filter(o=>o.status==='published');
  list.innerHTML=visible.length?visible.map(o=>'<button class="dcxMissionTile dcxStoryMissionTile" type="button" data-mission-open="'+esc(o.id)+'">'+
-   '<span class="dcxStoryTileArt">'+imageMarkup(o.imageUrl,o.title,'dcxStoryTileImage')+'</span>'+
+   '<span class="dcxStoryTileArt">'+imageMarkup(o.imageUrl,o.title,'dcxStoryTileImage',o.imageFrame)+'</span>'+
    '<span class="dcxMissionTileInfo"><small>'+esc(o.code||'MISSÃO DCX')+' // '+esc(statusLabel(o))+'</small><strong>'+esc(o.title)+'</strong><span>'+esc(o.summary||'Acesse os arquivos desta operação.')+'</span></span>'+
    '<span class="dcxMissionTileAction">ABRIR <b aria-hidden="true">›</b></span></button>').join(''):'<div class="dcxStoryEmpty">Nenhuma missão publicada.</div>';
 }
 function playerCharacters(){
  const list=$('dcxCharacterGrid');if(!list)return;
  const chars=studio.characters.filter(ch=>ch.status==='published');
- list.innerHTML=chars.length?chars.map(ch=>'<article class="dcxCharacterCard"><div class="dcxCharacterArt">'+imageMarkup(ch.imageUrl,ch.name,'dcxCharacterImage')+'</div>'+
+ list.innerHTML=chars.length?chars.map(ch=>'<article class="dcxCharacterCard"><div class="dcxCharacterArt">'+imageMarkup(ch.imageUrl,ch.name,'dcxCharacterImage',ch.imageFrame)+'</div>'+
  '<div class="dcxCharacterMeta"><small>ARQUIVO // PERSONAGEM</small><h2>'+esc(ch.name)+'</h2><p>'+esc(ch.lore||'Nenhuma descrição publicada.')+'</p></div></article>').join(''):'<div class="dcxStoryEmpty">Os arquivos de personagens ainda não foram publicados pelo Keymaster.</div>';
 }
 const stageModules=[
@@ -92,7 +91,9 @@ function prepMarkup(op){
 }
 function objectiveMarkup(op){return op.objectives.length?op.objectives.map((x,i)=>'<li><span>'+String(i+1).padStart(2,'0')+'</span>'+esc(x)+'</li>').join(''):'<li>Objetivos ainda não definidos.</li>'}
 function heroMarkup(op){
- return '<header class="dcxStoryMissionHero"'+(op.imageUrl?' style="background-image:linear-gradient(90deg,rgba(4,13,21,.98),rgba(4,13,21,.68)),url(&quot;'+esc(op.imageUrl)+'&quot;)"':'')+'>'+
+ const img=window.DCX?.ImageTools?.frame(op.imageUrl,op.imageFrame,op.title,'dcxStoryHeroImage');
+ const dim=window.DCX?.ImageTools?.normalize(op.imageFrame).dim||0;
+ return '<header class="dcxStoryMissionHero">'+(img?'<div class="dcxStoryHeroArt">'+img+'<div class="dcxImageDim" style="opacity:'+(dim/100)+'"></div></div>':'')+
  '<small>DCX // '+esc(op.code||'MISSÃO')+'</small><h1>'+esc(op.title)+'</h1><p>'+esc(op.summary)+'</p></header>';
 }
 function renderMission(missionId){
@@ -177,6 +178,7 @@ function loadOp(){
  if($('kmStudioOpCode'))$('kmStudioOpCode').value=op.code;
  if($('kmStudioOpSummary'))$('kmStudioOpSummary').value=op.summary;
  if($('kmStudioOpImage'))$('kmStudioOpImage').value=op.imageUrl;
+ window.DCX?.ImageTools?.attach('kmStudioOpImage',op.imageFrame);
  if($('kmStudioOpPublic'))$('kmStudioOpPublic').checked=op.status==='published';
  if($('kmStudioOpObjectives'))$('kmStudioOpObjectives').value=op.objectives.join('\n');
  if($('kmStudioOpDelete'))$('kmStudioOpDelete').hidden=!opEditing;
@@ -189,13 +191,14 @@ function loadChar(){
  if($('kmStudioCharName'))$('kmStudioCharName').value=ch.name;
  if($('kmStudioCharLore'))$('kmStudioCharLore').value=ch.lore;
  if($('kmStudioCharImage'))$('kmStudioCharImage').value=ch.imageUrl;
+ window.DCX?.ImageTools?.attach('kmStudioCharImage',ch.imageFrame);
  if($('kmStudioCharPublic'))$('kmStudioCharPublic').checked=ch.status==='published';
  if($('kmStudioCharDelete'))$('kmStudioCharDelete').hidden=!charEditing;
  charDirty=false;renderCharPreview();
 }
 function renderCharPreview(){
  const p=$('kmStudioCharPreview');if(!p)return;
- p.innerHTML='<div class="dcxCharacterArt">'+imageMarkup($('kmStudioCharImage')?.value||'',$('kmStudioCharName')?.value||'Personagem','dcxCharacterImage')+'</div>'+
+ p.innerHTML='<div class="dcxCharacterArt">'+imageMarkup($('kmStudioCharImage')?.value||'',$('kmStudioCharName')?.value||'Personagem','dcxCharacterImage',window.DCX?.ImageTools?.read('kmStudioCharImage'))+'</div>'+
  '<div class="dcxCharacterMeta"><small>PRÉVIA // CARTÃO</small><h2>'+esc($('kmStudioCharName')?.value||'NOME DO PERSONAGEM')+'</h2><p>'+esc($('kmStudioCharLore')?.value||'Descrição e lore do personagem.')+'</p></div>';
 }
 function renderHost(){
@@ -221,7 +224,7 @@ async function saveOperation(){
  const imageRaw=clean($('kmStudioOpImage')?.value,1900),imageUrl=safeUrl(imageRaw);
  if(imageRaw&&!imageUrl)return notify('LINK DE IMAGEM INVÁLIDO — USE HTTPS OU UM ARQUIVO PNG/JPG');
  const item={id:opEditing||id('mission'),title,code,summary:clean($('kmStudioOpSummary')?.value,1200),
-  imageUrl,status:$('kmStudioOpPublic')?.checked?'published':'draft',
+  imageUrl,imageFrame:window.DCX?.ImageTools?.read('kmStudioOpImage'),status:$('kmStudioOpPublic')?.checked?'published':'draft',
   objectives:String($('kmStudioOpObjectives')?.value||'').split('\n').map(x=>clean(x,240)).filter(Boolean),
   preparations:readPrepInputs().filter(p=>p.title),
   modules:window.DCX?.MissionBuilder?.readModules?.()||[]};
@@ -247,7 +250,7 @@ async function saveCharacter(){
  const imageRaw=clean($('kmStudioCharImage')?.value,1900),imageUrl=safeUrl(imageRaw);
  if(imageRaw&&!imageUrl)return notify('LINK DE IMAGEM INVÁLIDO — USE HTTPS OU UM ARQUIVO PNG/JPG');
  const item={id:charEditing||id('character'),name,lore:clean($('kmStudioCharLore')?.value,5000),
- imageUrl,status:$('kmStudioCharPublic')?.checked?'published':'draft'};
+ imageUrl,imageFrame:window.DCX?.ImageTools?.read('kmStudioCharImage'),status:$('kmStudioCharPublic')?.checked?'published':'draft'};
  const characters=studio.characters.some(v=>v.id===item.id)
   ?studio.characters.map(v=>v.id===item.id?item:v)
   :[...studio.characters,item];

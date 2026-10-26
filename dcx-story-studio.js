@@ -23,7 +23,8 @@ function normalize(raw){
    objectives:Array.isArray(op.objectives)?op.objectives.map(v=>clean(v,240)).filter(Boolean):[],
    preparations:Array.isArray(op.preparations)?op.preparations.filter(Boolean).map(p=>({id:clean(p.id,64),title:clean(p.title,120),description:clean(p.description,600),done:!!p.done})).filter(p=>p.id&&p.title):[]
  })).filter(op=>op.id&&op.title):[];
- if(!operations.some(op=>op.id==='operacao-h'))operations.unshift(defaultOperation());
+ // Only add legacy mission to rooms without a saved catalog; explicit deletions persist.
+ if(!Array.isArray(d.operations))operations.unshift(defaultOperation());
  const chars=Array.isArray(d.characters)?d.characters.filter(Boolean).map(ch=>({
    id:clean(ch.id,64),name:clean(ch.name,100),lore:clean(ch.lore,5000),
    imageUrl:safeUrl(ch.imageUrl),status:ch.status==='draft'?'draft':'published'
@@ -116,13 +117,21 @@ function renderPlayer(){
 }
 function hostOperations(){
  const list=$('kmStudioOperations');if(!list)return;
- list.innerHTML=studio.operations.map(op=>'<button class="kmStudioListItem '+(opEditing===op.id?'selected':'')+'" type="button" data-edit-op="'+esc(op.id)+'">'+
-  '<span>'+esc(op.code||'MISSÃO')+'</span><b>'+esc(op.title)+'</b><small>'+esc(statusLabel(op))+' · '+op.preparations.length+' PREPARAÇÕES</small></button>').join('');
+ list.innerHTML=studio.operations.length?studio.operations.map(op=>
+  '<div class="kmStudioEntry '+(opEditing===op.id?'selected':'')+'">'+
+    '<div class="kmStudioEntryText"><span>'+esc(op.code||'MISSÃO')+'</span><b>'+esc(op.title)+'</b><small>'+esc(statusLabel(op))+' · '+op.preparations.length+' PREPARAÇÕES</small></div>'+
+    '<div class="kmStudioEntryActions"><button class="kmStudioActionEdit" type="button" data-edit-op="'+esc(op.id)+'" aria-label="Editar missão '+esc(op.title)+'">EDITAR</button>'+
+    '<button class="kmStudioActionDelete" type="button" data-delete-op="'+esc(op.id)+'" aria-label="Excluir missão '+esc(op.title)+'">EXCLUIR</button></div></div>'
+ ).join(''):'<div class="kmStudioEmpty">Nenhuma missão cadastrada. Crie uma nova operação.</div>';
 }
 function hostCharacters(){
  const list=$('kmStudioCharacters');if(!list)return;
  list.innerHTML=studio.characters.length?studio.characters.map(ch=>
-  '<button class="kmStudioListItem '+(charEditing===ch.id?'selected':'')+'" data-edit-character="'+esc(ch.id)+'" type="button"><span>PERSONAGEM</span><b>'+esc(ch.name)+'</b><small>'+esc(statusLabel(ch))+'</small></button>').join(''):'<div class="kmStudioEmpty">Nenhum personagem cadastrado.</div>';
+  '<div class="kmStudioEntry '+(charEditing===ch.id?'selected':'')+'">'+
+    '<div class="kmStudioEntryText"><span>PERSONAGEM</span><b>'+esc(ch.name)+'</b><small>'+esc(statusLabel(ch))+'</small></div>'+
+    '<div class="kmStudioEntryActions"><button class="kmStudioActionEdit" type="button" data-edit-character="'+esc(ch.id)+'" aria-label="Editar personagem '+esc(ch.name)+'">EDITAR</button>'+
+    '<button class="kmStudioActionDelete" type="button" data-delete-character="'+esc(ch.id)+'" aria-label="Excluir personagem '+esc(ch.name)+'">EXCLUIR</button></div></div>'
+ ).join(''):'<div class="kmStudioEmpty">Nenhum personagem cadastrado.</div>';
 }
 function renderPrepInputs(items){
  const box=$('kmStudioPrepRows');if(!box)return;
@@ -145,7 +154,7 @@ function loadOp(){
  if($('kmStudioOpImage'))$('kmStudioOpImage').value=op.imageUrl;
  if($('kmStudioOpPublic'))$('kmStudioOpPublic').checked=op.status==='published';
  if($('kmStudioOpObjectives'))$('kmStudioOpObjectives').value=op.objectives.join('\n');
- if($('kmStudioOpDelete'))$('kmStudioOpDelete').hidden=op.id==='operacao-h';
+ if($('kmStudioOpDelete'))$('kmStudioOpDelete').hidden=!opEditing;
  renderPrepInputs(op.preparations);
  opDirty=false;
 }
@@ -171,8 +180,14 @@ function renderHost(){
  if(opCount)opCount.textContent=studio.operations.length+' MISSÕES';
  if(charCount)charCount.textContent=studio.characters.length+' PERSONAGENS';
 }
-function selectOp(opid){opEditing=opid;opDirty=false;hostOperations();loadOp()}
-function selectChar(chid){charEditing=chid;charDirty=false;hostCharacters();loadChar()}
+function selectOp(opid){
+ if(opDirty&&opEditing!==opid&&!confirm('Descartar alterações não salvas da missão atual?'))return;
+ opEditing=opid;opDirty=false;hostOperations();loadOp();
+}
+function selectChar(chid){
+ if(charDirty&&charEditing!==chid&&!confirm('Descartar alterações não salvas do personagem atual?'))return;
+ charEditing=chid;charDirty=false;hostCharacters();loadChar();
+}
 async function saveOperation(){
  const title=clean($('kmStudioOpTitle')?.value,100);
  if(!title)return notify('INFORME O TÍTULO DA MISSÃO');
@@ -183,18 +198,20 @@ async function saveOperation(){
   imageUrl,status:$('kmStudioOpPublic')?.checked?'published':'draft',
   objectives:String($('kmStudioOpObjectives')?.value||'').split('\n').map(x=>clean(x,240)).filter(Boolean),
   preparations:readPrepInputs().filter(p=>p.title)};
- const operations=studio.operations.filter(v=>v.id!==item.id).concat(item);
+ const operations=studio.operations.some(v=>v.id===item.id)
+  ?studio.operations.map(v=>v.id===item.id?item:v)
+  :[...studio.operations,item];
  if(await publish({...studio,operations},'MISSÃO SALVA E SINCRONIZADA')){
   opEditing=item.id;opDirty=false;renderHost();
  }
 }
-async function deleteOperation(){
- if(opEditing==='operacao-h')return notify('O DOSSIÊ ORIGINAL DA OPERAÇÃO H É PRESERVADO');
- const op=studio.operations.find(v=>v.id===opEditing);if(!op)return;
- if(!confirm('Excluir a missão "'+op.title+'"? Esta ação afeta todos os jogadores.'))return;
- const operations=studio.operations.filter(v=>v.id!==opEditing);
- if(await publish({...studio,operations},'MISSÃO EXCLUÍDA')){
-  opEditing='operacao-h';opDirty=false;renderHost();
+async function deleteOperation(targetId=opEditing){
+ const op=studio.operations.find(v=>v.id===targetId);if(!op)return;
+ if(!confirm('Excluir definitivamente a missão "'+op.title+'"? Ela desaparecerá para todos os jogadores.'))return;
+ const operations=studio.operations.filter(v=>v.id!==targetId);
+ if(await publish({...studio,operations},'MISSÃO EXCLUÍDA E REMOVIDA DO PLAYER')){
+  if(opEditing===targetId){opEditing=operations[0]?.id||null;opDirty=false}
+  renderHost();
  }
 }
 async function saveCharacter(){
@@ -204,26 +221,35 @@ async function saveCharacter(){
  if(imageRaw&&!imageUrl)return notify('LINK DE IMAGEM INVÁLIDO — USE HTTPS OU UM ARQUIVO PNG/JPG');
  const item={id:charEditing||id('character'),name,lore:clean($('kmStudioCharLore')?.value,5000),
  imageUrl,status:$('kmStudioCharPublic')?.checked?'published':'draft'};
- const characters=studio.characters.filter(v=>v.id!==item.id).concat(item);
+ const characters=studio.characters.some(v=>v.id===item.id)
+  ?studio.characters.map(v=>v.id===item.id?item:v)
+  :[...studio.characters,item];
  if(await publish({...studio,characters},'PERSONAGEM PUBLICADO NA SALA')){
   charEditing=item.id;charDirty=false;renderHost();
  }
 }
-async function deleteCharacter(){
- const ch=studio.characters.find(v=>v.id===charEditing);if(!ch)return;
- if(!confirm('Excluir "'+ch.name+'"? Todos os jogadores perderão acesso ao card.'))return;
- const characters=studio.characters.filter(v=>v.id!==charEditing);
- if(await publish({...studio,characters},'PERSONAGEM EXCLUÍDO')){
-  charEditing=null;charDirty=false;renderHost();
+async function deleteCharacter(targetId=charEditing){
+ const ch=studio.characters.find(v=>v.id===targetId);if(!ch)return;
+ if(!confirm('Excluir definitivamente o personagem "'+ch.name+'"? O card será removido para todos os jogadores.'))return;
+ const characters=studio.characters.filter(v=>v.id!==targetId);
+ if(await publish({...studio,characters},'PERSONAGEM EXCLUÍDO E REMOVIDO DO PLAYER')){
+  if(charEditing===targetId){charEditing=characters[0]?.id||null;charDirty=false}
+  renderHost();
  }
 }
 function bindHost(){
- $('kmStudioNewOp')?.addEventListener('click',()=>{opEditing=null;opDirty=false;hostOperations();loadOp();$('kmStudioOpTitle')?.focus()});
- $('kmStudioNewChar')?.addEventListener('click',()=>{charEditing=null;charDirty=false;hostCharacters();loadChar();$('kmStudioCharName')?.focus()});
+ $('kmStudioNewOp')?.addEventListener('click',()=>{
+  if(opDirty&&!confirm('Descartar alterações não salvas da missão atual?'))return;
+  opEditing=null;opDirty=false;hostOperations();loadOp();$('kmStudioOpTitle')?.focus();
+ });
+ $('kmStudioNewChar')?.addEventListener('click',()=>{
+  if(charDirty&&!confirm('Descartar alterações não salvas do personagem atual?'))return;
+  charEditing=null;charDirty=false;hostCharacters();loadChar();$('kmStudioCharName')?.focus();
+ });
  $('kmStudioOpSave')?.addEventListener('click',saveOperation);
- $('kmStudioOpDelete')?.addEventListener('click',deleteOperation);
+ $('kmStudioOpDelete')?.addEventListener('click',()=>deleteOperation());
  $('kmStudioCharSave')?.addEventListener('click',saveCharacter);
- $('kmStudioCharDelete')?.addEventListener('click',deleteCharacter);
+ $('kmStudioCharDelete')?.addEventListener('click',()=>deleteCharacter());
  $('kmStudioAddPrep')?.addEventListener('click',()=>{
   const current=readPrepInputs(true);current.push({id:id('prep'),title:'',description:'',done:false});
   renderPrepInputs(current);opDirty=true;
@@ -234,8 +260,18 @@ function bindHost(){
   const list=readPrepInputs(true).filter(p=>p.id!==remove.dataset.removePrep);
   renderPrepInputs(list);opDirty=true;
  });
- $('kmStudioOperations')?.addEventListener('click',e=>{const b=e.target.closest('[data-edit-op]');if(b)selectOp(b.dataset.editOp)});
- $('kmStudioCharacters')?.addEventListener('click',e=>{const b=e.target.closest('[data-edit-character]');if(b)selectChar(b.dataset.editCharacter)});
+ $('kmStudioOperations')?.addEventListener('click',e=>{
+  const del=e.target.closest('[data-delete-op]');
+  if(del){deleteOperation(del.dataset.deleteOp);return}
+  const edit=e.target.closest('[data-edit-op]');
+  if(edit)selectOp(edit.dataset.editOp);
+ });
+ $('kmStudioCharacters')?.addEventListener('click',e=>{
+  const del=e.target.closest('[data-delete-character]');
+  if(del){deleteCharacter(del.dataset.deleteCharacter);return}
+  const edit=e.target.closest('[data-edit-character]');
+  if(edit)selectChar(edit.dataset.editCharacter);
+ });
  $('kmStudioOpForm')?.addEventListener('input',()=>{opDirty=true});
  $('kmStudioOpForm')?.addEventListener('change',()=>{opDirty=true});
  $('kmStudioCharForm')?.addEventListener('input',()=>{charDirty=true;renderCharPreview()});

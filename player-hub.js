@@ -13,6 +13,7 @@
     const overview=$('dcxMissionsOverview');
     if(overview)overview.hidden=true;
     missionSections().forEach(section=>{section.hidden=section!==chosen});
+    const dynamic=$('dcxMissionDynamic');if(dynamic)dynamic.hidden=dynamic!==chosen;
     if(id==='operacao-h'){
       $('dcxMissionLegacyArchive').hidden=true;
       $('dcxStoryLegacyModules').hidden=false;

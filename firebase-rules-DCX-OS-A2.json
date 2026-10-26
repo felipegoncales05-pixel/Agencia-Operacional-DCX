@@ -75,7 +75,20 @@
           },
           "handouts": {
             ".read": "auth != null && auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1'",
-            ".write": "auth != null && auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1'"
+            ".write": "auth != null && auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1'",
+            "public": {
+              ".read": "auth != null"
+            },
+            "players": {
+              "$playerId": {
+                ".read": "auth != null && (auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1' || $playerId === root.child('rooms').child($room).child('requests').child(auth.uid).child('identity').child('playerId').val())"
+              }
+            },
+            "teams": {
+              "$teamId": {
+                ".read": "auth != null && (auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1' || $teamId === root.child('rooms').child($room).child('dcx').child('operators').child(root.child('rooms').child($room).child('requests').child(auth.uid).child('identity').child('playerId').val()).child('narrative').child('teamId').val())"
+              }
+            }
           },
           "polls": {
             ".read": "auth != null && auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1'",
@@ -96,6 +109,15 @@
           "eventLog": {
             ".read": "auth != null && auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1'",
             ".write": "auth != null && auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1'"
+          },
+          "handoutAcks": {
+            ".read": "auth != null && auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1'",
+            "$handoutId": {
+              "$playerId": {
+                ".read": "auth != null && (auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1' || $playerId === root.child('rooms').child($room).child('requests').child(auth.uid).child('identity').child('playerId').val())",
+                ".write": "auth != null && (auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1' || $playerId === root.child('rooms').child($room).child('requests').child(auth.uid).child('identity').child('playerId').val())"
+              }
+            }
           }
         }
       }

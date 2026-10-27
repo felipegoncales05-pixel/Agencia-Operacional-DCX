@@ -98,7 +98,7 @@ function create({container,center=TOKYO,zoom=13,host=false,onClick,onSelect,onMo
    let geo={lat:center.lat,lng:center.lng},worldCenter={lng:0,lat:12};
    if(z<=5)mode='global';
    let width=0,height=0,dpr=1,last=0,frame=0,pointList=[],destroyed=false;
-   let dragging=null,moved=false,visible=false,pointNodes=[];
+   let dragging=null,moved=false,ignoreClick=false,visible=false,pointNodes=[];
    function screenSize(){
     const r=container.getBoundingClientRect();
     if(r.width<30||r.height<30)return false;
@@ -139,7 +139,7 @@ function create({container,center=TOKYO,zoom=13,host=false,onClick,onSelect,onMo
     ctx.fillStyle=palette.background;ctx.fillRect(0,0,width,height);
     const scale=km(),centerKm=cityKm(geo),left=centerKm.x-width/scale/2,top=centerKm.y-height/scale/2;
     const right=centerKm.x+width/scale/2,bottom=centerKm.y+height/scale/2;
-    const step=z>14?.23:z>11?.55:1.3;
+    const step=z>14?.23:z>11?.55:Math.max(1.3,8/scale);
     const minI=Math.floor(left/step)-2,maxI=Math.ceil(right/step)+2;
     const minJ=Math.floor(top/step)-2,maxJ=Math.ceil(bottom/step)+2;
     ctx.lineJoin='round';ctx.lineCap='round';
@@ -310,10 +310,11 @@ function create({container,center=TOKYO,zoom=13,host=false,onClick,onSelect,onMo
    }
    function cursorUp(e){
     if(!dragging)return;
-    const dragged=moved;dragging=null;moved=false;
+    const dragged=moved;dragging=null;moved=false;ignoreClick=dragged;
     if(dragged)onCameraChange?.();
    }
    function click(e){
+    if(ignoreClick){ignoreClick=false;return}
     if(dragging||moved)return;
     if(host&&e.button!==0)return;
     const xy=drawPosition(e);

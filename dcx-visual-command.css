@@ -97,3 +97,19 @@ html[data-dcx-visual-fx=oldpc] #dcxVcMain,html[data-dcx-visual-fx=vhs] #dcxVcMai
 html[data-dcx-visual-fx=retro] body:after,html[data-dcx-visual-fx=oldpc] body:after,html[data-dcx-visual-fx=vhs] body:after{will-change:transform}
 @media(max-width:780px){#dcxVcLayout{display:block!important}#dcxVcSidebar{top:0!important;max-height:100dvh!important;width:min(310px,88vw)!important}#dcxVcLayout[data-sidebar=slim] #dcxVcSidebar{width:min(310px,88vw)!important}#dcxVcLayout[data-sidebar=slim] .dcxVcBrandText,#dcxVcLayout[data-sidebar=slim] .dcxVcNavHeading,#dcxVcLayout[data-sidebar=slim] .dcxVcNavText{display:initial!important}#dcxVcLayout[data-sidebar=slim] #dcxVcSidebar .kmWorkspaceTab{justify-content:flex-start;padding:9px 10px}#dcxVcSidebar .kmWorkspaceTabs{display:block!important}#dcxVcLayout .dcxVcMenuToggle{display:inline-block}html[data-dcx-visual-fx=oldpc] .app,html[data-dcx-visual-fx=vhs] .app{border:0!important}#dcxVcMain{margin-top:8px}}
 @media(max-width:520px){.dcxVcQuick{max-width:100%;flex-wrap:wrap}.dcxVcQuick .dcxVcButton{min-height:29px}.dcxVcContextHeading h1{font-size:19px}.dcxVcMetrics,.dcxVcPlayerHud{grid-template-columns:repeat(2,minmax(0,1fr))}.dcxVcMetric{min-height:46px}.dcxVcMetricIcon{width:27px;min-width:27px;height:27px}.dcxVcSettingsHead h2{font-size:16px}}
+
+/* Accessible form controls on dark themes */
+.dcxVcSettingsGrid select,.dcxVcSettingsGrid select option{background-color:#071b29!important;color:#e5faff!important;opacity:1!important}
+.dcxVcSettingsGrid select:focus{outline:2px solid var(--ps-accent,var(--km-accent,#c8e85a));outline-offset:2px}
+.dcxVcSettingsGrid select option:checked{background:#174052!important;color:#fff!important}
+.dcxVcSettingsGrid input[type=range]{min-height:27px}
+/* A noticeable, readable analog signal layer */
+html[data-dcx-visual-fx=retro] body:after,html[data-dcx-visual-fx=oldpc] body:after,html[data-dcx-visual-fx=vhs] body:after{opacity:.25!important;background-image:repeating-linear-gradient(0deg,#0009 0px,#0009 1px,transparent 1px,transparent 3px),repeating-linear-gradient(90deg,#45f6ee19 0 1px,transparent 1px 6px),radial-gradient(circle at center,transparent 35%,#0205138a 100%)!important;animation:dcxAnalogStatic .16s steps(3,end) infinite!important;mix-blend-mode:screen;pointer-events:none}
+html[data-dcx-visual-fx=vhs] body:after{opacity:.38!important;background-image:repeating-linear-gradient(0deg,#071425dd 0px,#071425dd 1px,transparent 2px,transparent 5px),repeating-linear-gradient(90deg,#ff427021 0 3px,#3bdeff22 4px 9px,transparent 10px 20px),linear-gradient(90deg,#f8517022,transparent 12%,transparent 90%,#58d5ff22)!important;animation:dcxAnalogStatic .12s steps(4,end) infinite!important}
+html[data-dcx-visual-fx=oldpc] body:after{opacity:.3!important;animation:dcxAnalogStatic .25s steps(4,end) infinite!important}
+html[data-dcx-visual-fx=oldpc] .dcxVcContext,html[data-dcx-visual-fx=oldpc] .dcxDashHero,html[data-dcx-visual-fx=oldpc] .top{animation:dcxOldCRTDeform 5s linear infinite}
+@keyframes dcxAnalogStatic{0%{background-position:0 0,0 0,center}25%{background-position:0 4px,7px -3px,center}50%{background-position:0 -8px,-5px 6px,center}75%{background-position:0 11px,13px 4px,center}100%{background-position:0 -3px,2px -8px,center}}
+@keyframes dcxOldCRTDeform{0%,91%,95%,100%{transform:translateX(0) skewX(0)}92%{transform:translateX(1px) skewX(.35deg)}93%{transform:translateX(-2px) skewX(-.5deg)}94%{transform:translateX(1px) skewX(.18deg)}}
+html[data-dcx-visual-level="1"][data-dcx-visual-fx] body:after{opacity:.09!important}
+html[data-dcx-visual-level="3"][data-dcx-visual-fx] body:after{opacity:.45!important}
+@media(prefers-reduced-motion:reduce){html[data-dcx-visual-fx] body:after,html[data-dcx-visual-fx=oldpc] .dcxVcContext,html[data-dcx-visual-fx=oldpc] .dcxDashHero,html[data-dcx-visual-fx=oldpc] .top{animation:none!important}}

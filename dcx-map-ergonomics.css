@@ -29,3 +29,14 @@
 .dcxTacticalMap:fullscreen .dcxMapSidebar{max-height:calc(100dvh - 200px)}
 @media(max-width:1050px){.dcxMapOptimized .dcxMapLayout{grid-template-columns:1fr!important}.dcxMapOptimized .dcxMapSidebar{max-height:320px}.dcxMapOptimized .dcxMapCanvas{height:clamp(390px,55dvh,720px)}}
 @media(max-width:620px){.dcxMapOptimized .dcxMapHeroTitle h1{font-size:24px}.dcxMapOptimized .dcxMapCanvas{height:55dvh;min-height:300px}.dcxMapErgoControls input{width:58px}.dcxNavDock{padding:0 8px}.dcxMapErgoBtn{font-size:8px;padding:7px}}
+
+/* DCX QOL V9 — resilient collapsible player header and reliable restore button */
+.app.dcxNavCollapsed>.dcxNavDock,
+.app.dcxNavCollapsed>.dcxVcPlayerHud,
+.app.dcxNavCollapsed>.roomBar,
+.app.dcxNavCollapsed>.playerWorkspaceBar,
+.app.dcxNavCollapsed>.top{display:none!important}
+.app.dcxNavCollapsed #dcxNavRestore,
+.app.dcxNavCollapsed>.dcxNavRestore{display:flex!important;align-items:center;justify-content:center;position:relative;z-index:60}
+.dcxNavRestore[hidden]{display:none!important}
+.app.dcxNavCollapsed>.dcxNavRestore[hidden]{display:flex!important}

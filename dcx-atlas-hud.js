@@ -29,6 +29,11 @@ function head(){
  nav.append(btn('◎ GLOBAL',()=>{engine()?.global();update();refresh()},'global'),btn('⌖ TOKYO',()=>chooseCity('tokyo'),'tokyo'));
  const other=btn('◇ OUTRAS CIDADES',()=>{current='cities';refresh()},'cities');
  nav.append(other);
+ if(/keymaster\.html$/i.test(location.pathname)){
+  const make=btn('+ CRIAR PONTO',()=>window.DCX?.Cartography?.createAtCenter?.(),'dcxAtlasCreatePin');
+  make.title='M1 no mapa cria no local clicado. M2 movimenta. Este botão cria no centro da câmera.';
+  nav.append(make);
+ }
  const state=node('span','dcxAtlasState','TOP-DOWN // MAPA 2D');
  header.append(brand,nav,state);shell.append(header);
  const sides=node('div','dcxAtlasSides');

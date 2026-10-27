@@ -139,10 +139,11 @@ function create({container,center=TOKYO,zoom=12,host=false,onClick=noop,onSelect
     fadeDuration:0,localIdeographFontFamily:'sans-serif'
    });
    map.touchZoomRotate.disableRotation();
-   if(host)map.dragPan.disable();
+   // Players and Keymaster use the same left-button drag-to-pan controls.
+   map.dragPan.enable();
   }catch(e){reject(e);return}
   let ready=false,destroyed=false,lastCityId='',pointsById=new Map(),lastPoints={};
-  let labelMode='complete',disposeTheme=noop,pointer=null;
+  let labelMode='complete',disposeTheme=noop;
   const timeout=setTimeout(()=>{if(!ready){map.remove();reject(Error('Não foi possível desenhar o mapa híbrido.'))}},18000);
   function camera(){const c=map.getCenter();return {lat:c.lat,lng:c.lng}}
   const atlas=()=>window.DCX?.FictionalAtlas||{};
@@ -243,8 +244,10 @@ function create({container,center=TOKYO,zoom=12,host=false,onClick=noop,onSelect
    ready=true;clearTimeout(timeout);
    addLabels(map);addPoints(map);
    map.on('click',e=>{
-    if(pick(e))return;
-    if(host)onClick({lat:e.lngLat.lat,lng:e.lngLat.lng})
+    // Left-click may inspect existing pins; empty ground never creates a pin.
+    // The Keymaster's contextmenu (right click) is the only map-creation action.
+    if(e.originalEvent?.button!=null&&e.originalEvent.button!==0)return;
+    pick(e);
    });
    map.on('mousemove',e=>onMouseMove({lat:e.lngLat.lat,lng:e.lngLat.lng}));
    map.on('moveend',()=>{updateLabels();onCameraChange()});
@@ -254,19 +257,17 @@ function create({container,center=TOKYO,zoom=12,host=false,onClick=noop,onSelect
    }
    if(host){
     const el=map.getCanvasContainer();
-    el.addEventListener('contextmenu',e=>e.preventDefault());
-    el.addEventListener('pointerdown',e=>{
-     if(e.button!==2)return;pointer={x:e.clientX,y:e.clientY};
-     el.setPointerCapture?.(e.pointerId);e.preventDefault();
+    el.addEventListener('contextmenu',e=>{
+     // Use the native event's screen position, not the camera center:
+     // M2 opens the complete Keymaster editor exactly where the pointer is.
+     e.preventDefault();
+     if(destroyed||!ready)return;
+     const rect=map.getCanvas().getBoundingClientRect();
+     const x=e.clientX-rect.left,y=e.clientY-rect.top;
+     if(x<0||y<0||x>rect.width||y>rect.height)return;
+     const geo=map.unproject([x,y]);
+     onClick({lat:geo.lat,lng:geo.lng});
     });
-    el.addEventListener('pointermove',e=>{
-     if(!pointer)return;
-     const dx=e.clientX-pointer.x,dy=e.clientY-pointer.y;
-     pointer={x:e.clientX,y:e.clientY};
-     map.panBy([-dx,-dy],{duration:0});
-    });
-    el.addEventListener('pointerup',e=>{if(e.button===2)pointer=null});
-    el.addEventListener('pointercancel',()=>pointer=null);
    }
    disposeTheme=window.DCX?.MapColors?.observe?.(applyTheme)||noop;
    applyTheme();

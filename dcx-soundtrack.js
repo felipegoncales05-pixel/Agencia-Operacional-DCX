@@ -55,17 +55,18 @@ function normalize(raw){
  return {queue,currentId:queue.some(q=>q.id===v.currentId)?v.currentId:(queue[0]?.id||''),playing:!!v.playing,loop,volume:clip(v.volume,0,100,75),revision:Number(v.revision)||0,updatedAt:Number(v.updatedAt)||0};
 }
 const entry=()=>state.queue.find(q=>q.id===state.currentId)||null;
-function embedSrc(track,api=false){
+function embedSrc(track,api=false,autoplay=false){
  if(!track)return '';
  if(track.kind==='spotify')return 'https://open.spotify.com/embed/'+track.type+'/'+track.spotifyId+'?utm_source=generator&theme=0';
  if(track.kind!=='youtube')return '';
- const params=new URLSearchParams({rel:'0',playsinline:'1',loop:state.loop==='off'?'0':'1'});
+ const params=new URLSearchParams({rel:'0',playsinline:'1',loop:state.loop==='one'?'1':'0'});
+ if(autoplay)params.set('autoplay','1');
  if(api){params.set('enablejsapi','1');params.set('origin',location.origin)}
  if(track.type==='playlist'){params.set('list',track.youtubeId);return 'https://www.youtube.com/embed/videoseries?'+params.toString()}
- if(state.loop!=='off')params.set('playlist',track.youtubeId);
+ if(state.loop==='one')params.set('playlist',track.youtubeId);
  return 'https://www.youtube.com/embed/'+track.youtubeId+'?'+params.toString();
 }
-let state=empty(),ref=null,connected='',session=null,local={enabled:false,volume:75},localRoom='',playerFrameKey='',audio=null,audioKey='',localSongId='',statusMessage='',youtubePlayer=null,youtubeGeneration=0;
+let state=empty(),ref=null,connected='',session=null,local={enabled:false,volume:75},localRoom='',playerFrameKey='',audio=null,audioKey='',localSongId='',statusMessage='',youtubePlayer=null,youtubeGeneration=0,masterCursorId='',localCursorId='',autoplayBlocked=false,attemptedMediaKey='',apiReady=false;
 function context(){
  const api=window.OPH?.Realtime,auth=api?.getFirebaseAuth?.(),db=api?.getFirebaseDatabase?.();
  const user=auth?.currentUser;
@@ -89,7 +90,11 @@ function listen(){
  restoreLocal(c.room);
  ref=c.db.ref('rooms/'+c.room+'/dcx/soundtrack');
  ref.on('value',snapshot=>{
+  const oldId=state.currentId,oldPlaying=state.playing;
   state=normalize(snapshot.val());
+  if(state.currentId!==oldId||state.playing!==oldPlaying||!masterCursorId){
+   masterCursorId=state.currentId;localCursorId='';attemptedMediaKey='';
+  }
   render();
  },error=>{status('Não foi possível acessar a trilha: '+(error?.message||error),true);console.warn('[DCX SOUNDTRACK]',error)});
  render();
@@ -129,12 +134,45 @@ function loadYoutubeApi(){
  });
  return window.DCX_YoutubeApiPromise;
 }
+function advanceLocal(finishedId){
+ if(!local.enabled||!state.playing||!state.queue.length)return;
+ if(state.loop==='one'){if(youtubePlayer?.playVideo)try{youtubePlayer.seekTo(0,true);youtubePlayer.playVideo()}catch{};return}
+ if(state.loop==='off'){status('Fim da faixa. Aguardando próxima seleção do Keymaster.');return}
+ const index=state.queue.findIndex(q=>q.id===finishedId);
+ if(index<0)return;
+ localCursorId=state.queue[(index+1)%state.queue.length].id;
+ attemptedMediaKey='';
+ Promise.resolve().then(()=>renderPlayer());
+}
 function attachYoutubeControls(frame){
  const generation=++youtubeGeneration;
  loadYoutubeApi().then(()=>{
   if(generation!==youtubeGeneration||!frame.isConnected||!window.YT?.Player)return;
   youtubePlayer=new YT.Player(frame,{events:{
-   onReady:event=>{if(generation!==youtubeGeneration)return;youtubeVolume();try{event.target.setLoop(state.loop!=='off')}catch{}},
+   onReady:event=>{
+     if(generation!==youtubeGeneration)return;
+     apiReady=true;
+     youtubeVolume();
+     try{event.target.setLoop(state.loop==='one')}catch{}
+     if(local.enabled&&state.playing){
+      attemptedMediaKey=playerFrameKey;
+      try{event.target.playVideo()}catch{status('Toque no ▶ do YouTube para liberar o áudio.',true)}
+     }
+    },
+    onStateChange:event=>{
+     if(generation!==youtubeGeneration)return;
+     if(event.data===window.YT?.PlayerState?.PLAYING){autoplayBlocked=false;status('♫ Reproduzindo áudio da sessão.')}
+     if(event.data===window.YT?.PlayerState?.ENDED&&state.loop!=='one'){
+      const finished=playerFrameKey;
+      advanceLocal(finished);
+     }
+    },
+    onAutoplayBlocked:()=>{
+     if(generation!==youtubeGeneration)return;
+     autoplayBlocked=true;
+     status('O navegador bloqueou o autoplay com som. Clique em TOCAR AGORA para liberar a música.',true);
+     updatePlayerControls();
+    },
    onError:event=>{
     if(generation!==youtubeGeneration)return;
     const code=event.data;
@@ -221,31 +259,60 @@ function mountPlayer(){
  container.id='dcxSoundtrackPlayerPanel';container.className='dcxSoundtrackPlayerPanel hidden';container.setAttribute('aria-label','Trilha sonora da operação');container.setAttribute('aria-hidden','true');
  container.innerHTML='<header><div><small>DCX // AUDIO LINK</small><b>TRILHA SONORA</b></div><button id="dcxSoundtrackClose" class="soundtrackClose" type="button" aria-label="Fechar">×</button></header>'+
  '<div class="soundtrackPlayerBody"><div class="soundtrackPlayerCover"><span>♫</span><div><small id="dcxSoundtrackPlayerType">AGUARDANDO</small><h2 id="dcxSoundtrackPlayerTitle">NENHUMA TRILHA PUBLICADA</h2></div></div>'+
- '<div class="soundtrackPlayerButtons"><button id="dcxSoundtrackEnable" type="button" class="btn gold">▶ ATIVAR MEU ÁUDIO</button></div>'+
+ '<div class="soundtrackPlayerButtons"><button id="dcxSoundtrackEnable" type="button" class="btn gold">▶ ATIVAR MÚSICA AUTOMÁTICA</button><button id="dcxSoundtrackResume" type="button" class="btn soundtrackResumeBtn" hidden>▶ TOCAR AGORA</button></div>'+
  '<div class="soundtrackPlayerVolume"><label for="dcxSoundtrackPlayerVolume">VOLUME PESSOAL <b id="dcxSoundtrackPlayerVolumeValue">75%</b></label><input id="dcxSoundtrackPlayerVolume" type="range" min="0" max="100" value="75"></div>'+
  '<div id="dcxSoundtrackPlayerMedia" class="soundtrackPlayerMedia"></div>'+
  '<p class="soundtrackMessage" id="dcxSoundtrackPlayerStatus" role="status" aria-live="polite">Conectando à sala...</p>'+
- '<p class="soundtrackNote">No YouTube, pressione ▶ dentro do vídeo. Alguns vídeos não permitem incorporação; links antigos do Spotify seguem disponíveis.</p></div>';
+ '<p class="soundtrackNote">Um clique libera a jukebox. As próximas músicas do YouTube ou áudio direto tentarão iniciar sozinhas. O Spotify mantém seu player oficial, sujeito às limitações da plataforma e do navegador.</p></div>';
  document.body.append(container);
- const open=()=>{container.classList.remove('hidden');container.setAttribute('aria-hidden','false');renderPlayer()};
- const close=()=>{container.classList.add('hidden');container.setAttribute('aria-hidden','true');local.enabled=false;saveLocal();clearMedia();renderPlayer()};
+ const open=()=>{container.classList.remove('hidden','soundtrackCompact');container.setAttribute('aria-hidden','false');$('dcxSoundtrackClose').textContent='−';$('dcxSoundtrackClose').title='Minimizar player';renderPlayer()};
+ const close=()=>{
+  if(!local.enabled){container.classList.add('hidden');container.setAttribute('aria-hidden','true');clearMedia();return}
+  container.classList.remove('hidden');container.classList.add('soundtrackCompact');
+  container.setAttribute('aria-hidden','false');
+  $('dcxSoundtrackClose').textContent='▢';
+  $('dcxSoundtrackClose').title='Expandir player';
+ };
+ const expand=()=>{
+  container.classList.remove('hidden','soundtrackCompact');container.setAttribute('aria-hidden','false');
+  $('dcxSoundtrackClose').textContent='−';$('dcxSoundtrackClose').title='Minimizar player';
+  renderPlayer();
+ };
  $('dcxOpenSoundtrack')?.addEventListener('click',open);
  $('dcxSoundtrackLauncher')?.addEventListener('click',open);
- $('dcxSoundtrackClose').addEventListener('click',close);
+ $('dcxSoundtrackClose').addEventListener('click',()=>container.classList.contains('soundtrackCompact')?expand():close());
  $('dcxSoundtrackEnable').addEventListener('click',()=>{
   local.enabled=!local.enabled;saveLocal();
-  if(!local.enabled){clearMedia();status('Áudio desativado apenas neste dispositivo.')}else status('Áudio ativado neste dispositivo.');renderPlayer();
+  attemptedMediaKey='';autoplayBlocked=false;
+  if(!local.enabled){clearMedia();status('Áudio desativado neste dispositivo.');container.classList.remove('soundtrackCompact')}
+  else status('♫ Jukebox ativada: acompanhando as faixas do Keymaster.');
+  renderPlayer();
  });
  $('dcxSoundtrackPlayerVolume').addEventListener('input',e=>{
   local.volume=clip(e.target.value,0,100,75);saveLocal();
   if(audio)audio.volume=clip(state.volume,0,100,75)/100*local.volume/100;youtubeVolume();
   $('dcxSoundtrackPlayerVolumeValue').textContent=local.volume+'%';
  });
- document.addEventListener('keydown',e=>{if(e.key==='Escape')close()});
+ $('dcxSoundtrackResume').addEventListener('click',()=>{
+  autoplayBlocked=false;attemptedMediaKey='';
+  const current=state.queue.find(q=>q.id===localCursorId)||entry();
+  if(current?.kind==='youtube'){
+   if(youtubePlayer?.playVideo){
+    try{youtubePlayer.playVideo();status('Tentando iniciar o YouTube...')}catch{}
+   }else if(local.enabled&&state.playing){
+    clearMedia();showYoutube(current);
+   }
+  }else if(current?.kind==='audio'){
+   if(audio){audio.play().then(()=>status('♫ Reproduzindo áudio.')).catch(()=>status('Toque no Play do reprodutor.',true))}
+   else playAudio(current)
+  }else status('Para Spotify, use ▶ dentro do player oficial.');
+  updatePlayerControls();
+ });
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!container.classList.contains('hidden'))close()});
 }
 function clearMedia(){
  const area=$('dcxSoundtrackPlayerMedia');
- if(audio){audio.pause();audio.src='';audio=null}youtubeGeneration++;if(youtubePlayer){try{youtubePlayer.destroy()}catch{}youtubePlayer=null}
+ if(audio){audio.pause();audio.src='';audio=null}youtubeGeneration++;apiReady=false;if(youtubePlayer){try{youtubePlayer.destroy()}catch{}youtubePlayer=null}
  if(area)area.replaceChildren();
  audioKey='';playerFrameKey='';localSongId='';
 }
@@ -264,15 +331,15 @@ function showSpotify(track){
 }
 function showYoutube(track){
  const area=$('dcxSoundtrackPlayerMedia');if(!area)return;
- if(playerFrameKey===track.id){youtubeVolume();if(youtubePlayer?.setLoop)try{youtubePlayer.setLoop(state.loop!=='off')}catch{};return}
+ if(playerFrameKey===track.id){youtubeVolume();if(youtubePlayer?.setLoop)try{youtubePlayer.setLoop(state.loop==='one')}catch{};return}
  clearMedia();playerFrameKey=track.id;
  const frame=document.createElement('iframe');frame.id='dcxYoutubePlayerFrame';
- frame.src=embedSrc(track,true);frame.loading='eager';
+ frame.src=embedSrc(track,true,true);frame.loading='eager';
  frame.allow='accelerometer; autoplay; encrypted-media; fullscreen; picture-in-picture';
  frame.referrerPolicy='strict-origin-when-cross-origin';
  frame.title='YouTube: '+track.title;area.append(frame);
  attachYoutubeControls(frame);
- status('Vídeo pronto. Pressione ▶ dentro do player YouTube para ouvir.');
+ status('Preparando YouTube para iniciar automaticamente…');
 }
 function playAudio(track){
  const area=$('dcxSoundtrackPlayerMedia');if(!area)return;
@@ -285,25 +352,42 @@ function playAudio(track){
   audio.addEventListener('ended',()=>{
    if(!local.enabled||!state.playing)return;
    if(state.loop==='one'){audio.currentTime=0;audio.play().catch(()=>{})}
-   else if(state.loop==='all'){const next=nextId(localSongId,1),item=state.queue.find(q=>q.id===next);if(item){if(item.kind==='audio')playAudio(item);else showSpotify(item)}}
+   else advanceLocal(localSongId);
   });
  }
  if(!audio)return;
  audio.loop=state.loop==='one';
  audio.volume=(state.volume/100)*(local.volume/100);
- audio.play().catch(()=>status('Clique no ▶ do reprodutor para liberar o áudio neste navegador.'));
+ if(attemptedMediaKey!==track.id){
+  attemptedMediaKey=track.id;
+  audio.play().then(()=>{autoplayBlocked=false;status('♫ Reproduzindo áudio da sessão.')})
+    .catch(()=>{autoplayBlocked=true;status('Navegador bloqueou o som. Clique em TOCAR AGORA.',true);updatePlayerControls()});
+ }
+}
+function updatePlayerControls(){
+ const b=$('dcxSoundtrackResume');if(!b)return;
+ const current=state.queue.find(q=>q.id===localCursorId)||entry();
+ b.hidden=!local.enabled||!state.playing||!current||(!autoplayBlocked&&current.kind!=='spotify');
+ if(current?.kind==='spotify')b.textContent='▶ USE O PLAYER SPOTIFY';
+ else b.textContent='▶ TOCAR AGORA';
 }
 function renderPlayer(){
  if(!$('dcxSoundtrackPlayerPanel'))return;
- const current=entry();
+ const current=(state.queue.find(q=>q.id===localCursorId)||entry());
  $('dcxSoundtrackPlayerTitle').textContent=current?.title||'NENHUMA TRILHA PUBLICADA';
  $('dcxSoundtrackPlayerType').textContent=current?(current.kind==='youtube'?'YOUTUBE // '+current.type.toUpperCase():current.kind==='spotify'?'SPOTIFY // '+current.type.toUpperCase():'ÁUDIO DIRETO'):'AGUARDANDO KEYMASTER';
  $('dcxSoundtrackPlayerVolume').value=String(local.volume);
  $('dcxSoundtrackPlayerVolumeValue').textContent=local.volume+'%';
- $('dcxSoundtrackEnable').textContent=local.enabled?'■ DESATIVAR ÁUDIO':'▶ ATIVAR MEU ÁUDIO';
+ $('dcxSoundtrackEnable').textContent=local.enabled?'■ DESATIVAR JUKEBOX':'▶ ATIVAR MÚSICA AUTOMÁTICA';
+ updatePlayerControls();
  const launcher=$('dcxSoundtrackLauncherLabel');if(launcher)launcher.textContent=current?(state.playing?'TRILHA DISPONÍVEL':'TRILHA PAUSADA'):'SEM TRILHA';
  if(!local.enabled){clearMedia();status('Seu áudio está desativado. Ative quando desejar.');return}
- if($('dcxSoundtrackPlayerPanel').classList.contains('hidden')){clearMedia();return}
+ if($('dcxSoundtrackPlayerPanel').classList.contains('hidden')){
+   $('dcxSoundtrackPlayerPanel').classList.remove('hidden');
+   $('dcxSoundtrackPlayerPanel').classList.add('soundtrackCompact');
+   $('dcxSoundtrackPlayerPanel').setAttribute('aria-hidden','false');
+   $('dcxSoundtrackClose').textContent='▢';
+  }
  if(!current||!state.playing){clearMedia();status(!current?'Aguardando o Keymaster selecionar uma trilha.':'O Keymaster suspendeu a trilha.');return}
  if(current.kind==='youtube')showYoutube(current);
  else if(current.kind==='spotify')showSpotify(current);

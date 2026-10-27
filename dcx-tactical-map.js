@@ -45,13 +45,14 @@ function config(){
  return {apiKey:clean(v.apiKey,256),mapId:clean(v.mapId,128),center:vec(v.center||DEFAULT_CENTER)};
 }
 function getMapCenter(){
+ if(window.DCX?.WorldGlobe?.isActive?.())return window.DCX.WorldGlobe.getCamera().center;
  if(hybridMap)return hybridMap.center();
  if(fictionalMap)return fictionalMap.center();
  if(map){const c=map.getCenter();if(c)return {lat:c.lat(),lng:c.lng()}}
  if(leafletMap){const c=leafletMap.getCenter();return {lat:c.lat,lng:c.lng}}
  return {...fallbackCenter}
 }
-function getMapZoom(){return hybridMap?Math.round(hybridMap.zoom()):fictionalMap?Math.round(fictionalMap.zoom()):map?Math.round(map.getZoom()||13):leafletMap?Math.round(leafletMap.getZoom()):fallbackZoom}
+function getMapZoom(){if(window.DCX?.WorldGlobe?.isActive?.())return window.DCX.WorldGlobe.getCamera().zoom;return hybridMap?Math.round(hybridMap.zoom()):fictionalMap?Math.round(fictionalMap.zoom()):map?Math.round(map.getZoom()||13):leafletMap?Math.round(leafletMap.getZoom()):fallbackZoom}
 function updateFromDb(value){
  const raw=value&&typeof value==='object'?value:{};
  const pts=raw.points&&typeof raw.points==='object'?raw.points:{};
@@ -59,6 +60,7 @@ function updateFromDb(value){
  for(const [id,p] of values){const q=normalizePoint(p,id);if(q)points[id]=q}
  data={points,center:vec(raw.center||config().center),zoom:clampZoom(raw.zoom)};
  renderAll();
+ window.DCX?.WorldGlobe?.refresh?.();
 }
 function attach(){
  const c=context();if(!c){status('AGUARDANDO FIREBASE // ENTRE NA SALA');return false}
@@ -598,6 +600,7 @@ function renderFallback(){
 }
 function notifyCamera(){document.dispatchEvent(new CustomEvent('dcx-map-camera',{detail:{zoom:getMapZoom(),center:getMapCenter()}}))}
 function zoom(d){
+ if(window.DCX?.WorldGlobe?.zoom?.(d))return;
  if(hybridMap)hybridMap.setZoom(clampZoom(hybridMap.zoom()+d));
  else if(fictionalMap)fictionalMap.setZoom(clampZoom(fictionalMap.zoom()+d));
  else if(map)map.setZoom(Math.min(19,Math.max(1,(map.getZoom()||13)+d)));

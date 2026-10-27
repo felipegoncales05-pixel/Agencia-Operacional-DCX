@@ -3,6 +3,7 @@
 'use strict';
 const HOST=/keymaster\.html$/i.test(location.pathname);
 const $=id=>document.getElementById(id);
+const q=selector=>document.querySelector(selector);
 const TYPES={interest:{label:'PONTO DE INTERESSE',badge:'INTERESSE'},important:{label:'PONTO IMPORTANTE',badge:'IMPORTANTE'},risk:{label:'ÁREA DE RISCO',badge:'PERIGO'}};
 const ICONS=[['pin','◎'],['target','⌖'],['tower','▥'],['base','▣'],['star','★'],['signal','⌁'],['medical','✚'],['portal','◇'],['intel','◈'],['warning','⚠'],['sorcerer','✦'],['curses','☷']];
 const THREATS={sorcerers:'Feiticeiros',humans:'Humanos',curses:'Maldições',unregistered:'Não-registrados'};
@@ -26,7 +27,7 @@ function normalizePoint(p,id){
 }
 const clampZoom=v=>cap(v,1,19,13);
 const roomData=()=>({points:{},center:{...DEFAULT_CENTER},zoom:13});
-let data=roomData(),ref=null,sessionKey='',statusMessage='',root=null,board=null,overlay=null,sidebar=null,drawer=null,selectedId='',draftPos=null,map=null,mapLoaded=false,mapFailed=false,mapObjects=[],mapReady=false,pan=null,fallbackCenter={...DEFAULT_CENTER},fallbackZoom=13,initialized=false,watcher=null;
+let data=roomData(),ref=null,sessionKey='',statusMessage='',root=null,board=null,overlay=null,sidebar=null,drawer=null,selectedId='',draftPos=null,map=null,mapLoaded=false,mapFailed=false,mapObjects=[],mapReady=false,pan=null,fallbackCenter={...DEFAULT_CENTER},fallbackZoom=13,initialized=false,watcher=null,leafletMap=null,leafletLayers=null,leafletTiles=null;
 function context(){
  const api=window.OPH?.Realtime,db=api?.getFirebaseDatabase?.(),auth=api?.getFirebaseAuth?.();
  const uid=auth?.currentUser?.uid;
@@ -43,8 +44,12 @@ function config(){
  const v=window.OPH_CONFIG?.map||{};
  return {apiKey:clean(v.apiKey,256),mapId:clean(v.mapId,128),center:vec(v.center||DEFAULT_CENTER)};
 }
-function getMapCenter(){const c=map?.getCenter?.();return c?{lat:c.lat(),lng:c.lng()}:{...fallbackCenter}}
-function getMapZoom(){return map?Math.round(map.getZoom()||13):fallbackZoom}
+function getMapCenter(){
+ if(map){const c=map.getCenter();if(c)return {lat:c.lat(),lng:c.lng()}}
+ if(leafletMap){const c=leafletMap.getCenter();return {lat:c.lat,lng:c.lng}}
+ return {...fallbackCenter}
+}
+function getMapZoom(){return map?Math.round(map.getZoom()||13):leafletMap?Math.round(leafletMap.getZoom()):fallbackZoom}
 function updateFromDb(value){
  const raw=value&&typeof value==='object'?value:{};
  const pts=raw.points&&typeof raw.points==='object'?raw.points:{};
@@ -217,10 +222,115 @@ function initGoogle(){
   renderMapObjects();
   status('GOOGLE MAPS CARREGADO // VISUALIZAÇÃO AO VIVO');
  }).catch(e=>{
-  mapFailed=true;initFallback();
-  status('MODO TÁTICO ALTERNATIVO // '+e.message,true);
+  console.warn('[DCX MAP] Google Maps não disponível; alternando para OpenStreetMap:',e);
+  return initOSM('Google Maps indisponível');
  });
 }
+
+/* OPENSTREETMAP FALLBACK // real street names while the Google API key is absent. */
+function loadLeaflet(){
+ if(window.L?.map&&window.L?.tileLayer)return Promise.resolve(window.L);
+ if(window.DCX_LeafletPromise)return window.DCX_LeafletPromise;
+ window.DCX_LeafletPromise=new Promise((resolve,reject)=>{
+  const link=document.createElement('link');
+  link.rel='stylesheet';link.href='https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css';
+  document.head.append(link);
+  const script=document.createElement('script');
+  script.src='https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js';
+  script.async=true;
+  let finished=false;
+  const finish=(error)=>{if(finished)return;finished=true;clearTimeout(timer);if(error)reject(error);else resolve(window.L)};
+  const timer=setTimeout(()=>finish(new Error('Tempo esgotado ao carregar Leaflet. Verifique sua conexão.')),14000);
+  script.onload=()=>window.L?.map?finish():finish(new Error('Leaflet não inicializou.'));
+  script.onerror=()=>finish(new Error('CDN de mapas indisponível.'));
+  document.head.append(script);
+ }).catch(e=>{window.DCX_LeafletPromise=null;throw e});
+ return window.DCX_LeafletPromise;
+}
+async function initOSM(reason='Chave Google Maps não configurada'){
+ const note=q('.dcxMapSourceNotice');
+ if(note)note.textContent='CARREGANDO RUAS E CIDADES // OPENSTREETMAP';
+ status('CARREGANDO MAPA GEOGRÁFICO…');
+ try{
+  const L=await loadLeaflet();
+  const parent=$('dcxMapOverlay');if(!parent)return;
+  parent.classList.remove('dcxMapFallback');
+  parent.replaceChildren();
+  const layer=text('div','dcxMapLeaflet');layer.id='dcxMapLeaflet';parent.append(layer);
+  leafletMap=L.map(layer,{center:[fallbackCenter.lat,fallbackCenter.lng],zoom:fallbackZoom,
+   minZoom:1,maxZoom:19,zoomControl:false,attributionControl:true,
+   scrollWheelZoom:true,dragging:!HOST,worldCopyJump:true,
+   preferCanvas:true,zoomSnap:1,keyboard:true});
+  leafletTiles=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{
+   minZoom:1,maxZoom:19,
+   attribution:'&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>',
+   updateWhenIdle:true,keepBuffer:1
+  });
+  let failedTiles=0;
+  leafletTiles.on('tileerror',()=>{
+   if(++failedTiles===3)status('O servidor de mapas recusou algumas imagens. Confira sua conexão ou política do provedor.',true);
+  });
+  leafletTiles.addTo(leafletMap);
+  leafletLayers=L.layerGroup().addTo(leafletMap);
+  leafletMap.on('mousemove',e=>updateCoords({lat:e.latlng.lat,lng:e.latlng.lng}));
+  leafletMap.on('zoomend moveend',()=>{fallbackCenter=getMapCenter();fallbackZoom=getMapZoom();notifyCamera()});
+  if(HOST){
+   leafletMap.on('click',e=>openEditor(null,{lat:e.latlng.lat,lng:e.latlng.lng}));
+   layer.addEventListener('contextmenu',e=>e.preventDefault());
+   let mouse=null;
+   layer.addEventListener('pointerdown',e=>{
+    if(e.button!==2||e.target.closest('.dcxMapLeafletGlyph'))return;
+    e.preventDefault();mouse={x:e.clientX,y:e.clientY};
+    layer.setPointerCapture?.(e.pointerId);
+   });
+   layer.addEventListener('pointermove',e=>{
+    if(!mouse)return;
+    const x=e.clientX-mouse.x,y=e.clientY-mouse.y;
+    leafletMap.panBy([-x,-y],{animate:false});
+    mouse={x:e.clientX,y:e.clientY};
+   });
+   layer.addEventListener('pointerup',e=>{if(e.button===2)mouse=null});
+   layer.addEventListener('pointercancel',()=>mouse=null);
+  }
+  if(note)note.textContent='OPENSTREETMAP // RUAS E LOCALIZAÇÕES REAIS // VISÃO TÁTICA DCX';
+  renderMapObjects();
+  // Leaflet can mount while its tab is hidden. Fix dimensions when selected.
+  requestAnimationFrame(()=>leafletMap?.invalidateSize({pan:false}));
+  setTimeout(()=>leafletMap?.invalidateSize({pan:false}),300);
+  status('MAPA DE RUAS CARREGADO // '+reason+'.');
+ }catch(e){
+  console.error('[DCX MAP] Falha no mapa geográfico alternativo',e);
+  mapFailed=true;
+  initFallback();
+  status('MAPA GEOGRÁFICO INDISPONÍVEL // '+e.message+' — GRADE TÁTICA ATIVA',true);
+ }
+}
+function renderLeafletObjects(){
+ if(!leafletMap||!leafletLayers||!window.L)return;
+ const L=window.L;
+ leafletLayers.clearLayers();
+ for(const p of Object.values(data.points)){
+  if(p.type==='risk'){
+   const danger=L.circle([p.lat,p.lng],{radius:RADIUS[p.radius].meters,
+    color:'#fa647c',weight:2,opacity:.85,fillColor:'#fb3858',fillOpacity:.23,
+    bubblingMouseEvents:false});
+   danger.on('click',e=>{if(e.originalEvent)L.DomEvent.stopPropagation(e.originalEvent);HOST?openEditor(p):selectPoint(p.id,false)});
+   danger.addTo(leafletLayers);
+  }
+  const icon=L.divIcon({
+   className:'dcxMapLeafletGlyph dcxMapLeafletGlyph-'+p.type,
+   html:'<span aria-hidden="true">'+iconFor(p.icon)+'</span>',
+   iconSize:[36,36],iconAnchor:[18,18]
+  });
+  const marker=L.marker([p.lat,p.lng],{icon,title:p.title,keyboard:true,riseOnHover:true,bubblingMouseEvents:false});
+  marker.on('click',e=>{
+   if(e.originalEvent)L.DomEvent.stopPropagation(e.originalEvent);
+   HOST?openEditor(p):selectPoint(p.id,false);
+  });
+  marker.addTo(leafletLayers);
+ }
+}
+
 function clearObjects(){
  for(const o of mapObjects){try{o.setMap(null)}catch{}}
  mapObjects=[];
@@ -244,11 +354,13 @@ function renderMapObjects(){
    marker.addListener('click',()=>HOST?openEditor(p):selectPoint(p.id,false));
    mapObjects.push(marker);
   }
- }else if(mapFailed||!canMapGoogle()){renderFallback()}
+ }else if(leafletMap){renderLeafletObjects()}
+ else if(mapFailed){renderFallback()}
 }
 function startMap(){
  fallbackCenter={...(data.center||config().center)};fallbackZoom=data.zoom||13;
- if(canMapGoogle())initGoogle();else{mapFailed=true;initFallback();status('MAPA TÁTICO DEMO // CONFIGURE A API DO GOOGLE PARA VER RUAS REAIS')}
+ if(canMapGoogle())initGoogle();
+ else initOSM('Google Maps sem chave configurada');
 }
 function latLngToWorld(p,zoom){
  const lat=Math.max(-85,Math.min(85,p.lat)),sin=Math.sin(lat*Math.PI/180);
@@ -272,14 +384,14 @@ function updateCoords(p){
  const badge=q('.dcxMapCoords');if(badge)badge.textContent=(p.lat>=0?'+':'')+p.lat.toFixed(5)+'° / '+(p.lng>=0?'+':'')+p.lng.toFixed(5)+'°';
 }
 function initFallback(){
- if(map)return;
+ if(map||leafletMap)return;
  const stage=$('dcxMapOverlay');if(!stage)return;
  stage.classList.add('dcxMapFallback');stage.setAttribute('role','application');
  const notice=q('.dcxMapSourceNotice');if(notice)notice.textContent='DCX TACTICAL GRID // SEM CHAVE GOOGLE MAPS // COORDENADAS REAIS';
  renderFallback();
 }
 function renderFallback(){
- const stage=$('dcxMapOverlay');if(!stage||map)return;
+ const stage=$('dcxMapOverlay');if(!stage||map||leafletMap)return;
  stage.replaceChildren();
  const grid=text('div','dcxMapGrid');stage.append(grid);
  const center=latLngToWorld(fallbackCenter,fallbackZoom);
@@ -301,29 +413,32 @@ function renderFallback(){
 }
 function notifyCamera(){document.dispatchEvent(new CustomEvent('dcx-map-camera',{detail:{zoom:getMapZoom(),center:getMapCenter()}}))}
 function zoom(d){
- if(map){map.setZoom(Math.min(19,Math.max(1,(map.getZoom()||13)+d)))}
+ if(map)map.setZoom(Math.min(19,Math.max(1,(map.getZoom()||13)+d)));
+ else if(leafletMap)leafletMap.setZoom(clampZoom(leafletMap.getZoom()+d));
  else{fallbackZoom=clampZoom(fallbackZoom+d);renderFallback();notifyCamera()}
 }
 function moveTo(p){
  if(map){map.panTo({lat:p.lat,lng:p.lng});if(map.getZoom()<14)map.setZoom(14)}
+ else if(leafletMap){leafletMap.flyTo([p.lat,p.lng],Math.max(leafletMap.getZoom(),14),{duration:.5})}
  else{fallbackCenter={lat:p.lat,lng:p.lng};fallbackZoom=Math.max(fallbackZoom,14);renderFallback();notifyCamera()}
 }
 function centerMap(p,z){
  if(map){map.panTo(p);map.setZoom(z||13)}
+ else if(leafletMap){leafletMap.setView([p.lat,p.lng],clampZoom(z))}
  else{fallbackCenter={...p};fallbackZoom=clampZoom(z);renderFallback();notifyCamera()}
 }
 function bindBoard(){
  let down=null;
  board.addEventListener('contextmenu',e=>{if(HOST)e.preventDefault()});
  board.addEventListener('pointerdown',e=>{
-  if(map)return;
+  if(map||leafletMap)return;
   if(e.target.closest('.dcxMapPin'))return;
   if((HOST&&e.button!==2)||(!HOST&&e.button!==0))return;
   down={x:e.clientX,y:e.clientY,c:{...fallbackCenter},moved:false};
   board.setPointerCapture?.(e.pointerId);
  });
  board.addEventListener('pointermove',e=>{
-  if(map)return;
+  if(map||leafletMap)return;
   if(!down){const r=board.getBoundingClientRect();updateCoords(screenPoint(e.clientX-r.left,e.clientY-r.top));return}
   const a=latLngToWorld(down.c,fallbackZoom);
   const diffX=e.clientX-down.x,diffY=e.clientY-down.y;
@@ -334,14 +449,26 @@ function bindBoard(){
  board.addEventListener('pointerup',e=>{if(!down)return;down=null});
  board.addEventListener('pointercancel',()=>down=null);
  board.addEventListener('click',e=>{
-  if(map||!HOST||e.target.closest('.dcxMapPin'))return;
+  if(map||leafletMap||!HOST||e.target.closest('.dcxMapPin'))return;
   const r=board.getBoundingClientRect();
   openEditor(null,screenPoint(e.clientX-r.left,e.clientY-r.top));
  });
- board.addEventListener('wheel',e=>{if(map)return;e.preventDefault();zoom(e.deltaY<0?1:-1)},{passive:false});
+ board.addEventListener('wheel',e=>{if(map||leafletMap)return;e.preventDefault();zoom(e.deltaY<0?1:-1)},{passive:false});
  board.addEventListener('keydown',e=>{if(e.key==='+'||e.key==='=')zoom(1);if(e.key==='-')zoom(-1)});
- const observer=new ResizeObserver(()=>{if(!map&&root&&mapFailed)renderFallback()});
- observer.observe(board);
+ if(typeof ResizeObserver==='function'){
+  const observer=new ResizeObserver(()=>{
+   if(leafletMap)leafletMap.invalidateSize({pan:false});
+   else if(!map&&root&&mapFailed)renderFallback();
+  });
+  observer.observe(board);
+ }
+ document.addEventListener('dcx-map-viewport-resized',()=>{
+  if(leafletMap)leafletMap.invalidateSize({pan:false});
+  else if(!map&&mapFailed)renderFallback();
+ });
+ document.querySelectorAll('[data-tab="tactical-map"],[data-workspace-target="map"]').forEach(b=>
+  b.addEventListener('click',()=>setTimeout(()=>leafletMap?.invalidateSize({pan:false}),100))
+ );
 }
 function closeEditor(){drawer?.classList.add('hidden');draftPos=null}
 function openEditor(point,pos){
@@ -428,7 +555,17 @@ function ensureTabs(){
  }
 }
 function start(){
- ensureTabs();createShell();startMap();startWatch();
+ try{
+  ensureTabs();
+  createShell();
+  if(!board)throw new Error('Painel do mapa não foi criado.');
+  startMap();
+  startWatch();
+ }catch(e){
+  console.error('[DCX MAP] Erro de inicialização:',e);
+  status('ERRO NA INICIALIZAÇÃO DO MAPA // '+e.message,true);
+  try{mapFailed=true;initFallback()}catch(err){console.error('[DCX MAP] Fallback',err)}
+ }
 }
 window.DCX=window.DCX||{};
 window.DCX.Cartography={get points(){return Object.values(data.points)},selectPoint,zoom,openEditor,centerMap,getCamera:()=>({zoom:getMapZoom(),center:getMapCenter()})};

@@ -20,14 +20,14 @@ function read(){
  }catch{return {fx:'off',level:2,hud:true,sidebar:'wide'}}
 }
 let preferences=read(),settings=[],hudCards=[],layout=null,nav=null;
-const icons={'tactical-map':'⌖',master:'◈',operation:'⌘',missions:'➤',characters:'◇',soundtrack:'♫',players:'◉',teams:'▦',credentials:'▣',polls:'✓',handouts:'▤',notes:'✎',yumiya:'YK',typography:'Aa',settings:'⚙'};
+const icons={'tactical-map':'⌖',master:'◈',operation:'⌘',missions:'➤',characters:'◇',factions:'⬡',soundtrack:'♫',players:'◉',teams:'▦',credentials:'▣',polls:'✓',handouts:'▤',notes:'✎',yumiya:'YK',typography:'Aa',settings:'⚙'};
 const groups=[
- {name:'CENTRO DE COMANDO',items:['master','operation','missions','tactical-map','characters','soundtrack']},
+ {name:'CENTRO DE COMANDO',items:['master','operation','missions','tactical-map','characters','factions','soundtrack']},
  {name:'GESTÃO DE AGENTES',items:['players','teams','credentials','polls']},
  {name:'ARQUIVOS E SINAIS',items:['handouts','notes','yumiya']},
  {name:'TERMINAL',items:['typography','settings']}
 ];
-const tabLabels={'tactical-map':'MAPA TÁTICO',master:'CENTRO DE OPERAÇÕES',operation:'CONTROLE DA OPERAÇÃO',missions:'MISSÕES',characters:'PERSONAGENS',soundtrack:'SOUNDTRACK',players:'PLAYER DATA',teams:'EQUIPES // STATUS',credentials:'CREDENCIAIS',polls:'VOTAÇÕES',handouts:'HANDOUTS',notes:'ANOTAÇÕES',yumiya:'YUMIYA // REMOTE',typography:'FONT STUDIO',settings:'CONFIGURAÇÕES'};
+const tabLabels={'tactical-map':'MAPA TÁTICO',master:'CENTRO DE OPERAÇÕES',operation:'CONTROLE DA OPERAÇÃO',missions:'MISSÕES',characters:'PERSONAGENS',factions:'FACÇÕES',soundtrack:'SOUNDTRACK',players:'PLAYER DATA',teams:'EQUIPES // STATUS',credentials:'CREDENCIAIS',polls:'VOTAÇÕES',handouts:'HANDOUTS',notes:'ANOTAÇÕES',yumiya:'YUMIYA // REMOTE',typography:'FONT STUDIO',settings:'CONFIGURAÇÕES'};
 function persist(){try{localStorage.setItem(STORAGE,JSON.stringify(preferences))}catch{}}
 function element(tag,cls,text){
  const e=document.createElement(tag);if(cls)e.className=cls;

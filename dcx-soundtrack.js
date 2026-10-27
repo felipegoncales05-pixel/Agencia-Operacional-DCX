@@ -306,7 +306,7 @@ function mountPlayer(){
  if($('dcxSoundtrackPlayerPanel'))return;
  const container=document.createElement('section');
  container.id='dcxSoundtrackPlayerPanel';container.className='dcxSoundtrackPlayerPanel hidden';container.setAttribute('aria-label','Trilha sonora da operação');container.setAttribute('aria-hidden','true');
- container.innerHTML='<header><div><small>DCX // AUDIO LINK</small><b>TRILHA SONORA</b></div><button id="dcxSoundtrackClose" class="soundtrackClose" type="button" aria-label="Fechar">×</button></header>'+
+ container.innerHTML='<header><div><small>DCX // AUDIO LINK</small><b>TRILHA SONORA</b></div><div class="soundtrackWindowActions"><button id="dcxSoundtrackMinimize" class="soundtrackClose" type="button" aria-label="Minimizar trilha sonora" title="Minimizar">−</button><button id="dcxSoundtrackClose" class="soundtrackClose soundtrackDismiss" type="button" aria-label="Fechar janela da trilha sonora" title="Fechar janela">×</button></div></header>'+
  '<div class="soundtrackPlayerBody"><div class="soundtrackPlayerCover"><span>♫</span><div><small id="dcxSoundtrackPlayerType">AGUARDANDO</small><h2 id="dcxSoundtrackPlayerTitle">NENHUMA TRILHA PUBLICADA</h2></div></div>'+
  '<div class="soundtrackPlayerButtons"><button id="dcxSoundtrackEnable" type="button" class="btn gold">▶ ATIVAR MÚSICA AUTOMÁTICA</button><button id="dcxSoundtrackResume" type="button" class="btn soundtrackResumeBtn" hidden>▶ TOCAR AGORA</button></div>'+
  '<div class="soundtrackPlayerVolume"><label for="dcxSoundtrackPlayerVolume">VOLUME PESSOAL <b id="dcxSoundtrackPlayerVolumeValue">20%</b></label><input id="dcxSoundtrackPlayerVolume" type="range" min="0" max="100" value="20"></div><p class="soundtrackVolumeHint" id="dcxSoundtrackPlayerVolumeHint">Volume de entrada: 20%.</p>'+
@@ -314,22 +314,31 @@ function mountPlayer(){
  '<p class="soundtrackMessage" id="dcxSoundtrackPlayerStatus" role="status" aria-live="polite">Conectando à sala...</p>'+
  '<p class="soundtrackNote">Autoplay ligado por padrão: YouTube e MP3 tentam tocar sem confirmação. Navegadores podem bloquear o som até a primeira interação no site. Por segurança, Spotify não inicia sozinho.</p></div>';
  document.body.append(container);
- const open=()=>{container.classList.remove('hidden','soundtrackCompact');container.setAttribute('aria-hidden','false');$('dcxSoundtrackClose').textContent='−';$('dcxSoundtrackClose').title='Minimizar player';renderPlayer()};
- const close=()=>{
-  if(!local.enabled){container.classList.add('hidden');container.setAttribute('aria-hidden','true');clearMedia();return}
-  container.classList.remove('hidden');container.classList.add('soundtrackCompact');
+ const open=()=>{
+  container.classList.remove('hidden','soundtrackCompact');
   container.setAttribute('aria-hidden','false');
-  $('dcxSoundtrackClose').textContent='▢';
-  $('dcxSoundtrackClose').title='Expandir player';
- };
- const expand=()=>{
-  container.classList.remove('hidden','soundtrackCompact');container.setAttribute('aria-hidden','false');
-  $('dcxSoundtrackClose').textContent='−';$('dcxSoundtrackClose').title='Minimizar player';
+  $('dcxSoundtrackMinimize').textContent='−';
+  $('dcxSoundtrackMinimize').title='Minimizar';
   renderPlayer();
+ };
+ // X closes the HUD without stopping the soundtrack.
+ const close=()=>{
+  container.classList.add('hidden');
+  container.classList.remove('soundtrackCompact');
+  container.setAttribute('aria-hidden','true');
+ };
+ const minimize=()=>{
+  if(container.classList.contains('soundtrackCompact')){open();return}
+  container.classList.remove('hidden');
+  container.classList.add('soundtrackCompact');
+  container.setAttribute('aria-hidden','false');
+  $('dcxSoundtrackMinimize').textContent='▢';
+  $('dcxSoundtrackMinimize').title='Expandir trilha sonora';
  };
  $('dcxOpenSoundtrack')?.addEventListener('click',open);
  $('dcxSoundtrackLauncher')?.addEventListener('click',open);
- $('dcxSoundtrackClose').addEventListener('click',()=>container.classList.contains('soundtrackCompact')?expand():close());
+ $('dcxSoundtrackClose').addEventListener('click',close);
+ $('dcxSoundtrackMinimize').addEventListener('click',minimize);
  $('dcxSoundtrackEnable').addEventListener('click',()=>{
   local.enabled=!local.enabled;saveLocal();
   attemptedMediaKey='';autoplayBlocked=false;
@@ -450,12 +459,7 @@ function renderPlayer(){
  updatePlayerControls();
  const launcher=$('dcxSoundtrackLauncherLabel');if(launcher)launcher.textContent=current?(state.playing?'TRILHA DISPONÍVEL':'TRILHA PAUSADA'):'SEM TRILHA';
  if(!local.enabled){clearMedia();status('Seu áudio está desativado. Ative quando desejar.');return}
- if($('dcxSoundtrackPlayerPanel').classList.contains('hidden')&&current&&state.playing){
-   $('dcxSoundtrackPlayerPanel').classList.remove('hidden');
-   $('dcxSoundtrackPlayerPanel').classList.add('soundtrackCompact');
-   $('dcxSoundtrackPlayerPanel').setAttribute('aria-hidden','false');
-   $('dcxSoundtrackClose').textContent='▢';
-  }
+ // Never reopen the soundtrack window automatically when the track changes.
  if(!current||!state.playing){clearMedia();status(!current?'Aguardando o Keymaster selecionar uma trilha.':'O Keymaster suspendeu a trilha.');return}
  if(current.kind==='youtube')showYoutube(current);
  else if(current.kind==='spotify')showSpotify(current);

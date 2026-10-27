@@ -72,6 +72,7 @@ console.info("[DCX OS] A2.2 AUTH ISOLATION // PLAYER // YUMIYA CORE FINAL-11");
     if(box)box.value="";
     renderYumiya();
     await publishYumiyaIdentity(identity);
+    await window.DCX?.Player?.init?.(true);
     toast("OPERADOR IDENTIFICADO");
     requestAnimationFrame(()=>$("yumiyaInput")?.focus());
   }
@@ -95,6 +96,7 @@ console.info("[DCX OS] A2.2 AUTH ISOLATION // PLAYER // YUMIYA CORE FINAL-11");
     $("yumiyaRenamePanel")?.classList.add("hidden");
     renderYumiya();
     await publishYumiyaIdentity(identity);
+    await window.DCX?.Player?.init?.(true);
     toast("OPERADOR RENOMEADO // "+name.toUpperCase());
   }
   function changeYumiyaIdentity(){openYumiyaRename()}

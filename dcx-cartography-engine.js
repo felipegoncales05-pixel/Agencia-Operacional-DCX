@@ -87,18 +87,44 @@ const palette={
 function create({container,center=TOKYO,zoom=13,host=false,onClick,onSelect,onMouseMove,onCameraChange}={}){
  return new Promise((resolve,reject)=>{
   try{
+   // Always-visible illustrated cartography beneath the interactive canvas.
+   // If browser rendering is delayed, players still see an actual city instead of a black void.
+   const boot=document.createElement('div');boot.className='dcxFictionBoot';
+   boot.setAttribute('aria-hidden','true');
+   const shapes=[];
+   for(let x=0;x<1200;x+=42)for(let y=0;y<720;y+=40){
+    const k=rand(x*47+y*131);
+    if(k<.13)continue;
+    const inset=5+k*7;
+    const fill=k>.89?'#19435b':k>.68?'#0e2f43':'#0b2132';
+    shapes.push('<rect x="'+(x+inset).toFixed(0)+'" y="'+(y+inset).toFixed(0)+'" width="'+(42-inset*1.5).toFixed(0)+'" height="'+(40-inset*1.5).toFixed(0)+'" rx="1" fill="'+fill+'"/>');
+    if(k>.86)shapes.push('<rect x="'+(x+inset+4).toFixed(0)+'" y="'+(y+inset+4).toFixed(0)+'" width="4" height="3" fill="#43cbef" opacity=".5"/>');
+   }
+   const streets=[];
+   for(let y=0;y<=720;y+=40)streets.push('<path d="M0 '+y+'H1200" stroke="'+(y%200===0?'#227da4':'#17435c')+'" stroke-width="'+(y%200===0?3:1.1)+'"/>');
+   for(let x=0;x<=1200;x+=42)streets.push('<path d="M'+x+' 0V720" stroke="'+(x%210===0?'#227da4':'#17435c')+'" stroke-width="'+(x%210===0?3:1.1)+'"/>');
+   boot.innerHTML='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 720" preserveAspectRatio="xMidYMid slice" role="presentation">'+
+     '<rect width="1200" height="720" fill="#04121d"/>'+shapes.join('')+streets.join('')+
+     '<path d="M0 428Q220 370 420 465T900 415T1200 520" fill="none" stroke="#145d7d" stroke-width="39" opacity=".28"/>'+
+     '<path d="M0 428Q220 370 420 465T900 415T1200 520" fill="none" stroke="#43c3dd" stroke-width="3" opacity=".7"/>'+
+     '<ellipse cx="580" cy="356" rx="188" ry="123" fill="none" stroke="#54d2ea" stroke-width="4" opacity=".7"/>'+
+     '<ellipse cx="580" cy="356" rx="310" ry="218" fill="none" stroke="#cd5eac" stroke-width="3" opacity=".6"/>'+
+     '<path d="M0 600L1200 100M190 0L1030 720" stroke="#4dd4e6" stroke-width="5" opacity=".64"/>'+
+     '<path d="M0 240L1200 490" stroke="#dd5b9e" stroke-width="2" opacity=".65"/>'+
+     '</svg>';
+   container.append(boot);
    const canvas=document.createElement('canvas');canvas.className='dcxFictionCanvas';
    canvas.setAttribute('role','img');canvas.setAttribute('aria-label','Cartografia top-down interativa da DCX');
    canvas.style.cssText='display:block;width:100%;height:100%;touch-action:none;cursor:crosshair';
    container.append(canvas);
-   const ctx=canvas.getContext('2d',{alpha:false,desynchronized:true});
+   const ctx=canvas.getContext('2d',{alpha:true,desynchronized:true});
    if(!ctx)throw Error('Seu navegador não disponibilizou desenho 2D.');
    let city=CITIES.reduce((best,v)=>dist(center,v)<dist(center,best)?v:best,CITIES[0]);
    let mode='city',z=clamp(zoom,1,19);
    let geo={lat:center.lat,lng:center.lng},worldCenter={lng:0,lat:12};
    if(z<=5)mode='global';
    let width=0,height=0,dpr=1,last=0,frame=0,pointList=[],destroyed=false;
-   let dragging=null,moved=false,ignoreClick=false,visible=false,pointNodes=[];
+   let dragging=null,moved=false,ignoreClick=false,visible=false,pointNodes=[],painted=false,renderError='',resizeObserver=null,visibilityObserver=null,watchTimer=null;
    function screenSize(){
     const r=container.getBoundingClientRect();
     if(r.width<30||r.height<30)return false;
@@ -111,6 +137,28 @@ function create({container,center=TOKYO,zoom=13,host=false,onClick,onSelect,onMo
     visible=true;return true;
    }
    function schedule(){if(!destroyed&&!frame)frame=requestAnimationFrame(draw)}
+   function installRecovery(){
+    if(typeof ResizeObserver==='function'){
+     resizeObserver=new ResizeObserver(()=>{if(!destroyed)schedule()});
+     resizeObserver.observe(container);
+    }
+    if(typeof IntersectionObserver==='function'){
+     visibilityObserver=new IntersectionObserver(entries=>{
+      if(entries.some(e=>e.isIntersecting)){schedule()}
+     },{threshold:0});
+     visibilityObserver.observe(container);
+    }
+    document.addEventListener('visibilitychange',onVisibilityChange);
+    window.addEventListener('dcx-map-viewport-resized',onVisibilityChange);
+    window.addEventListener('resize',onVisibilityChange,{passive:true});
+    // A low-frequency watchdog covers tabs that become visible without a resize event.
+    watchTimer=window.setInterval(()=>{
+     if(destroyed||document.hidden)return;
+     const box=container.getBoundingClientRect();
+     if(box.width>40&&box.height>40&&!painted)schedule();
+    },1350);
+   }
+   function onVisibilityChange(){if(!destroyed)schedule()}
    function km(){return 32*Math.pow(2,z-13)}
    function worldScale(){return (Math.min(width/390,height/202)*Math.pow(2,z-2))}
    function projectGlobal(lat,lng){
@@ -260,10 +308,23 @@ function create({container,center=TOKYO,zoom=13,host=false,onClick,onSelect,onMo
    }
    function draw(now=0){
     frame=0;if(destroyed||!screenSize())return;
-    if(now-last<28){frame=requestAnimationFrame(draw);return}last=now;
-    ctx.clearRect(0,0,width,height);
-    if(mode==='global')globalMap();else cityMap();
-    drawPoints();
+    if(now-last<28){schedule();return}last=now;
+    try{
+     ctx.clearRect(0,0,width,height);
+     if(mode==='global')globalMap();else cityMap();
+     drawPoints();
+     painted=true;renderError='';
+     canvas.dataset.dcxPainted='true';
+     boot.classList.add('is-painted');
+     const host=container.closest('.dcxTacticalMap');
+     if(host)host.dataset.mapRender='ready';
+    }catch(error){
+     renderError=error?.message||String(error);
+     console.error('[DCX MAP] Falha ao desenhar mapa 2D',error);
+     painted=false;boot.classList.remove('is-painted');
+     const host=container.closest('.dcxTacticalMap');
+     if(host){host.dataset.mapRender='fallback';}
+    }
    }
    function focusCity(id){
     const found=CITIES.find(c=>c.id===id)||CITIES[0];
@@ -346,17 +407,27 @@ function create({container,center=TOKYO,zoom=13,host=false,onClick,onSelect,onMo
     zoom:()=>z,center:()=>mode==='global'?{...worldCenter}:{...geo},
     setZoom,setCenter:changeCenter,
     flyTo(p,nextZoom){changeCenter(p,nextZoom||14)},
-    resize:schedule,
+    resize:()=>{painted=false;schedule()},
+    getStatus:()=>({painted,renderError,width,height}),
     goCity:focusCity,
     global:globe,
     getCity:()=>city,
     isGlobal:()=>mode==='global',
-    destroy(){destroyed=true;cancelAnimationFrame(frame);canvas.remove();if(window.DCX?.FictionalMapEngine?.active===api)window.DCX.FictionalMapEngine.active=null}
+    destroy(){
+     destroyed=true;cancelAnimationFrame(frame);
+     if(watchTimer)window.clearInterval(watchTimer);
+     resizeObserver?.disconnect();visibilityObserver?.disconnect();
+     document.removeEventListener('visibilitychange',onVisibilityChange);
+     window.removeEventListener('dcx-map-viewport-resized',onVisibilityChange);
+     window.removeEventListener('resize',onVisibilityChange);
+     canvas.remove();boot.remove();
+     if(window.DCX?.FictionalMapEngine?.active===api)window.DCX.FictionalMapEngine.active=null
+    }
    };
    window.DCX=window.DCX||{};
    window.DCX.FictionalMapEngine=window.DCX.FictionalMapEngine||{};
    window.DCX.FictionalMapEngine.active=api;
-   schedule();resolve(api);
+   installRecovery();schedule();resolve(api);
   }catch(error){reject(error)}
  });
 }

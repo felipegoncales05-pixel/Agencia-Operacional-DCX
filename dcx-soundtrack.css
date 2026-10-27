@@ -5,3 +5,10 @@
 .dcxSoundtrackPlayerPanel.soundtrackCompact .soundtrackPlayerMedia{position:relative!important;left:auto!important;opacity:1!important;pointer-events:auto!important;width:280px!important;height:158px!important;overflow:visible!important;transform:scale(.45);transform-origin:top left;visibility:visible!important}.dcxSoundtrackPlayerPanel.soundtrackCompact .soundtrackPlayerMedia iframe{min-width:280px;min-height:158px}.dcxSoundtrackPlayerPanel .dcxSpotifySlot{width:100%}
 
 .soundtrackVolumeHint{font:10px/1.5 monospace;color:#98c7d2;margin:6px 0 10px}.soundtrackVolumeHint[data-spotify=true]{color:#ffd49a}.soundtrackPlayerVolume input:disabled{opacity:.35;cursor:not-allowed}
+
+/* PLAYER CLOSE FIX */
+.soundtrackWindowActions{display:flex;align-items:center;gap:7px;flex-shrink:0}
+.soundtrackWindowActions .soundtrackClose{min-width:39px;min-height:38px;display:grid;place-items:center}
+.soundtrackWindowActions .soundtrackDismiss{border-color:#b96576;color:#ffafbd;background:#351b29}
+.soundtrackWindowActions .soundtrackDismiss:hover{background:#632738;color:#fff}
+.dcxSoundtrackPlayerPanel.hidden{display:none!important}

@@ -19,7 +19,7 @@ window.OPH_CONFIG = {
   map: {
     apiKey: "",
     mapId: "",
-    center: { lat: -23.5505, lng: -46.6333 }
+    center: { lat: 35.6762, lng: 139.6503 }
   },
 
   defaultRoom: "FRIA-01",

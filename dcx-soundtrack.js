@@ -17,6 +17,17 @@ function parseSource(link){
  let parsed;
  try{parsed=new URL(raw)}catch{throw new Error('O endereço precisa começar com https://')}
  if(parsed.protocol!=='https:')throw new Error('Use somente endereços HTTPS.');
+ if(['youtu.be','www.youtu.be','youtube.com','www.youtube.com','m.youtube.com','music.youtube.com','youtube-nocookie.com','www.youtube-nocookie.com'].includes(parsed.hostname)){
+  const parts=parsed.pathname.split('/').filter(Boolean);
+  const video=parsed.hostname.includes('youtu.be')?parts[0]:
+    ['shorts','live','embed','v'].includes(parts[0])?parts[1]:parts[0]==='watch'?parsed.searchParams.get('v'):null;
+  const list=parsed.searchParams.get('list');
+  if(typeof video==='string'&&/^[a-zA-Z0-9_-]{11}$/.test(video))
+   return {kind:'youtube',type:'video',id:video,url:'https://www.youtube.com/watch?v='+video};
+  if(typeof list==='string'&&/^[a-zA-Z0-9_-]{10,140}$/.test(list)&&['playlist','watch','embed','videoseries'].includes(parts[0]))
+   return {kind:'youtube',type:'playlist',id:list,url:'https://www.youtube.com/playlist?list='+list};
+  throw new Error('Link YouTube inválido. Use Compartilhar → Copiar link do vídeo ou playlist.');
+ }
  if(parsed.hostname==='open.spotify.com'){
   const match=parsed.pathname.match(/^\/(?:intl-[a-z]{2}\/)?(track|playlist|album|episode|show)\/([a-zA-Z0-9]{22})\/?$/i);
   if(!match)throw new Error('Link Spotify inválido. Utilize Compartilhar → Copiar link.');
@@ -37,15 +48,24 @@ function normalize(raw){
    const source=parseSource(row.url);
    const id=/^[a-zA-Z0-9_-]{3,55}$/.test(String(row.id||''))?String(row.id):'S-'+queue.length+'-'+source.id;
    if(queue.some(item=>item.id===id))continue;
-   queue.push({id,title:clean(row.title)||'Sem título',kind:source.kind,type:source.type,url:source.url,spotifyId:source.id});
+   queue.push({id,title:clean(row.title)||'Sem título',kind:source.kind,type:source.type,url:source.url,spotifyId:source.kind==='spotify'?source.id:'',youtubeId:source.kind==='youtube'?source.id:''});
   }catch{}
  }
  const loop=['off','one','all'].includes(v.loop)?v.loop:'all';
  return {queue,currentId:queue.some(q=>q.id===v.currentId)?v.currentId:(queue[0]?.id||''),playing:!!v.playing,loop,volume:clip(v.volume,0,100,75),revision:Number(v.revision)||0,updatedAt:Number(v.updatedAt)||0};
 }
 const entry=()=>state.queue.find(q=>q.id===state.currentId)||null;
-const embedSrc=track=>track&&track.kind==='spotify'?'https://open.spotify.com/embed/'+track.type+'/'+track.spotifyId+'?utm_source=generator&theme=0':'';
-let state=empty(),ref=null,connected='',session=null,local={enabled:false,volume:75},localRoom='',playerFrameKey='',audio=null,audioKey='',localSongId='',statusMessage='';
+function embedSrc(track,api=false){
+ if(!track)return '';
+ if(track.kind==='spotify')return 'https://open.spotify.com/embed/'+track.type+'/'+track.spotifyId+'?utm_source=generator&theme=0';
+ if(track.kind!=='youtube')return '';
+ const params=new URLSearchParams({rel:'0',playsinline:'1',loop:state.loop==='off'?'0':'1'});
+ if(api){params.set('enablejsapi','1');params.set('origin',location.origin)}
+ if(track.type==='playlist'){params.set('list',track.youtubeId);return 'https://www.youtube.com/embed/videoseries?'+params.toString()}
+ if(state.loop!=='off')params.set('playlist',track.youtubeId);
+ return 'https://www.youtube.com/embed/'+track.youtubeId+'?'+params.toString();
+}
+let state=empty(),ref=null,connected='',session=null,local={enabled:false,volume:75},localRoom='',playerFrameKey='',audio=null,audioKey='',localSongId='',statusMessage='',youtubePlayer=null,youtubeGeneration=0;
 function context(){
  const api=window.OPH?.Realtime,auth=api?.getFirebaseAuth?.(),db=api?.getFirebaseDatabase?.();
  const user=auth?.currentUser;
@@ -92,19 +112,53 @@ function nextId(current,direction=1){
  if(newIndex>=0&&newIndex<n)return state.queue[newIndex].id;
  return state.loop==='all'?state.queue[(newIndex+n)%n].id:current;
 }
+function youtubeVolume(){
+ if(youtubePlayer&&typeof youtubePlayer.setVolume==='function'){
+  try{youtubePlayer.setVolume(Math.round(state.volume*local.volume/100))}catch{}
+ }
+}
+function loadYoutubeApi(){
+ if(window.YT?.Player)return Promise.resolve();
+ if(window.DCX_YoutubeApiPromise)return window.DCX_YoutubeApiPromise;
+ window.DCX_YoutubeApiPromise=new Promise((resolve,reject)=>{
+  const previous=window.onYouTubeIframeAPIReady;
+  window.onYouTubeIframeAPIReady=()=>{if(typeof previous==='function')try{previous()}catch{};resolve()};
+  const script=document.createElement('script');script.src='https://www.youtube.com/iframe_api';script.async=true;
+  script.onerror=()=>{window.DCX_YoutubeApiPromise=null;reject(new Error('API YouTube indisponível'))};
+  document.head.append(script);
+ });
+ return window.DCX_YoutubeApiPromise;
+}
+function attachYoutubeControls(frame){
+ const generation=++youtubeGeneration;
+ loadYoutubeApi().then(()=>{
+  if(generation!==youtubeGeneration||!frame.isConnected||!window.YT?.Player)return;
+  youtubePlayer=new YT.Player(frame,{events:{
+   onReady:event=>{if(generation!==youtubeGeneration)return;youtubeVolume();try{event.target.setLoop(state.loop!=='off')}catch{}},
+   onError:event=>{
+    if(generation!==youtubeGeneration)return;
+    const code=event.data;
+    status([101,150].includes(code)?'O autor bloqueou a reprodução incorporada. Escolha outro vídeo.':
+      code===100?'Vídeo indisponível ou privado.':
+      code===153?'YouTube não reconheceu a origem do site. Verifique a hospedagem.':
+      'Erro do player YouTube: '+code,true);
+   }
+  }});
+ }).catch(()=>{if(generation===youtubeGeneration)status('Player YouTube abriu, mas o controle de volume remoto está indisponível.',true)});
+}
 function hostMarkup(){
  return '<div class="soundtrackIntro"><div class="soundtrackEyebrow">KEYMASTER // AMBIENT CONTROL</div><h1>SOUNDTRACK <span>CONTROL</span></h1><p>Escolha a atmosfera da operação. Os jogadores decidem quando ativar o áudio em seus próprios dispositivos.</p></div>'+
  '<div class="soundtrackColumns"><div class="soundtrackCard"><div class="soundtrackSectionHead"><span>01 // CENTRAL DE REPRODUÇÃO</span><b id="dcxSoundtrackConnection">SINCRONIZANDO...</b></div>'+
  '<div id="dcxSoundtrackKmNow" class="soundtrackNow"></div>'+
  '<div class="soundtrackTransport"><button class="btn" data-st-act="previous" title="Faixa anterior" type="button">⏮ ANTERIOR</button><button class="btn gold" data-st-act="toggle" id="dcxSoundtrackToggle" type="button">▶ LIBERAR TRILHA</button><button class="btn" data-st-act="next" title="Próximo item da fila" type="button">PRÓXIMA ⏭</button></div>'+
  '<div class="soundtrackFields"><label>VOLUME GERAL <output id="dcxSoundtrackKmVolValue">75%</output><input id="dcxSoundtrackKmVolume" type="range" min="0" max="100" value="75"></label>'+
- '<label>REPETIÇÃO<select id="dcxSoundtrackKmLoop"><option value="off">SEM REPETIÇÃO</option><option value="one">REPETIR FAIXA (ÁUDIO DIRETO)</option><option value="all">REPETIR FILA (ÁUDIO DIRETO)</option></select></label></div>'+
- '<p class="soundtrackNote">No Spotify, o volume, o início e a repetição interna pertencem ao player oficial. Os botões do Keymaster controlam a seleção e a disponibilização do player, não a conta Spotify dos jogadores.</p>'+
+ '<label>REPETIÇÃO<select id="dcxSoundtrackKmLoop"><option value="off">SEM REPETIÇÃO</option><option value="one">REPETIR VÍDEO / FAIXA</option><option value="all">REPETIR PLAYLIST / ÁUDIO</option></select></label></div>'+
+ '<p class="soundtrackNote">No YouTube, o vídeo completo depende da permissão de incorporação do autor. Cada jogador inicia no próprio player. O volume é ajustado pela API quando disponível.</p>'+
  '<div class="soundtrackEmbed" id="dcxSoundtrackKmPreview"></div>'+
  '<div class="soundtrackMessage" id="dcxSoundtrackKmStatus" role="status" aria-live="polite"></div></div>'+
  '<div class="soundtrackCard"><div class="soundtrackSectionHead"><span>02 // BIBLIOTECA DA SALA</span><b>MÁX. 40 ITENS</b></div>'+
  '<div class="soundtrackAdd"><label>NOME DA FAIXA OU PLAYLIST<input type="text" id="dcxSoundtrackAddTitle" maxlength="90" placeholder="Ex.: Neblina no distrito 07"></label>'+
- '<label>LINK DO SPOTIFY OU ÁUDIO DIRETO<input type="url" id="dcxSoundtrackAddUrl" maxlength="1800" placeholder="https://open.spotify.com/playlist/..."></label>'+
+ '<label>LINK DO YOUTUBE (VÍDEO/PLAYLIST) OU ÁUDIO<input type="url" id="dcxSoundtrackAddUrl" maxlength="1800" placeholder="https://www.youtube.com/watch?v=..."></label>'+
  '<button type="button" class="btn gold" id="dcxSoundtrackAdd">+ ADICIONAR À FILA</button></div>'+
  '<div id="dcxSoundtrackKmQueue" class="soundtrackQueue"></div></div></div>';
 }
@@ -144,21 +198,21 @@ function mountHost(){
    status('Comando sincronizado com a sala.');
   }catch(error){status(error.message||String(error),true)}finally{btn.disabled=false}
  });
- $('dcxSoundtrackKmVolume').addEventListener('change',async e=>{try{await publish(s=>{s.volume=clip(e.target.value,0,100,75);return s});status('Volume geral enviado (para áudio direto).')}catch(err){status(err.message,true)}});
+ $('dcxSoundtrackKmVolume').addEventListener('change',async e=>{try{await publish(s=>{s.volume=clip(e.target.value,0,100,75);return s});status('Volume geral atualizado para áudio direto e YouTube (quando disponível).')}catch(err){status(err.message,true)}});
  $('dcxSoundtrackKmLoop').addEventListener('change',async e=>{try{await publish(s=>{s.loop=e.target.value;return s});status('Modo de repetição atualizado.')}catch(err){status(err.message,true)}});
 }
 function renderHost(){
  if(!$('dcxSoundtrackKmRoot'))return;
  $('dcxSoundtrackConnection').textContent=connected?'FIREBASE // SALA '+session.room:'AGUARDANDO FIREBASE';
  const current=entry(),box=$('dcxSoundtrackKmNow');
- if(box)box.innerHTML=current?'<span class="soundtrackCover">♫</span><div><small>'+(current.kind==='spotify'?'SPOTIFY // '+esc(current.type.toUpperCase()):'ÁUDIO DIRETO // HTML5')+'</small><strong>'+esc(current.title)+'</strong><span>'+(state.playing?'● DISPONÍVEL PARA JOGADORES':'○ PAUSADO PELO KEYMASTER')+'</span></div>':'<span class="soundtrackCover">♫</span><div><small>SEM MÚSICA SELECIONADA</small><strong>AGUARDANDO PRIMEIRA TRILHA</strong><span>ADICIONE UM LINK À BIBLIOTECA</span></div>';
+ if(box)box.innerHTML=current?'<span class="soundtrackCover">♫</span><div><small>'+(current.kind==='youtube'?'YOUTUBE // '+esc(current.type.toUpperCase()):current.kind==='spotify'?'SPOTIFY // '+esc(current.type.toUpperCase()):'ÁUDIO DIRETO // HTML5')+'</small><strong>'+esc(current.title)+'</strong><span>'+(state.playing?'● DISPONÍVEL PARA JOGADORES':'○ PAUSADO PELO KEYMASTER')+'</span></div>':'<span class="soundtrackCover">♫</span><div><small>SEM MÚSICA SELECIONADA</small><strong>AGUARDANDO PRIMEIRA TRILHA</strong><span>ADICIONE UM LINK À BIBLIOTECA</span></div>';
  $('dcxSoundtrackToggle').textContent=state.playing?'■ SUSPENDER TRILHA':'▶ LIBERAR TRILHA';
  $('dcxSoundtrackKmVolume').value=String(state.volume);$('dcxSoundtrackKmVolValue').textContent=state.volume+'%';
  $('dcxSoundtrackKmLoop').value=state.loop;
  const list=$('dcxSoundtrackKmQueue');
- list.innerHTML=state.queue.length?state.queue.map((q,i)=>'<article class="soundtrackTrack '+(q.id===state.currentId?'active':'')+'"><span>'+(i+1).toString().padStart(2,'0')+'</span><div><b>'+esc(q.title)+'</b><small>'+ (q.kind==='spotify'?'SPOTIFY // '+esc(q.type.toUpperCase()):'ÁUDIO DIRETO')+'</small></div><button class="btn" type="button" data-st-act="pick" data-id="'+esc(q.id)+'" title="Selecionar">▶</button><button class="btn" type="button" data-st-act="up" data-id="'+esc(q.id)+'" title="Subir">↑</button><button class="btn" type="button" data-st-act="down" data-id="'+esc(q.id)+'" title="Descer">↓</button><button class="btn" type="button" data-st-act="remove" data-id="'+esc(q.id)+'" title="Remover">×</button></article>').join(''):'<div class="soundtrackEmpty">Sua biblioteca está vazia. Adicione um link de faixa ou playlist do Spotify.</div>';
- const prev=$('dcxSoundtrackKmPreview'),desired=current?.kind==='spotify'?embedSrc(current):'';
- if(prev?.dataset.src!==desired){prev.dataset.src=desired;prev.replaceChildren();if(desired){const frame=document.createElement('iframe');frame.src=desired;frame.loading='lazy';frame.allow='encrypted-media; clipboard-write; fullscreen; picture-in-picture';frame.setAttribute('title','Prévia do player oficial do Spotify');frame.setAttribute('referrerpolicy','strict-origin-when-cross-origin');prev.append(frame)}}
+ list.innerHTML=state.queue.length?state.queue.map((q,i)=>'<article class="soundtrackTrack '+(q.id===state.currentId?'active':'')+'"><span>'+(i+1).toString().padStart(2,'0')+'</span><div><b>'+esc(q.title)+'</b><small>'+ (q.kind==='youtube'?'YOUTUBE // '+esc(q.type.toUpperCase()):q.kind==='spotify'?'SPOTIFY // '+esc(q.type.toUpperCase()):'ÁUDIO DIRETO')+'</small></div><button class="btn" type="button" data-st-act="pick" data-id="'+esc(q.id)+'" title="Selecionar">▶</button><button class="btn" type="button" data-st-act="up" data-id="'+esc(q.id)+'" title="Subir">↑</button><button class="btn" type="button" data-st-act="down" data-id="'+esc(q.id)+'" title="Descer">↓</button><button class="btn" type="button" data-st-act="remove" data-id="'+esc(q.id)+'" title="Remover">×</button></article>').join(''):'<div class="soundtrackEmpty">Sua biblioteca está vazia. Adicione um vídeo ou playlist do YouTube.</div>';
+ const prev=$('dcxSoundtrackKmPreview'),desired=['youtube','spotify'].includes(current?.kind)?embedSrc(current):'';
+ if(prev?.dataset.src!==desired){prev.dataset.src=desired;prev.replaceChildren();if(desired){const frame=document.createElement('iframe');frame.src=desired;frame.loading='lazy';frame.allow='accelerometer; autoplay; encrypted-media; clipboard-write; fullscreen; picture-in-picture';frame.setAttribute('title','Prévia do player oficial da trilha sonora');frame.setAttribute('referrerpolicy','strict-origin-when-cross-origin');prev.append(frame)}}
  if(statusMessage)status(statusMessage);
 }
 function mountPlayer(){
@@ -171,10 +225,10 @@ function mountPlayer(){
  '<div class="soundtrackPlayerVolume"><label for="dcxSoundtrackPlayerVolume">VOLUME PESSOAL <b id="dcxSoundtrackPlayerVolumeValue">75%</b></label><input id="dcxSoundtrackPlayerVolume" type="range" min="0" max="100" value="75"></div>'+
  '<div id="dcxSoundtrackPlayerMedia" class="soundtrackPlayerMedia"></div>'+
  '<p class="soundtrackMessage" id="dcxSoundtrackPlayerStatus" role="status" aria-live="polite">Conectando à sala...</p>'+
- '<p class="soundtrackNote">O Spotify requer que você inicie a música dentro do player oficial; os controles de volume e repetição do Spotify são independentes.</p></div>';
+ '<p class="soundtrackNote">No YouTube, pressione ▶ dentro do vídeo. Alguns vídeos não permitem incorporação; links antigos do Spotify seguem disponíveis.</p></div>';
  document.body.append(container);
  const open=()=>{container.classList.remove('hidden');container.setAttribute('aria-hidden','false');renderPlayer()};
- const close=()=>{container.classList.add('hidden');container.setAttribute('aria-hidden','true')};
+ const close=()=>{container.classList.add('hidden');container.setAttribute('aria-hidden','true');local.enabled=false;saveLocal();clearMedia();renderPlayer()};
  $('dcxOpenSoundtrack')?.addEventListener('click',open);
  $('dcxSoundtrackLauncher')?.addEventListener('click',open);
  $('dcxSoundtrackClose').addEventListener('click',close);
@@ -184,14 +238,14 @@ function mountPlayer(){
  });
  $('dcxSoundtrackPlayerVolume').addEventListener('input',e=>{
   local.volume=clip(e.target.value,0,100,75);saveLocal();
-  if(audio)audio.volume=clip(state.volume,0,100,75)/100*local.volume/100;
+  if(audio)audio.volume=clip(state.volume,0,100,75)/100*local.volume/100;youtubeVolume();
   $('dcxSoundtrackPlayerVolumeValue').textContent=local.volume+'%';
  });
  document.addEventListener('keydown',e=>{if(e.key==='Escape')close()});
 }
 function clearMedia(){
  const area=$('dcxSoundtrackPlayerMedia');
- if(audio){audio.pause();audio.src='';audio=null}
+ if(audio){audio.pause();audio.src='';audio=null}youtubeGeneration++;if(youtubePlayer){try{youtubePlayer.destroy()}catch{}youtubePlayer=null}
  if(area)area.replaceChildren();
  audioKey='';playerFrameKey='';localSongId='';
 }
@@ -202,11 +256,23 @@ function showSpotify(track){
  clearMedia();playerFrameKey=key;
  const frame=document.createElement('iframe');
  frame.src=embedSrc(track);frame.loading='eager';
- frame.allow='encrypted-media; clipboard-write; fullscreen; picture-in-picture';
+ frame.allow='accelerometer; autoplay; encrypted-media; clipboard-write; fullscreen; picture-in-picture';
  frame.referrerPolicy='strict-origin-when-cross-origin';
  frame.title='Spotify: '+track.title;
  area.append(frame);
  status('Player Spotify pronto. Clique em ▶ dentro do Spotify para ouvir.');
+}
+function showYoutube(track){
+ const area=$('dcxSoundtrackPlayerMedia');if(!area)return;
+ if(playerFrameKey===track.id){youtubeVolume();if(youtubePlayer?.setLoop)try{youtubePlayer.setLoop(state.loop!=='off')}catch{};return}
+ clearMedia();playerFrameKey=track.id;
+ const frame=document.createElement('iframe');frame.id='dcxYoutubePlayerFrame';
+ frame.src=embedSrc(track,true);frame.loading='eager';
+ frame.allow='accelerometer; autoplay; encrypted-media; fullscreen; picture-in-picture';
+ frame.referrerPolicy='strict-origin-when-cross-origin';
+ frame.title='YouTube: '+track.title;area.append(frame);
+ attachYoutubeControls(frame);
+ status('Vídeo pronto. Pressione ▶ dentro do player YouTube para ouvir.');
 }
 function playAudio(track){
  const area=$('dcxSoundtrackPlayerMedia');if(!area)return;
@@ -231,14 +297,16 @@ function renderPlayer(){
  if(!$('dcxSoundtrackPlayerPanel'))return;
  const current=entry();
  $('dcxSoundtrackPlayerTitle').textContent=current?.title||'NENHUMA TRILHA PUBLICADA';
- $('dcxSoundtrackPlayerType').textContent=current?(current.kind==='spotify'?'SPOTIFY // '+current.type.toUpperCase():'ÁUDIO DIRETO'):'AGUARDANDO KEYMASTER';
+ $('dcxSoundtrackPlayerType').textContent=current?(current.kind==='youtube'?'YOUTUBE // '+current.type.toUpperCase():current.kind==='spotify'?'SPOTIFY // '+current.type.toUpperCase():'ÁUDIO DIRETO'):'AGUARDANDO KEYMASTER';
  $('dcxSoundtrackPlayerVolume').value=String(local.volume);
  $('dcxSoundtrackPlayerVolumeValue').textContent=local.volume+'%';
  $('dcxSoundtrackEnable').textContent=local.enabled?'■ DESATIVAR ÁUDIO':'▶ ATIVAR MEU ÁUDIO';
  const launcher=$('dcxSoundtrackLauncherLabel');if(launcher)launcher.textContent=current?(state.playing?'TRILHA DISPONÍVEL':'TRILHA PAUSADA'):'SEM TRILHA';
  if(!local.enabled){clearMedia();status('Seu áudio está desativado. Ative quando desejar.');return}
+ if($('dcxSoundtrackPlayerPanel').classList.contains('hidden')){clearMedia();return}
  if(!current||!state.playing){clearMedia();status(!current?'Aguardando o Keymaster selecionar uma trilha.':'O Keymaster suspendeu a trilha.');return}
- if(current.kind==='spotify')showSpotify(current);
+ if(current.kind==='youtube')showYoutube(current);
+ else if(current.kind==='spotify')showSpotify(current);
  else playAudio(current);
 }
 function render(){if(HOST)renderHost();else renderPlayer()}

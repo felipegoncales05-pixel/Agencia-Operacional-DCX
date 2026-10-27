@@ -467,6 +467,8 @@ function switchToLight(){
 
 function selectPreset(p){
  const detail=$('dcxMapDetail');if(detail)detail.replaceChildren(makeDetail(p));
+ // The example pins are read-only; a Keymaster can create a new pin next to one.
+ if(HOST&&p.preset)status('PONTO DE EXEMPLO // PARA PUBLICAR UM NOVO LOCAL, USE + CRIAR PONTO');
 }
 function startMap(){
  fallbackCenter={...((data.center&&data.center.lat!==DEFAULT_CENTER.lat)?data.center:DEFAULT_CENTER)};
@@ -594,7 +596,7 @@ function openEditor(point,pos){
  drawer.classList.remove('hidden');drawer.replaceChildren();
  const form=document.createElement('form');form.className='dcxMapForm';
  const head=text('div','dcxMapEditHead');
- const h=text('div','');h.append(text('small','',point?'DCX // EDITAR LOCAL':'DCX // NOVO PING'),text('h2','',point?.title||'PUBLICAR PONTO NO MAPA'));
+ const h=text('div','');h.append(text('small','',point&&!point.preset?'DCX // EDITAR LOCAL':'DCX // NOVO PING'),text('h2','',point?.title||'PUBLICAR PONTO NO MAPA'));
  head.append(h,tab('FECHAR','×',closeEditor));form.append(head);
  function field(title,el){const label=text('label','dcxMapFormField');label.append(text('span','',title),el);form.append(label);return el}
  function input(value,max=90){const e=document.createElement('input');e.value=value||'';e.maxLength=max;return e}
@@ -614,9 +616,9 @@ function openEditor(point,pos){
  const posText=text('div','dcxMapEditCoordinates','COORDENADAS '+draftPos.lat.toFixed(5)+', '+draftPos.lng.toFixed(5));
  form.append(posText);
  const actions=text('div','dcxMapEditActions');
- const submit=tab(point?'SALVAR ALTERAÇÕES':'PUBLICAR NO MAPA','✓',()=>{},'dcxMapSubmit');
+ const submit=tab(point&&!point.preset?'SALVAR ALTERAÇÕES':'PUBLICAR NO MAPA','✓',()=>{},'dcxMapSubmit');
  submit.type='submit';submit.onclick=null;actions.append(submit);
- if(point)actions.append(tab('EXCLUIR','×',async()=>{
+ if(point&&!point.preset)actions.append(tab('EXCLUIR','×',async()=>{
   if(!window.confirm('Excluir este marcador do mapa compartilhado?'))return;
   try{await removePoint(point.id);selectedId='';closeEditor();status('MARCADOR EXCLUÍDO.')}catch(e){status('ERRO AO EXCLUIR: '+e.message,true)}
  },'dcxMapDelete'));
@@ -626,7 +628,7 @@ function openEditor(point,pos){
   const photo=image.value.trim();if(photo&&!safeUrl(photo)){status('Imagem deve usar endereço HTTPS válido.',true);submit.disabled=false;return}
   const record={...draftPos,type:category.value,title:name.value,description:desc.value,icon:symbols.value,image:photo,stars:Number(star.value),
    threatCount:Number(count.value),threatType:threat.value,radius:radius.value};
-  try{await writePoint(record,point?.id||'');closeEditor();status('PONTO PUBLICADO NO FIREBASE.');}
+  try{await writePoint(record,point?.preset?'':point?.id||'');closeEditor();status('PONTO PUBLICADO NO FIREBASE.');}
   catch(err){status('NÃO FOI POSSÍVEL SALVAR: '+err.message,true)}
   finally{submit.disabled=false}
  });
@@ -683,6 +685,8 @@ function start(){
  }
 }
 window.DCX=window.DCX||{};
-window.DCX.Cartography={get points(){return Object.values(allPoints())},selectPoint,zoom,openEditor,centerMap,getCamera:()=>({zoom:getMapZoom(),center:getMapCenter()}),get engine(){return fictionalMap}};
+window.DCX.Cartography={get points(){return Object.values(allPoints())},selectPoint,zoom,openEditor,
+ createAtCenter:()=>openEditor(null,getMapCenter()),centerMap,
+ getCamera:()=>({zoom:getMapZoom(),center:getMapCenter()}),get engine(){return fictionalMap}};
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
 })();

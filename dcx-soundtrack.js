@@ -5,6 +5,8 @@ const $=id=>document.getElementById(id);
 const HOST=/keymaster\.html$/i.test(location.pathname);
 const ADMIN_UID='luVVp67PW7c53fs6dstTDNE46Nz1';
 const STORE='dcx-player-soundtrack-v1';
+const START_VOLUME=20;
+const SAFETY_VERSION=2;
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clip=(value,min,max,def)=>Number.isFinite(Number(value))?Math.max(min,Math.min(max,Math.round(Number(value)))):def;
 const empty=()=>({queue:[],currentId:'',playing:false,loop:'all',volume:75,revision:0,updatedAt:0});
@@ -66,7 +68,7 @@ function embedSrc(track,api=false,autoplay=false){
  if(state.loop==='one')params.set('playlist',track.youtubeId);
  return 'https://www.youtube.com/embed/'+track.youtubeId+'?'+params.toString();
 }
-let state=empty(),ref=null,connected='',session=null,local={enabled:false,volume:75},localRoom='',playerFrameKey='',audio=null,audioKey='',localSongId='',statusMessage='',youtubePlayer=null,youtubeGeneration=0,masterCursorId='',localCursorId='',autoplayBlocked=false,attemptedMediaKey='',apiReady=false,spotifyController=null,spotifyGeneration=0;
+let state=empty(),ref=null,connected='',session=null,local={enabled:true,volume:START_VOLUME},localRoom='',playerFrameKey='',audio=null,audioKey='',localSongId='',statusMessage='',youtubePlayer=null,youtubeGeneration=0,masterCursorId='',localCursorId='',autoplayBlocked=false,attemptedMediaKey='',apiReady=false,spotifyController=null,spotifyGeneration=0;
 function context(){
  const api=window.OPH?.Realtime,auth=api?.getFirebaseAuth?.(),db=api?.getFirebaseDatabase?.();
  const user=auth?.currentUser;
@@ -76,9 +78,15 @@ function context(){
 function restoreLocal(room){
  if(room===localRoom)return;
  localRoom=room;
- try{const all=JSON.parse(localStorage.getItem(STORE)||'{}');local={enabled:!!all[room]?.enabled,volume:clip(all[room]?.volume,0,100,75)}}catch{local={enabled:false,volume:75}}
+ try{
+  const all=JSON.parse(localStorage.getItem(STORE)||'{}'),saved=all[room];
+  const oldVolume=clip(saved?.volume,0,100,START_VOLUME);
+  local={enabled:typeof saved?.enabled==='boolean'?saved.enabled:true,
+   volume:saved?.safetyVersion===SAFETY_VERSION?oldVolume:Math.min(START_VOLUME,oldVolume)};
+  if(saved?.safetyVersion!==SAFETY_VERSION)saveLocal();
+ }catch{local={enabled:true,volume:START_VOLUME}}
 }
-function saveLocal(){try{const all=JSON.parse(localStorage.getItem(STORE)||'{}');all[localRoom]=local;localStorage.setItem(STORE,JSON.stringify(all))}catch{}}
+function saveLocal(){try{const all=JSON.parse(localStorage.getItem(STORE)||'{}');all[localRoom]={...local,safetyVersion:SAFETY_VERSION};localStorage.setItem(STORE,JSON.stringify(all))}catch{}}
 function status(message,error=false){statusMessage=message;const el=$(HOST?'dcxSoundtrackKmStatus':'dcxSoundtrackPlayerStatus');if(el){el.textContent=message;el.dataset.error=error?'true':'false'}}
 function listen(){
  const c=context();
@@ -119,7 +127,11 @@ function nextId(current,direction=1){
 }
 function youtubeVolume(){
  if(youtubePlayer&&typeof youtubePlayer.setVolume==='function'){
-  try{youtubePlayer.setVolume(Math.round(state.volume*local.volume/100))}catch{}
+  try{
+   const volume=Math.round(state.volume*local.volume/100);
+   youtubePlayer.setVolume(volume);
+   if(volume<=0)youtubePlayer.mute?.();else youtubePlayer.unMute?.();
+  }catch{}
  }
 }
 function loadYoutubeApi(){
@@ -152,6 +164,7 @@ function attachYoutubeControls(frame){
    onReady:event=>{
      if(generation!==youtubeGeneration)return;
      apiReady=true;
+     try{event.target.mute()}catch{}
      youtubeVolume();
      try{event.target.setLoop(state.loop==='one')}catch{}
      if(local.enabled&&state.playing){
@@ -218,7 +231,7 @@ function hostMarkup(){
  '<div class="soundtrackTransport"><button class="btn" data-st-act="previous" title="Faixa anterior" type="button">⏮ ANTERIOR</button><button class="btn gold" data-st-act="toggle" id="dcxSoundtrackToggle" type="button">▶ LIBERAR TRILHA</button><button class="btn" data-st-act="next" title="Próximo item da fila" type="button">PRÓXIMA ⏭</button></div>'+
  '<div class="soundtrackFields"><label>VOLUME GERAL <output id="dcxSoundtrackKmVolValue">75%</output><input id="dcxSoundtrackKmVolume" type="range" min="0" max="100" value="75"></label>'+
  '<label>REPETIÇÃO<select id="dcxSoundtrackKmLoop"><option value="off">SEM REPETIÇÃO</option><option value="one">REPETIR VÍDEO / FAIXA</option><option value="all">REPETIR PLAYLIST / ÁUDIO</option></select></label></div>'+
- '<p class="soundtrackNote">No YouTube, o player tenta tocar automaticamente após a ativação do jogador. Spotify depende das regras da plataforma; links de áudio autorizados permitem mais controle. Cada jogador pode ajustar o som.</p>'+
+ '<p class="soundtrackNote">No YouTube e em arquivos de áudio, a DCX controla o volume. No Spotify incorporado, não é possível reduzir o volume por este site; por segurança, não há autoplay Spotify.</p>'+
  '<div class="soundtrackEmbed" id="dcxSoundtrackKmPreview"></div>'+
  '<div class="soundtrackMessage" id="dcxSoundtrackKmStatus" role="status" aria-live="polite"></div></div>'+
  '<div class="soundtrackCard"><div class="soundtrackSectionHead"><span>02 // BIBLIOTECA DA SALA</span><b>MÁX. 40 ITENS</b></div>'+
@@ -280,6 +293,15 @@ function renderHost(){
  if(prev?.dataset.src!==desired){prev.dataset.src=desired;prev.replaceChildren();if(desired){const frame=document.createElement('iframe');frame.src=desired;frame.loading='lazy';frame.allow='accelerometer; autoplay; encrypted-media; clipboard-write; fullscreen; picture-in-picture';frame.setAttribute('title','Prévia do player oficial da trilha sonora');frame.setAttribute('referrerpolicy','strict-origin-when-cross-origin');prev.append(frame)}}
  if(statusMessage)status(statusMessage);
 }
+function unlockOnInteraction(){
+ if(!local.enabled||!state.playing||!autoplayBlocked)return;
+ const current=state.queue.find(q=>q.id===localCursorId)||entry();
+ if(current?.kind==='youtube'&&youtubePlayer?.playVideo){
+  try{youtubeVolume();youtubePlayer.playVideo()}catch{}
+ }else if(current?.kind==='audio'&&audio?.paused){
+  audio.play().then(()=>{autoplayBlocked=false;status('♫ Música liberada.');updatePlayerControls()}).catch(()=>{});
+ }
+}
 function mountPlayer(){
  if($('dcxSoundtrackPlayerPanel'))return;
  const container=document.createElement('section');
@@ -287,10 +309,10 @@ function mountPlayer(){
  container.innerHTML='<header><div><small>DCX // AUDIO LINK</small><b>TRILHA SONORA</b></div><button id="dcxSoundtrackClose" class="soundtrackClose" type="button" aria-label="Fechar">×</button></header>'+
  '<div class="soundtrackPlayerBody"><div class="soundtrackPlayerCover"><span>♫</span><div><small id="dcxSoundtrackPlayerType">AGUARDANDO</small><h2 id="dcxSoundtrackPlayerTitle">NENHUMA TRILHA PUBLICADA</h2></div></div>'+
  '<div class="soundtrackPlayerButtons"><button id="dcxSoundtrackEnable" type="button" class="btn gold">▶ ATIVAR MÚSICA AUTOMÁTICA</button><button id="dcxSoundtrackResume" type="button" class="btn soundtrackResumeBtn" hidden>▶ TOCAR AGORA</button></div>'+
- '<div class="soundtrackPlayerVolume"><label for="dcxSoundtrackPlayerVolume">VOLUME PESSOAL <b id="dcxSoundtrackPlayerVolumeValue">75%</b></label><input id="dcxSoundtrackPlayerVolume" type="range" min="0" max="100" value="75"></div>'+
+ '<div class="soundtrackPlayerVolume"><label for="dcxSoundtrackPlayerVolume">VOLUME PESSOAL <b id="dcxSoundtrackPlayerVolumeValue">20%</b></label><input id="dcxSoundtrackPlayerVolume" type="range" min="0" max="100" value="20"></div><p class="soundtrackVolumeHint" id="dcxSoundtrackPlayerVolumeHint">Volume de entrada: 20%.</p>'+
  '<div id="dcxSoundtrackPlayerMedia" class="soundtrackPlayerMedia"></div>'+
  '<p class="soundtrackMessage" id="dcxSoundtrackPlayerStatus" role="status" aria-live="polite">Conectando à sala...</p>'+
- '<p class="soundtrackNote">Um clique habilita a jukebox. YouTube e MP3 tentam iniciar as próximas faixas; o Spotify usa a API oficial, sem garantia de reprodução integral ou automática.</p></div>';
+ '<p class="soundtrackNote">Autoplay ligado por padrão: YouTube e MP3 tentam tocar sem confirmação. Navegadores podem bloquear o som até a primeira interação no site. Por segurança, Spotify não inicia sozinho.</p></div>';
  document.body.append(container);
  const open=()=>{container.classList.remove('hidden','soundtrackCompact');container.setAttribute('aria-hidden','false');$('dcxSoundtrackClose').textContent='−';$('dcxSoundtrackClose').title='Minimizar player';renderPlayer()};
  const close=()=>{
@@ -333,12 +355,12 @@ function mountPlayer(){
    if(audio){audio.play().then(()=>status('♫ Reproduzindo áudio.')).catch(()=>status('Toque no Play do reprodutor.',true))}
    else playAudio(current)
   }else if(current?.kind==='spotify'){
-    if(spotifyController?.play){try{spotifyController.play();status('Tentando reproduzir pelo player oficial do Spotify…')}catch{status('Use o Play dentro do Spotify.',true)}}
-    else status('Use o Play dentro do player oficial do Spotify.');
+   status('Spotify tem volume próprio. Ajuste o volume do aparelho antes de iniciar no player oficial.');
   }
   updatePlayerControls();
  });
- document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!container.classList.contains('hidden'))close()});
+ document.addEventListener('pointerdown',unlockOnInteraction,{capture:true,passive:true});
+ document.addEventListener('keydown',e=>{unlockOnInteraction();if(e.key==='Escape'&&!container.classList.contains('hidden'))close()});
 }
 function clearMedia(){
  const area=$('dcxSoundtrackPlayerMedia');
@@ -360,9 +382,11 @@ function showSpotify(track){
    if(generation!==spotifyGeneration){try{controller.destroy()}catch{};return}
    spotifyController=controller;
    controller.addListener('playback_started',()=>{if(generation===spotifyGeneration)status('♫ Spotify reproduzindo pelo player oficial.')});
-   controller.addListener('ready',()=>{if(generation===spotifyGeneration&&local.enabled&&state.playing)try{controller.play()}catch{}});
-   if(local.enabled&&state.playing)try{controller.play()}catch{}
-   status('Spotify incorporado. A reprodução integral e o autoplay dependem do Spotify e do navegador.');
+   controller.addListener('ready',()=>{
+    if(generation!==spotifyGeneration)return;
+    status('Spotify preparado. Por segurança, o site não o inicia automaticamente: o volume do Spotify é independente. Ajuste o volume do dispositivo antes de dar Play.');
+   });
+   status('Spotify incorporado com reprodução manual. Ajuste o volume do aparelho antes de iniciar.');
   });
  }).catch(()=>{if(generation===spotifyGeneration)spotifyFallback(area,track,'Não foi possível usar a API do Spotify; use Play no player oficial.')});
 }
@@ -372,7 +396,7 @@ function showYoutube(track){
  if(playerFrameKey===track.id){youtubeVolume();if(youtubePlayer?.setLoop)try{youtubePlayer.setLoop(state.loop==='one')}catch{};return}
  clearMedia();playerFrameKey=track.id;
  const frame=document.createElement('iframe');frame.id='dcxYoutubePlayerFrame';
- frame.src=embedSrc(track,true,true);frame.loading='eager';
+ frame.src=embedSrc(track,true,false);frame.loading='eager';
  frame.allow='accelerometer; autoplay; encrypted-media; fullscreen; picture-in-picture';
  frame.referrerPolicy='strict-origin-when-cross-origin';
  frame.title='YouTube: '+track.title;area.append(frame);
@@ -405,9 +429,8 @@ function playAudio(track){
 function updatePlayerControls(){
  const b=$('dcxSoundtrackResume');if(!b)return;
  const current=state.queue.find(q=>q.id===localCursorId)||entry();
- b.hidden=!local.enabled||!state.playing||!current||(!autoplayBlocked&&current.kind!=='spotify');
- if(current?.kind==='spotify')b.textContent='▶ TENTAR SPOTIFY';
- else b.textContent='▶ TOCAR AGORA';
+ b.hidden=!local.enabled||!state.playing||!current||!autoplayBlocked||current.kind==='spotify';
+ b.textContent='▶ TOCAR AGORA';
 }
 function renderPlayer(){
  if(!$('dcxSoundtrackPlayerPanel'))return;
@@ -416,11 +439,18 @@ function renderPlayer(){
  $('dcxSoundtrackPlayerType').textContent=current?(current.kind==='youtube'?'YOUTUBE // '+current.type.toUpperCase():current.kind==='spotify'?'SPOTIFY // '+current.type.toUpperCase():'ÁUDIO DIRETO'):'AGUARDANDO KEYMASTER';
  $('dcxSoundtrackPlayerVolume').value=String(local.volume);
  $('dcxSoundtrackPlayerVolumeValue').textContent=local.volume+'%';
- $('dcxSoundtrackEnable').textContent=local.enabled?'■ DESATIVAR JUKEBOX':'▶ ATIVAR MÚSICA AUTOMÁTICA';
+ $('dcxSoundtrackEnable').textContent=local.enabled?'■ DESATIVAR MÚSICA AUTOMÁTICA':'▶ REATIVAR MÚSICA AUTOMÁTICA';
+ const spotifySource=current?.kind==='spotify';
+ $('dcxSoundtrackPlayerVolume').disabled=spotifySource;
+ const hint=$('dcxSoundtrackPlayerVolumeHint');
+ if(hint){hint.textContent=spotifySource?
+  'SPOTIFY: volume próprio. O controle da DCX não funciona nele; ajuste o aparelho antes de dar Play.':
+  'VOLUME DCX: começa em 20%, ajustável aqui para YouTube ou áudio direto.';
+  hint.dataset.spotify=spotifySource?'true':'false';}
  updatePlayerControls();
  const launcher=$('dcxSoundtrackLauncherLabel');if(launcher)launcher.textContent=current?(state.playing?'TRILHA DISPONÍVEL':'TRILHA PAUSADA'):'SEM TRILHA';
  if(!local.enabled){clearMedia();status('Seu áudio está desativado. Ative quando desejar.');return}
- if($('dcxSoundtrackPlayerPanel').classList.contains('hidden')){
+ if($('dcxSoundtrackPlayerPanel').classList.contains('hidden')&&current&&state.playing){
    $('dcxSoundtrackPlayerPanel').classList.remove('hidden');
    $('dcxSoundtrackPlayerPanel').classList.add('soundtrackCompact');
    $('dcxSoundtrackPlayerPanel').setAttribute('aria-hidden','false');

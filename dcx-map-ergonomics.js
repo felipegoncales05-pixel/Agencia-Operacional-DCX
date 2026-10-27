@@ -40,7 +40,7 @@ function map(){
  const label=document.createElement('label');label.htmlFor='dcxMapUiScale';label.textContent='INTERFACE ';
  const output=document.createElement('output');output.id='dcxMapUiScaleOutput';
  const slider=document.createElement('input');slider.id='dcxMapUiScale';slider.type='range';slider.min='75';slider.max='125';slider.step='5';slider.setAttribute('aria-label','Escala dos painéis do mapa');
- const compact=button('▤ PAINÉIS','dcxMapErgoBtn',()=>setPanels(!root.classList.contains('dcxMapPanelsHidden')));
+ const compact=button('▤ PAINÉIS','dcxMapErgoBtn',()=>setPanels(root.classList.contains('dcxMapPanelsHidden')));
  compact.title='Mostrar ou esconder Pontos Importantes';
  const fit=button('▣ TELA INTEIRA','dcxMapErgoBtn',async()=>{
   try{

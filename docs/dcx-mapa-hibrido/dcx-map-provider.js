@@ -143,7 +143,7 @@ function create({container,center=TOKYO,zoom=12,host=false,onClick=noop,onSelect
    map.dragPan.enable();
   }catch(e){reject(e);return}
   let ready=false,destroyed=false,lastCityId='',pointsById=new Map(),lastPoints={};
-  let labelMode='complete',disposeTheme=noop;
+  let labelMode='complete',disposeTheme=noop,removeRightClick=noop;
   const timeout=setTimeout(()=>{if(!ready){map.remove();reject(Error('Não foi possível desenhar o mapa híbrido.'))}},18000);
   function camera(){const c=map.getCenter();return {lat:c.lat,lng:c.lng}}
   const atlas=()=>window.DCX?.FictionalAtlas||{};
@@ -256,18 +256,50 @@ function create({container,center=TOKYO,zoom=12,host=false,onClick=noop,onSelect
     map.on('mouseleave',id,()=>{map.getCanvas().style.cursor=''});
    }
    if(host){
-    const el=map.getCanvasContainer();
-    el.addEventListener('contextmenu',e=>{
-     // Use the native event's screen position, not the camera center:
-     // M2 opens the complete Keymaster editor exactly where the pointer is.
+    // MapLibre handles its own contextmenu events. Capture the native event
+    // before that handler AND listen to the MapLibre event as a fallback.
+    // A single physical M2 press must open exactly one editor.
+    const el=map.getContainer();
+    let rightDown=null,lastOpen=0;
+    const down=e=>{if(e.button===2)rightDown={x:e.clientX,y:e.clientY,dragged:false}};
+    const move=e=>{
+     if(!rightDown)return;
+     if(Math.hypot(e.clientX-rightDown.x,e.clientY-rightDown.y)>7)rightDown.dragged=true;
+    };
+    const up=e=>{if(e.button===2&&rightDown?.dragged)rightDown=null};
+    const openAt=(lat,lng)=>{
+     if(destroyed||!ready||rightDown?.dragged)return;
+     const now=Date.now();
+     if(now-lastOpen<300)return;
+     if(!Number.isFinite(lat)||!Number.isFinite(lng))return;
+     lastOpen=now;
+     onClick({lat,lng});
+    };
+    const nativeContext=e=>{
      e.preventDefault();
-     if(destroyed||!ready)return;
-     const rect=map.getCanvas().getBoundingClientRect();
-     const x=e.clientX-rect.left,y=e.clientY-rect.top;
-     if(x<0||y<0||x>rect.width||y>rect.height)return;
-     const geo=map.unproject([x,y]);
-     onClick({lat:geo.lat,lng:geo.lng});
-    });
+     const box=map.getCanvas().getBoundingClientRect();
+     const x=e.clientX-box.left,y=e.clientY-box.top;
+     if(x<0||y<0||x>box.width||y>box.height)return;
+     const point=map.unproject([x,y]);
+     openAt(point.lat,point.lng);
+    };
+    const mapContext=e=>{
+     e.preventDefault?.();
+     e.originalEvent?.preventDefault?.();
+     openAt(e.lngLat.lat,e.lngLat.lng);
+    };
+    el.addEventListener('pointerdown',down,true);
+    el.addEventListener('pointermove',move,true);
+    el.addEventListener('pointerup',up,true);
+    el.addEventListener('contextmenu',nativeContext,true);
+    map.on('contextmenu',mapContext);
+    removeRightClick=()=>{
+     el.removeEventListener('pointerdown',down,true);
+     el.removeEventListener('pointermove',move,true);
+     el.removeEventListener('pointerup',up,true);
+     el.removeEventListener('contextmenu',nativeContext,true);
+     map.off('contextmenu',mapContext);
+    };
    }
    disposeTheme=window.DCX?.MapColors?.observe?.(applyTheme)||noop;
    applyTheme();
@@ -285,7 +317,7 @@ function create({container,center=TOKYO,zoom=12,host=false,onClick=noop,onSelect
     setLabelMode:mode=>{labelMode=mode==='simple'?'simple':'complete';applyVisibility();return labelMode},
     getStatus:()=>({painted:ready,width:container.clientWidth,height:container.clientHeight,provider:'MapLibre+OpenFreeMap'}),
     destroy:()=>{
-     destroyed=true;disposeTheme();clearTimeout(timeout);map.remove()
+     destroyed=true;removeRightClick();disposeTheme();clearTimeout(timeout);map.remove()
     }
    });
   }

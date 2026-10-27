@@ -85,3 +85,12 @@
 .dcxAtlasRowLabel small{line-height:1.3}
 @media(max-width:800px){.dcxAtlasViewModes .dcxAtlasBtn{font-size:8px;padding:6px}.dcxAtlasDirectory{width:195px}.dcxAtlasDirectoryTabs .dcxAtlasBtn{font-size:7px}}
 @media(max-width:600px){.dcxAtlasDirectory{width:155px;max-height:55vh}.dcxAtlasDirectoryTabs{grid-template-columns:repeat(2,minmax(0,1fr));gap:3px;padding:5px}.dcxAtlasViewModes{width:100%;justify-content:center}.dcxAtlasTop{gap:6px}.dcxAtlasLocation{width:95px}}
+
+/* DCX GEO REAL // opt-in provider controls */
+.dcxAtlasProviderModes{display:inline-flex;align-items:center;gap:3px;padding:3px;border:1px solid #42618b;border-radius:8px;background:#061823}
+.dcxAtlasProviderModes .dcxAtlasBtn{padding:7px 9px;font-size:9px;border-color:transparent;white-space:nowrap}
+.dcxAtlasProviderModes .dcxAtlasBtn.active{background:#15364d;border-color:#72dff4;color:#d9f9ff;box-shadow:inset 0 -2px 0 #65d8f2}
+.dcxAtlasProviderModes .dcxAtlasBtn:disabled{opacity:.6;cursor:wait}
+.dcxMapHybrid{z-index:3!important;position:absolute!important;inset:0!important}
+.dcxAtlasActive .dcxMapCanvas:before{z-index:4!important}
+@media(max-width:700px){.dcxAtlasProviderModes{flex-wrap:wrap}.dcxAtlasProviderModes .dcxAtlasBtn{font-size:8px;padding:6px}}

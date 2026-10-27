@@ -10,3 +10,15 @@
 .dcxMapLeafletGlyph-important{background:#e9f080;box-shadow:0 0 19px #f0fc7088}
 .dcxMapLeafletGlyph-risk{background:#f46d83;box-shadow:0 0 19px #ff526c99}
 .dcxMapOverlay:not(.dcxMapFallback){z-index:1}
+
+/* MAP PERF V4: isolate paint and avoid GPU compositing of the full terminal. */
+.dcxMapCanvas{contain:layout paint;isolation:isolate}
+.dcxMapLeaflet .leaflet-tile-pane{filter:none!important}
+.dcxMapLeaflet{background:#07101b}
+.dcxMapModeTools{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+.dcxMapModeTools .dcxMapButton{font-size:9px;padding:7px 9px}
+.dcxMapFictionCityName{color:#d7faff;font:bold 15px ui-monospace,monospace;text-shadow:0 0 10px #04101e,0 0 18px #55cedf;white-space:nowrap}
+.dcxMapFictionRoadName{color:#8be3ec;font:800 9px ui-monospace,monospace;text-shadow:0 0 8px #05111e;white-space:nowrap}
+.dcxFictionLabel{pointer-events:none}
+html[data-dcx-visual-fx] body:has(.dcxMapPane.active):after,html[data-dcx-visual-fx] body:has(.kmWorkspaceView[data-km-view="tactical-map"].active):after{animation:none!important;opacity:.035!important}
+html[data-dcx-visual-fx] body:has(.dcxMapPane.active) .app,html[data-dcx-visual-fx] body:has(.kmWorkspaceView[data-km-view="tactical-map"].active) .app{filter:none!important}

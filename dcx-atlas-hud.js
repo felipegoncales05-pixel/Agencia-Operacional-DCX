@@ -22,6 +22,7 @@ function goGlobal(){
  const cartography=window.DCX?.Cartography,current=cartography?.getCamera?.();
  if(engine()?.global)engine().global();
  else if(cartography?.centerMap)cartography.centerMap(current?.center||{lat:15,lng:0},2);
+ if(!engine()?.supportsGlobe?.())window.DCX?.WorldGlobe?.show?.(true,2,current?.center||{lat:15,lng:0});
  update();refresh();
 }
 function locationLabel(){
@@ -35,7 +36,7 @@ function head(){
  const brand=node('div','dcxAtlasBrand');
  brand.append(node('small','','DCX // CRÔNICAS DO TEMPO'),node('strong','','CENTRAL CARTOGRÁFICA'));
  const nav=node('div','dcxAtlasNav');
- nav.append(btn('◎ GLOBAL',goGlobal,'global'),btn('⌖ TOKYO',()=>chooseCity('tokyo'),'tokyo'));
+ nav.append(btn('◉ GLOBO 3D',goGlobal,'global'),btn('⌖ TOKYO',()=>chooseCity('tokyo'),'tokyo'));
  const other=btn('◇ OUTRAS CIDADES',()=>{current='cities';refresh()},'cities');
  nav.append(other);
  const modes=node('div','dcxAtlasViewModes');
@@ -67,7 +68,7 @@ function head(){
  const coords=node('span','dcxAtlasLocationCoords','35.6762° N / 139.6503° E');coords.id='dcxAtlasLocationCoords';
  left.append(title,native,coords);
  const scope=node('div','dcxAtlasScope');
- scope.append(btn('◉ VISÃO GLOBAL',goGlobal),btn('⌖ CENTRALIZAR',()=>chooseCity(selectedCity)));
+ scope.append(btn('◉ VISÃO PLANETÁRIA',goGlobal),btn('⌖ CENTRALIZAR',()=>chooseCity(selectedCity)));
  left.append(scope);
  const right=node('aside','dcxAtlasDirectory');
  const tabs=node('div','dcxAtlasDirectoryTabs');

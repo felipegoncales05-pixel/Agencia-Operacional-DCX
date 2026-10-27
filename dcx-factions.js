@@ -129,7 +129,7 @@ async function saveFaction(values){
  const roster=record?privateRoster(id):{};
  const currentPublic=record?.membersPublic;
  const isMakingPublic=values.membersPublic&&!currentPublic;
- if(isMakingPublic&&!secretReady){feedback='NÃO É POSSÍVEL EXPOR FICHAS: SINCRONIZE PRIMEIRO O ARQUIVO PRIVADO.';render();return}
+ if(record&&!secretReady){feedback='ARQUIVO PRIVADO INDISPONÍVEL: SALVAMENTO BLOQUEADO PARA PROTEGER AS FICHAS.';renderStatus();return}
  pending=true;feedback='PUBLICANDO FACÇÃO...';renderStatus();
  try{
   await updatePublic(id,values,roster);

@@ -1,0 +1,50 @@
+
+/* DCX Atlas // modular minimal satellite-cyberpunk HUD. */
+.dcxMapOffline{position:absolute;inset:0;min-width:0;min-height:0;background:#030912;z-index:1;overflow:hidden}
+.dcxAtlasActive{--map-neon:var(--cyan,#6eeaff);position:relative;background:#030a12;padding:6px;max-width:100%;box-sizing:border-box}
+.dcxAtlasOldHero,.dcxAtlasOldNote{display:none!important}
+.dcxAtlasHud{position:relative;z-index:4;pointer-events:none}
+.dcxAtlasHud button,.dcxAtlasDirectory{pointer-events:auto}
+.dcxAtlasTop{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid #28576b;border-radius:10px 10px 0 0;padding:10px 14px;background:#04131ce8;min-height:54px}
+.dcxAtlasBrand{display:grid;gap:5px}.dcxAtlasBrand small{font:700 9px ui-monospace,monospace;color:#76c6d7;letter-spacing:.13em}.dcxAtlasBrand strong{font:900 16px ui-monospace,monospace;color:#e3f8ff;letter-spacing:.12em}
+.dcxAtlasNav{display:flex;gap:7px;align-items:center;flex-wrap:wrap}.dcxAtlasBtn{border:1px solid #24536a;background:#071a28;color:#9cc9d9;cursor:pointer;font:800 10px ui-monospace,monospace;padding:9px 12px;border-radius:6px;letter-spacing:.025em}
+.dcxAtlasBtn:hover,.dcxAtlasBtn.active{border-color:#62deea;background:#0b3244;color:#c9f7ff}
+.dcxAtlasState{color:#6198ab;font:8px ui-monospace,monospace;letter-spacing:.12em}
+.dcxAtlasSides{position:absolute;top:62px;left:10px;right:10px;display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.dcxAtlasLocation{width:155px;box-sizing:border-box;padding:14px 12px;display:grid;gap:6px;background:#04121ce8;border:1px solid #21566c;border-radius:8px;box-shadow:0 8px 25px #0007}
+.dcxAtlasLocation small{font:800 8px ui-monospace,monospace;color:#67bacb}
+.dcxAtlasPlace{font:900 18px ui-monospace,monospace;letter-spacing:.12em;color:#edfaff;overflow-wrap:anywhere}
+.dcxAtlasLocalName{color:#82b5c4;font-size:11px}
+.dcxAtlasLocationCoords{font:9px ui-monospace,monospace;color:#a0c6d9}
+.dcxAtlasScope{border-top:1px solid #23546c;margin-top:6px;padding-top:9px;display:grid;gap:6px}
+.dcxAtlasScope .dcxAtlasBtn{font-size:9px;padding:7px}
+.dcxAtlasDirectory{width:235px;box-sizing:border-box;background:#04111cf0;border:1px solid #2e7690;border-radius:8px;box-shadow:0 8px 30px #0009;max-height:min(58vh,430px);display:flex;flex-direction:column;min-width:0}
+.dcxAtlasDirectoryTabs{display:flex;gap:2px;padding:8px 5px;border-bottom:1px solid #29566c;flex-wrap:wrap}
+.dcxAtlasDirectoryTabs .dcxAtlasBtn{font-size:8px;padding:6px 7px}
+.dcxAtlasDirectoryList{overflow-y:auto;max-height:300px;min-height:70px;padding:5px}
+.dcxAtlasDirectoryRow{display:flex;align-items:center;gap:9px;width:100%;border:0;border-bottom:1px solid #164050;background:#0718268a;color:#cae8ef;padding:9px 6px;text-align:left;cursor:pointer}
+.dcxAtlasDirectoryRow:hover{background:#12394c}
+.dcxAtlasRowIcon{color:#67dcec;min-width:20px;text-align:center;font-size:14px}
+.dcxAtlasRowLabel{display:grid;gap:3px;min-width:0;flex:1}.dcxAtlasRowLabel strong{font:800 10px ui-monospace,monospace;overflow-wrap:anywhere}.dcxAtlasRowLabel small{font:8px ui-monospace,monospace;color:#81a9bc}
+.dcxAtlasRowArrow{color:#64d6e7;font-size:16px}.dcxAtlasLegend{border-top:1px solid #29566c;padding:10px}.dcxAtlasLegend strong{font:800 9px ui-monospace,monospace;color:#77d7e7}.dcxAtlasLegend p{font:8px/1.6 ui-monospace,monospace;color:#a4c2d1;margin:5px 0}
+.dcxAtlasBottom{position:absolute;left:15px;right:15px;top:clamp(470px,calc(78dvh - 72px),825px);display:flex;justify-content:space-between;align-items:center;color:#77b2c2;font:9px ui-monospace,monospace}
+.dcxAtlasZoom{display:flex;gap:5px}
+.dcxAtlasActive .dcxMapHero{display:none!important}
+.dcxAtlasActive .dcxMapLayout{grid-template-columns:1fr!important;gap:0;min-height:0}
+.dcxAtlasActive .dcxMapField{border-radius:0 0 10px 10px;grid-template-rows:minmax(0,1fr);height:clamp(440px,calc(78dvh - 58px),900px)}
+.dcxAtlasActive .dcxMapCanvas{height:100%!important;min-height:0!important}
+.dcxAtlasActive .dcxMapFieldBar{display:none}
+.dcxAtlasActive .dcxMapSidebar{display:none}
+.dcxAtlasActive .dcxMapCrosshair{opacity:.15}
+.dcxAtlasActive .dcxMapFooter{font-size:9px;padding:8px}
+.dcxAtlasActive .dcxMapEditor{z-index:2200}
+.dcxAtlasActive .dcxMapCanvas:before{position:absolute;inset:0;content:"";z-index:2;pointer-events:none;border:1px solid #127b9580;box-shadow:inset 0 0 50px #031824}
+.dcxAtlasActive .dcxAtlasHud .dcxAtlasBottom{top:calc(clamp(440px,calc(78dvh - 58px),900px) - 48px)}
+.dcxAtlasActive:fullscreen{padding:10px}
+.dcxAtlasActive:fullscreen .dcxMapField{height:calc(100dvh - 160px)}
+.dcxAtlasActive:fullscreen .dcxAtlasHud .dcxAtlasBottom{top:calc(100dvh - 213px)}
+.dcxMapPanelsHidden .dcxAtlasDirectory{display:none}
+.dcxMapOptimized.dcxAtlasActive .dcxMapCanvas{height:100%!important}
+.dcxAtlasActive .dcxMapErgoControls{display:none}
+@media(max-width:900px){.dcxAtlasState{display:none}.dcxAtlasLocation{width:130px}.dcxAtlasDirectory{width:185px}.dcxAtlasDirectoryTabs .dcxAtlasBtn{padding:5px}.dcxAtlasBrand strong{font-size:12px}}
+@media(max-width:600px){.dcxAtlasTop{flex-wrap:wrap}.dcxAtlasBrand{flex-basis:100%}.dcxAtlasSides{top:92px;left:5px;right:5px}.dcxAtlasLocation{width:95px;padding:8px 6px}.dcxAtlasPlace{font-size:12px}.dcxAtlasLocalName,.dcxAtlasLocationCoords{font-size:8px}.dcxAtlasScope .dcxAtlasBtn{font-size:7px;padding:4px}.dcxAtlasDirectory{width:155px;max-height:350px}.dcxAtlasDirectoryTabs .dcxAtlasBtn{font-size:7px}.dcxAtlasTop{padding:7px}.dcxAtlasNav .dcxAtlasBtn{padding:6px;font-size:8px}.dcxAtlasBottom{left:7px;right:7px;font-size:7px}}

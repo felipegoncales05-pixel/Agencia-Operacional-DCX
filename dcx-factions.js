@@ -5,7 +5,17 @@
 (()=>{
 'use strict';
 const HOST=/keymaster\.html$/i.test(location.pathname);
-const TYPES=['Ilegal','Legal','Pública','Privada','Familiar'];
+// Type describes legal status; category describes institutional structure.
+const TYPES=['Legal','Ilegal','Desconhecido'];
+const CATEGORIES=['Pública','Privada','Familiar'];
+const typeOf=f=>TYPES.includes(f?.type)?f.type:'Desconhecido';
+const categoryOf=f=>{
+ if(CATEGORIES.includes(f?.category))return f.category;
+ // Read legacy factions without mutating Firebase automatically.
+ return CATEGORIES.includes(f?.type)?f.type:'';
+};
+const typeClass=f=>typeOf(f).toLowerCase();
+const categoryLabel=f=>categoryOf(f)||'NÃO DEFINIDA';
 const SYMBOLS=[
  ['hex','⬡','HEXÁGONO'],['sun','☀','SOL'],['moon','☾','LUA'],['star','✦','ESTRELA'],
  ['crown','♛','COROA'],['diamond','◆','DIAMANTE'],['shield','⛨','ESCUDO'],['bolt','ϟ','RAIO'],
@@ -35,7 +45,7 @@ const select=(label,options,value)=>{
 const safeText=(v,max=400)=>String(v||'').trim().slice(0,max);
 const safeURL=v=>{const x=safeText(v,1000);try{return /^https:$/.test(new URL(x).protocol)?x:''}catch{return''}};
 const int=(v,max=100)=>Math.max(0,Math.min(max,Math.round(Number(v)||0)));
-const defaultFaction=()=>({title:'NOVA FACÇÃO',type:'Ilegal',symbol:'hex',authority:0,hostility:0,
+const defaultFaction=()=>({title:'NOVA FACÇÃO',type:'Desconhecido',category:'',symbol:'hex',authority:0,hostility:0,
  description:'',image:'',membersPublic:false,memberCount:0,members:{}});
 let room='',uid='',db=null,connected=false,publicRef=null,secretRef=null;
 let factions={},secrets={},secretReady=false,secretError='',pending=false,feedback='AGUARDANDO SESSÃO';
@@ -106,7 +116,7 @@ function memberData(o){
 }
 function sanitize(f,roster){
  const result={title:safeText(f.title,100)||'FACÇÃO SEM NOME',
-  type:TYPES.includes(f.type)?f.type:'Ilegal',symbol:ICONS[f.symbol]?f.symbol:'hex',
+  type:typeOf(f),category:categoryOf(f),symbol:ICONS[f.symbol]?f.symbol:'hex',
   authority:int(f.authority),hostility:int(f.hostility,5),
   description:safeText(f.description,3500),image:safeURL(f.image),
   membersPublic:!!f.membersPublic,
@@ -197,7 +207,11 @@ function renderMenu(){
   const button=btn('',()=>{selection=f.id;editor='';render()},'dcxFactionNav'+(selection===f.id?' active':''));
   const sym=el('span','dcxFactionSymbol',emblem(f));
   const txt=el('span','dcxFactionNavText');
-  txt.append(el('strong','',f.title),el('small','',f.type.toUpperCase()+' · AUTORIDADE '+int(f.authority)));
+  txt.append(el('strong','',f.title));
+  const classification=el('small','dcxFactionNavClass');
+  const kind=el('span','dcxFactionTypeBadge dcxFactionType-'+typeClass(f),typeOf(f).toUpperCase());
+  classification.append(kind,el('span','',' · '+categoryLabel(f).toUpperCase()+' · AUT. '+int(f.authority)));
+  txt.append(classification);
   const num=el('span','dcxFactionNavRank',String(int(f.authority)).padStart(2,'0'));
   button.append(sym,txt,num);body.append(button);
  });
@@ -212,11 +226,15 @@ function optionField(parent,label,list,value){
 function editFaction(){
  const f=current()||defaultFaction(),wrap=el('form','dcxFactionForm');
  wrap.addEventListener('submit',e=>{e.preventDefault();saveFaction({
-  title:title.value,type:kind.value,symbol:symbol.value,authority:authority.value,
+  title:title.value,type:kind.value,category:category.value,symbol:symbol.value,authority:authority.value,
   hostility:hostility.value,description:desc.value,image:image.value,membersPublic:visibility.checked
  })});
  const title=textField(wrap,f,'title','NOME / TÍTULO',100);
- const kind=optionField(wrap,'TIPO',TYPES.map(v=>[v,v.toUpperCase()]),f.type);
+ const kind=optionField(wrap,'TIPO / SITUAÇÃO LEGAL',TYPES.map(v=>[v,v.toUpperCase()]),typeOf(f));
+ const hint=el('p','dcxFactionFieldHint','LEGAL = VERDE NEON · ILEGAL = VERMELHO NEON · DESCONHECIDO = CINZA NEON');
+ wrap.append(hint);
+ const category=optionField(wrap,'CATEGORIA DA FACÇÃO',[['','SELECIONE A CATEGORIA'],...CATEGORIES.map(v=>[v,v.toUpperCase()])],categoryOf(f));
+ category.required=true;
  const symbol=optionField(wrap,'SÍMBOLO DA FACÇÃO',SYMBOLS.map(([id,icon,label])=>[id,icon+'  '+label]),f.symbol);
  const authority=textField(wrap,f,'authority','AUTORIDADE (0 A 100)',3);authority.type='number';authority.min='0';authority.max='100';
  const hostility=textField(wrap,f,'hostility','HOSTILIDADE COM A DCX (0 A 5 ESTRELAS)',1);hostility.type='number';hostility.min='0';hostility.max='5';
@@ -278,13 +296,14 @@ function renderDetails(){
  }
  const f=current();
  if(!f){body.append(el('div','dcxFactionEmpty','SELECIONE UMA FACÇÃO OU AGUARDE A PUBLICAÇÃO PELO KEYMASTER.'));return}
- const hero=el('section','dcxFactionHero');
+ const hero=el('section','dcxFactionHero dcxFactionType-'+typeClass(f));
  photo(hero,f.image,'Emblema visual da facção '+f.title);
  const copy=el('div','dcxFactionHeroCopy');
  copy.append(el('span','dcxFactionKicker','DCX // ARQUIVO DE INTELIGÊNCIA'),
   el('span','dcxFactionHeroSymbol',emblem(f)),el('h1','',f.title));
  const meta=el('div','dcxFactionMetrics');
- meta.append(el('span','','TIPO // '+(f.type||'ILEGAL').toUpperCase()),
+ meta.append(el('span','dcxFactionTypeBadge dcxFactionType-'+typeClass(f),'TIPO // '+typeOf(f).toUpperCase()),
+  el('span','dcxFactionCategoryBadge','CATEGORIA // '+categoryLabel(f).toUpperCase()),
   el('span','','AUTORIDADE // '+int(f.authority)+'/100'),
   el('span','dcxFactionHostility','HOSTILIDADE // '+stars(f.hostility)));
  copy.append(meta);hero.append(copy);body.append(hero);
@@ -344,6 +363,6 @@ function boot(){
  connect();refreshTimer=setInterval(connect,1500);render();
 }
 window.DCX=window.DCX||{};
-window.DCX.Factions={get selected(){return selection},get factions(){return sorted()},open(id){selection=id;editor='';render()},symbols:SYMBOLS};
+window.DCX.Factions={get selected(){return selection},get factions(){return sorted()},open(id){selection=id;editor='';render()},symbols:SYMBOLS,types:TYPES,categories:CATEGORIES};
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();

@@ -131,7 +131,7 @@ function mount(){
  canvas.addEventListener('dblclick',()=>openMapAt(latitude,longitude));
  window.addEventListener('resize',request,{passive:true});
  document.addEventListener('dcx-map-camera',e=>setCamera(e.detail));
- show(true,3,{lat:-17,lng:-48});
+ show(false,13,{lat:-17,lng:-48});
  setTimeout(()=>{if(window.DCX?.Cartography?.getCamera)setCamera(window.DCX.Cartography.getCamera())},160);
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount,{once:true});else mount();

@@ -338,7 +338,7 @@ function bindBoard(){
  });
  board.addEventListener('wheel',e=>{if(map)return;e.preventDefault();zoom(e.deltaY<0?1:-1)},{passive:false});
  board.addEventListener('keydown',e=>{if(e.key==='+'||e.key==='=')zoom(1);if(e.key==='-')zoom(-1)});
- const observer=new ResizeObserver(()=>{if(!map&&root)renderFallback()});
+ const observer=new ResizeObserver(()=>{if(!map&&root&&mapFailed)renderFallback()});
  observer.observe(board);
 }
 function closeEditor(){drawer?.classList.add('hidden');draftPos=null}
@@ -414,7 +414,7 @@ function ensureTabs(){
     document.querySelectorAll('.playerWorkspacePane').forEach(p=>p.classList.toggle('active',p.dataset.workspace==='map'));
     document.querySelectorAll('.playerWorkspaceTab').forEach(n=>n.classList.toggle('active',n===b));
     try{sessionStorage.setItem('dcx-map-tab-active','1')}catch{}
-    setTimeout(()=>{google?.maps?.event?.trigger?.(map,'resize');renderFallback()},100);
+    setTimeout(()=>{window.google?.maps?.event?.trigger?.(map,'resize');if(!map)renderFallback()},100);
    });
    nav.querySelectorAll('.playerWorkspaceTab:not([data-workspace-target="map"])').forEach(tab=>tab.addEventListener('click',()=>{const p=$('dcxMapPlayerPane');if(p)p.classList.remove('active')}));
   }

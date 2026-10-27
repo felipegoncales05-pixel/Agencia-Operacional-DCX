@@ -1,0 +1,9 @@
+/* Optional DCX hybrid provider UI. Include only with hybrid provider enabled. */
+.dcxHawaiiInset{position:absolute;z-index:10;transform:translate(-50%,-50%);padding:7px 10px;background:#082331ee;border:1px solid #65cde8;border-radius:8px;color:#e0faff;font:800 9px ui-monospace,monospace;box-shadow:0 0 14px #0fe6ff44;cursor:pointer;white-space:nowrap}
+.dcxHawaiiInset:hover,.dcxHawaiiInset:focus-visible{outline:2px solid #b6f0fb;outline-offset:2px}
+.dcxHawaiiInset[hidden]{display:none!important}
+.dcxMapHybrid{position:absolute;inset:0;min-height:320px;overflow:hidden;background:#03111b;isolation:isolate}
+.dcxMapHybrid .maplibregl-map{height:100%;width:100%;font-family:ui-monospace,monospace}
+.dcxMapHybrid .maplibregl-ctrl-attrib{background:#061924dc!important;color:#bddde5!important;font:10px ui-monospace,monospace!important}
+.dcxMapHybrid .maplibregl-ctrl-attrib a{color:#7edce8!important}
+@media(max-width:600px){.dcxHawaiiInset{font-size:8px;padding:5px 7px}}

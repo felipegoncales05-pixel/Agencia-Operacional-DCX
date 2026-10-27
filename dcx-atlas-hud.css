@@ -48,3 +48,15 @@
 .dcxAtlasActive .dcxMapErgoControls{display:none}
 @media(max-width:900px){.dcxAtlasState{display:none}.dcxAtlasLocation{width:130px}.dcxAtlasDirectory{width:185px}.dcxAtlasDirectoryTabs .dcxAtlasBtn{padding:5px}.dcxAtlasBrand strong{font-size:12px}}
 @media(max-width:600px){.dcxAtlasTop{flex-wrap:wrap}.dcxAtlasBrand{flex-basis:100%}.dcxAtlasSides{top:92px;left:5px;right:5px}.dcxAtlasLocation{width:95px;padding:8px 6px}.dcxAtlasPlace{font-size:12px}.dcxAtlasLocalName,.dcxAtlasLocationCoords{font-size:8px}.dcxAtlasScope .dcxAtlasBtn{font-size:7px;padding:4px}.dcxAtlasDirectory{width:155px;max-height:350px}.dcxAtlasDirectoryTabs .dcxAtlasBtn{font-size:7px}.dcxAtlasTop{padding:7px}.dcxAtlasNav .dcxAtlasBtn{padding:6px;font-size:8px}.dcxAtlasBottom{left:7px;right:7px;font-size:7px}}
+
+/* Interactive POI details: text stays outside the map graphic. */
+.dcxAtlasPointDetail{padding:12px 10px;border-top:1px solid #2d7086;background:#051e2c;overflow:auto;max-height:190px}
+.dcxAtlasPointDetail[hidden]{display:none!important}
+.dcxAtlasPointTop{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.dcxAtlasPointTop small{font:800 9px ui-monospace,monospace;color:#5cdbf4}
+.dcxAtlasPointDetail .dcxAtlasPointTitle{display:block;font:900 12px ui-monospace,monospace;color:#edfaff;margin-top:6px}
+.dcxAtlasPointDescription{white-space:pre-wrap;overflow-wrap:anywhere;font:11px/1.5 ui-monospace,monospace;color:#c6dbe5}
+.dcxAtlasThreats{display:block;color:#ff869a;font:900 10px ui-monospace,monospace}
+.dcxAtlasPointDetail img{display:block;max-width:100%;max-height:115px;object-fit:contain;margin:9px auto;border-radius:6px}
+.dcxAtlasPointClose{padding:3px 7px!important}
+.dcxAtlasEdit{margin-top:9px;width:100%}

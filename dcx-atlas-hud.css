@@ -104,3 +104,96 @@
 .dcxAtlasActive .dcxMapCanvas{background:#172632}
 .dcxMapHybrid{background:#1d3444}
 @media(max-width:600px){.dcxAtlasColorControl{width:100%;justify-content:center}#dcxAtlasColorSelect{max-width:65%}}
+
+/* DCXGEO8 // No dead band beneath the interactive GEO REAL map.
+   The outer atlas is a real flex column; the map takes the remaining space.
+   Id specificity + important deliberately beat older ergonomic fixed heights. */
+#dcxTacticalMap.dcxAtlasActive{
+ display:flex!important;
+ flex-direction:column!important;
+ height:clamp(550px,calc(100dvh - 12px),980px);
+ min-height:0!important;
+ overflow:hidden!important;
+}
+#dcxTacticalMap.dcxAtlasActive .dcxAtlasHud{
+ position:static!important;
+ flex:0 0 auto!important;
+}
+#dcxTacticalMap.dcxAtlasActive .dcxAtlasTop{
+ position:relative;
+ z-index:7;
+ flex:0 0 auto;
+}
+#dcxTacticalMap.dcxAtlasActive .dcxAtlasSides{
+ top:calc(var(--dcx-map-header-height, 60px) + 5px)!important;
+ z-index:8;
+}
+#dcxTacticalMap.dcxAtlasActive .dcxMapLayout{
+ flex:1 1 0%!important;
+ height:auto!important;
+ min-height:0!important;
+ display:grid!important;
+ grid-template-columns:minmax(0,1fr)!important;
+ grid-template-rows:minmax(0,1fr)!important;
+ overflow:hidden!important;
+}
+#dcxTacticalMap.dcxAtlasActive .dcxMapField{
+ width:100%!important;
+ height:100%!important;
+ min-width:0!important;
+ min-height:0!important;
+ display:grid!important;
+ grid-template-rows:minmax(0,1fr)!important;
+ overflow:hidden!important;
+}
+#dcxTacticalMap.dcxAtlasActive #dcxMapCanvas{
+ width:100%!important;
+ height:100%!important;
+ min-height:0!important;
+ max-height:none!important;
+ position:relative!important;
+ overflow:hidden!important;
+}
+#dcxTacticalMap.dcxAtlasActive #dcxMapOverlay,
+#dcxTacticalMap.dcxAtlasActive #dcxMapOffline,
+#dcxTacticalMap.dcxAtlasActive .dcxMapHybrid,
+#dcxTacticalMap.dcxAtlasActive .maplibregl-map,
+#dcxTacticalMap.dcxAtlasActive .maplibregl-canvas-container{
+ position:absolute;
+ inset:0;
+ width:100%!important;
+ height:100%!important;
+ min-height:0!important;
+ max-height:none!important;
+}
+#dcxTacticalMap.dcxAtlasActive .maplibregl-map,
+#dcxTacticalMap.dcxAtlasActive .maplibregl-canvas-container{
+ position:absolute!important;
+}
+#dcxTacticalMap.dcxAtlasActive .dcxMapFooter{
+ flex:0 0 auto!important;
+ margin:0!important;
+ min-height:24px;
+ padding:5px 12px!important;
+ z-index:5;
+}
+#dcxTacticalMap.dcxAtlasActive .dcxAtlasHud .dcxAtlasBottom{
+ top:auto!important;
+ bottom:39px!important;
+ left:14px;
+ right:14px;
+ z-index:9;
+ pointer-events:none;
+}
+#dcxTacticalMap.dcxAtlasActive .dcxAtlasBottom .dcxAtlasZoom,
+#dcxTacticalMap.dcxAtlasActive .dcxAtlasBottom button{
+ pointer-events:auto;
+}
+#dcxTacticalMap.dcxAtlasActive:fullscreen{
+ height:100dvh!important;
+ max-height:none!important;
+}
+@media(max-width:620px){
+ #dcxTacticalMap.dcxAtlasActive{height:clamp(520px,calc(100dvh - 16px),940px)}
+ #dcxTacticalMap.dcxAtlasActive .dcxAtlasHud .dcxAtlasBottom{bottom:40px!important}
+}

@@ -21,8 +21,56 @@ const CITIES=[
  {id:'rio',name:'RIO DE JANEIRO',local:'BRASIL',lat:-22.9068,lng:-43.1729,seed:155},
  {id:'paris',name:'PARIS',local:'FRANÇA',lat:48.8566,lng:2.3522,seed:169},
  {id:'cairo',name:'CAIRO',local:'EGITO',lat:30.0444,lng:31.2357,seed:182},
- {id:'sydney',name:'SYDNEY',local:'AUSTRÁLIA',lat:-33.8688,lng:151.2093,seed:194}
+ {id:'sydney',name:'SYDNEY',local:'AUSTRÁLIA',lat:-33.8688,lng:151.2093,seed:194},
+ {id:"washington",name:"WASHINGTON",local:"ESTADOS UNIDOS",lat:38.9072,lng:-77.0369,seed:205},
+ {id:"losangeles",name:"LOS ANGELES",local:"ESTADOS UNIDOS",lat:34.0522,lng:-118.2437,seed:213},
+ {id:"chicago",name:"CHICAGO",local:"ESTADOS UNIDOS",lat:41.8781,lng:-87.6298,seed:216},
+ {id:"mexico",name:"CIDADE DO MÉXICO",local:"MÉXICO",lat:19.4326,lng:-99.1332,seed:226},
+ {id:"toronto",name:"TORONTO",local:"CANADÁ",lat:43.6532,lng:-79.3832,seed:231},
+ {id:"vancouver",name:"VANCOUVER",local:"CANADÁ",lat:49.2827,lng:-123.1207,seed:238},
+ {id:"bogota",name:"BOGOTÁ",local:"COLÔMBIA",lat:4.711,lng:-74.0721,seed:245},
+ {id:"lima",name:"LIMA",local:"PERU",lat:-12.0464,lng:-77.0428,seed:252},
+ {id:"santiago",name:"SANTIAGO",local:"CHILE",lat:-33.4489,lng:-70.6693,seed:259},
+ {id:"buenosaires",name:"BUENOS AIRES",local:"ARGENTINA",lat:-34.6037,lng:-58.3816,seed:266},
+ {id:"brasilia",name:"BRASÍLIA",local:"BRASIL",lat:-15.7939,lng:-47.8828,seed:273},
+ {id:"berlin",name:"BERLIM",local:"ALEMANHA",lat:52.52,lng:13.405,seed:281},
+ {id:"madrid",name:"MADRI",local:"ESPANHA",lat:40.4168,lng:-3.7038,seed:286},
+ {id:"rome",name:"ROMA",local:"ITÁLIA",lat:41.9028,lng:12.4964,seed:293},
+ {id:"lisbon",name:"LISBOA",local:"PORTUGAL",lat:38.7223,lng:-9.1393,seed:298},
+ {id:"amsterdam",name:"AMSTERDÃ",local:"PAÍSES BAIXOS",lat:52.3676,lng:4.9041,seed:309},
+ {id:"stockholm",name:"ESTOCOLMO",local:"SUÉCIA",lat:59.3293,lng:18.0686,seed:316},
+ {id:"kyiv",name:"KIEV",local:"UNIÃO SOVIÉTICA",lat:50.4501,lng:30.5234,seed:321},
+ {id:"minsk",name:"MINSK",local:"UNIÃO SOVIÉTICA",lat:53.9006,lng:27.559,seed:328},
+ {id:"almaty",name:"ALMATY",local:"UNIÃO SOVIÉTICA",lat:43.222,lng:76.8512,seed:332},
+ {id:"tashkent",name:"TASHKENT",local:"UNIÃO SOVIÉTICA",lat:41.2995,lng:69.2401,seed:337},
+ {id:"vladivostok",name:"VLADIVOSTOK",local:"UNIÃO SOVIÉTICA",lat:43.1155,lng:131.8855,seed:339},
+ {id:"istanbul",name:"ISTAMBUL",local:"TURQUIA",lat:41.0082,lng:28.9784,seed:343},
+ {id:"dubai",name:"DUBAI",local:"EMIRADOS ÁRABES",lat:25.2048,lng:55.2708,seed:352},
+ {id:"jerusalem",name:"JERUSALÉM",local:"ISRAEL",lat:31.7683,lng:35.2137,seed:356},
+ {id:"tehran",name:"TEERÃ",local:"IRÃ",lat:35.6892,lng:51.389,seed:361},
+ {id:"delhi",name:"NOVA DELHI",local:"ÍNDIA",lat:28.6139,lng:77.209,seed:367},
+ {id:"mumbai",name:"MUMBAI",local:"ÍNDIA",lat:19.076,lng:72.8777,seed:375},
+ {id:"karachi",name:"KARACHI",local:"PAQUISTÃO",lat:24.8607,lng:67.0011,seed:379},
+ {id:"shanghai",name:"XANGAI",local:"CHINA",lat:31.2304,lng:121.4737,seed:383},
+ {id:"hongkong",name:"HONG KONG",local:"CHINA",lat:22.3193,lng:114.1694,seed:385},
+ {id:"taipei",name:"TAIPEI",local:"TAIWAN",lat:25.033,lng:121.5654,seed:388},
+ {id:"bangkok",name:"BANGKOK",local:"TAILÂNDIA",lat:13.7563,lng:100.5018,seed:390},
+ {id:"singapore",name:"SINGAPURA",local:"SINGAPURA",lat:1.3521,lng:103.8198,seed:392},
+ {id:"jakarta",name:"JACARTA",local:"INDONÉSIA",lat:-6.2088,lng:106.8456,seed:395},
+ {id:"manila",name:"MANILA",local:"FILIPINAS",lat:14.5995,lng:120.9842,seed:397},
+ {id:"hanoi",name:"HANÓI",local:"VIETNÃ",lat:21.0278,lng:105.8342,seed:402},
+ {id:"busan",name:"BUSAN",local:"COREIA DO SUL",lat:35.1796,lng:129.0756,seed:406},
+ {id:"lagos",name:"LAGOS",local:"NIGÉRIA",lat:6.5244,lng:3.3792,seed:410},
+ {id:"nairobi",name:"NAIRÓBI",local:"QUÊNIA",lat:-1.2921,lng:36.8219,seed:414},
+ {id:"johannesburg",name:"JOANESBURGO",local:"ÁFRICA DO SUL",lat:-26.2041,lng:28.0473,seed:419},
+ {id:"capetown",name:"CIDADE DO CABO",local:"ÁFRICA DO SUL",lat:-33.9249,lng:18.4241,seed:424},
+ {id:"addisababa",name:"ADIS ABEBA",local:"ETIÓPIA",lat:9.03,lng:38.74,seed:426},
+ {id:"casablanca",name:"CASABLANCA",local:"MARROCOS",lat:33.5731,lng:-7.5898,seed:431},
+ {id:"melbourne",name:"MELBOURNE",local:"AUSTRÁLIA",lat:-37.8136,lng:144.9631,seed:436},
+ {id:"auckland",name:"AUCKLAND",local:"NOVA ZELÂNDIA",lat:-36.8485,lng:174.7633,seed:440},
+ {id:"perth",name:"PERTH",local:"AUSTRÁLIA",lat:-31.9505,lng:115.8605,seed:445}
 ];
+const COUNTRIES=[["CANADÁ",57,-107],["ESTADOS UNIDOS",38,-102],["MÉXICO",24,-102],["BRASIL",-12,-52],["ARGENTINA",-39,-64],["CHILE",-28,-71],["PERU",-10,-76],["COLÔMBIA",4,-72],["VENEZUELA",8,-66],["BOLÍVIA",-17,-64],["EQUADOR",-1,-78],["REINO UNIDO",54,-3],["IRLANDA",53,-8],["PORTUGAL",40,-8],["ESPANHA",41,-4],["FRANÇA",47,2],["ALEMANHA",51,11],["ITÁLIA",43,12],["PAÍSES BAIXOS",52,5],["SUÉCIA",63,16],["NORUEGA",66,13],["POLÔNIA",52,19],["TURQUIA",39,35],["GRÉCIA",39,24],["UNIÃO SOVIÉTICA",62,88],["MARROCOS",31,-7],["EGITO",26,30],["NIGÉRIA",9,8],["ETIÓPIA",9,39],["QUÊNIA",0,38],["ÁFRICA DO SUL",-28,25],["ANGOLA",-12,18],["CONGO",-3,24],["SUDÃO",15,30],["ARGÉLIA",28,3],["ARÁBIA SAUDITA",24,45],["EMIRADOS ÁRABES",24,54],["IRÃ",32,54],["PAQUISTÃO",29,69],["ÍNDIA",22,79],["CHINA",36,104],["JAPÃO",37,139],["COREIA DO SUL",36,128],["NEPAL",28,84],["BANGLADESH",24,90],["TAILÂNDIA",16,101],["VIETNÃ",16,107],["MALÁSIA",4,102],["INDONÉSIA",-3,118],["FILIPINAS",12,123],["MONGÓLIA",46,104],["SINGAPURA",1.4,104],["AUSTRÁLIA",-25,135],["NOVA ZELÂNDIA",-41,173]];
 const DISTRICTS=[
  ['SHINJUKU','新宿',35.6938,139.7034],
  ['SHIBUYA','渋谷',35.6595,139.7005],
@@ -279,10 +327,35 @@ function create({container,center=TOKYO,zoom=13,host=false,onClick,onSelect,onMo
     ctx.closePath();ctx.fillStyle='#fa447015';ctx.fill();ctx.strokeStyle='#e7608a';ctx.lineWidth=1.2;ctx.stroke();
     ctx.font='bold 11px ui-monospace, monospace';ctx.textAlign='center';ctx.fillStyle='#f7a4bc';
     const ussr=projectGlobal(61,81);if(ussr.x>-110&&ussr.x<width+110)ctx.fillText('UNIÃO SOVIÉTICA · DCX',ussr.x,ussr.y);
+    // Text is a separate canvas overlay, never baked into the fictional land polygons.
+    // At world zoom levels prioritize country labels and avoid overlaps for readability.
+    const occupied=[];
+    const placeLabel=(value,x,y,priority=false)=>{
+     ctx.font=priority?'bold 12px ui-monospace, monospace':'bold 10px ui-monospace, monospace';
+     const w=ctx.measureText(value).width+8,h=17;
+     if(x-w/2<5||x+w/2>width-5||y-h/2<15||y+h/2>height-15)return false;
+     if(occupied.some(q=>x-w/2<q.x+q.w+8&&x+w/2>q.x-8&&y-h/2<q.y+q.h+5&&y+h/2>q.y-5))return false;
+     ctx.textAlign='center';ctx.textBaseline='middle';
+     ctx.lineWidth=3.3;ctx.strokeStyle='#020912';ctx.strokeText(value,x,y);
+     ctx.fillStyle=priority?'#ffadbe':'#addef2';ctx.fillText(value,x,y);
+     occupied.push({x:x-w/2,y:y-h/2,w,h});return true;
+    };
+    const zoomed=s>=2.1;
+    if(s>=1.0){
+     // Soviet state is represented as one geopolitical label in the RPG timeline.
+     placeLabel('UNIÃO SOVIÉTICA',ussr.x,ussr.y,true);
+     for(const [name,lat,lng] of COUNTRIES){
+      if(name==='UNIÃO SOVIÉTICA')continue;
+      const p=projectGlobal(lat,lng);
+      placeLabel(name,p.x,p.y,false);
+     }
+    }
+    // Dots are clickable city targets; labels gain detail as the global zoom increases.
     for(const c of CITIES){
      const p=projectGlobal(c.lat,c.lng);if(p.x<0||p.x>width||p.y<0||p.y>height)continue;
-     ctx.fillStyle='#7be9f3';ctx.shadowColor='#4bc6e7';ctx.shadowBlur=7;
-     ctx.beginPath();ctx.arc(p.x,p.y,c.id==='tokyo'?5:3,0,2*Math.PI);ctx.fill();ctx.shadowBlur=0;
+     ctx.fillStyle='#7be9f3';ctx.shadowColor='#4bc6e7';ctx.shadowBlur=5;
+     ctx.beginPath();ctx.arc(p.x,p.y,c.id==='tokyo'?4:2.5,0,2*Math.PI);ctx.fill();ctx.shadowBlur=0;
+     if(zoomed||c.id==='tokyo')placeLabel(c.name,p.x,p.y-14,c.id==='tokyo');
     }
     ctx.fillStyle='#6dbacf';ctx.font='9px ui-monospace, monospace';ctx.textAlign='left';ctx.fillText('MUNDO ALTERNATIVO // VISÃO GLOBAL 2D',20,height-22);
    }
@@ -386,9 +459,10 @@ function create({container,center=TOKYO,zoom=13,host=false,onClick,onSelect,onMo
      }
     }
     if(mode==='global'){
+     if(host){onClick?.(toGeo(xy.x,xy.y));return}
      for(const cityData of CITIES){
       const p=projectGlobal(cityData.lat,cityData.lng);
-      if(Math.hypot(xy.x-p.x,xy.y-p.y)<14){focusCity(cityData.id);return}
+      if(Math.hypot(xy.x-p.x,xy.y-p.y)<20){focusCity(cityData.id);return}
      }
      return;
     }
@@ -432,5 +506,5 @@ function create({container,center=TOKYO,zoom=13,host=false,onClick,onSelect,onMo
  });
 }
 window.DCX=window.DCX||{};
-window.DCX.FictionalAtlas={TOKYO,CITIES,DISTRICTS,ROADS,seedPoints,roadNames:ROADS.map(r=>r[0]),create};
+window.DCX.FictionalAtlas={TOKYO,CITIES,COUNTRIES,DISTRICTS,ROADS,seedPoints,roadNames:ROADS.map(r=>r[0]),create};
 })();

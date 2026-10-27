@@ -143,6 +143,23 @@ function create({container,center=TOKYO,zoom=12,host=false,onClick=noop,onSelect
    map.dragPan.enable();
   }catch(e){reject(e);return}
   let ready=false,destroyed=false,lastCityId='',pointsById=new Map(),lastPoints={};
+  let projectionAvailable=false;
+  function activateGlobeProjection(){
+   try{
+    if(typeof map.setProjection!=='function')return;
+    if(map.getProjection?.()?.type!=='globe')map.setProjection({type:'globe'});
+    projectionAvailable=map.getProjection?.()?.type==='globe';
+   }catch(error){
+    projectionAvailable=false;
+    console.warn('[DCX MAP] Globo nativo indisponível; preservando mapa 2D.',error);
+   }
+  }
+  map.on('style.load',activateGlobeProjection);
+  function updateOrbitalUI(){
+   const orbital=projectionAvailable&&map.getZoom()<=5.5;
+   container.classList.toggle('dcx-orbital-mode',orbital);
+   container.closest('.dcxTacticalMap')?.classList.toggle('dcx-map-orbit-active',orbital);
+  }
   let labelMode='complete',disposeTheme=noop,removeRightClick=noop;
   const timeout=setTimeout(()=>{if(!ready){map.remove();reject(Error('Não foi possível desenhar o mapa híbrido.'))}},18000);
   function camera(){const c=map.getCenter();return {lat:c.lat,lng:c.lng}}
@@ -250,7 +267,9 @@ function create({container,center=TOKYO,zoom=12,host=false,onClick=noop,onSelect
     pick(e);
    });
    map.on('mousemove',e=>onMouseMove({lat:e.lngLat.lat,lng:e.lngLat.lng}));
-   map.on('moveend',()=>{updateLabels();onCameraChange()});
+   map.on('moveend',()=>{updateLabels();updateOrbitalUI();onCameraChange()});
+    map.on('zoom',updateOrbitalUI);
+    updateOrbitalUI();
    for(const id of ['dcx-hybrid-pins','dcx-hybrid-pin-hits','dcx-risk-fill']){
     map.on('mouseenter',id,()=>{map.getCanvas().style.cursor='pointer'});
     map.on('mouseleave',id,()=>{map.getCanvas().style.cursor=''});
@@ -311,13 +330,15 @@ function create({container,center=TOKYO,zoom=12,host=false,onClick=noop,onSelect
     resize:()=>map.resize(),goCity:id=>{
      const found=cities().find(c=>c.id===id);if(found)setCenter(found,12)
     },
-    global:()=>setCenter({lat:15,lng:0},2),
-    getCity:city,isGlobal:()=>map.getZoom()<=4,
+    global:()=>map.easeTo({zoom:2,duration:850}),
+    getCity:city,isGlobal:()=>map.getZoom()<=5,
+    supportsGlobe:()=>projectionAvailable,
+    getProjection:()=>map.getProjection?.()?.type||'mercator',
     getLabelMode:()=>labelMode,
     setLabelMode:mode=>{labelMode=mode==='simple'?'simple':'complete';applyVisibility();return labelMode},
-    getStatus:()=>({painted:ready,width:container.clientWidth,height:container.clientHeight,provider:'MapLibre+OpenFreeMap'}),
+    getStatus:()=>({painted:ready,width:container.clientWidth,height:container.clientHeight,provider:'MapLibre+OpenFreeMap',globe:projectionAvailable,projection:map.getProjection?.()?.type||'mercator'}),
     destroy:()=>{
-     destroyed=true;removeRightClick();disposeTheme();clearTimeout(timeout);map.remove()
+     destroyed=true;removeRightClick();disposeTheme();clearTimeout(timeout);map.remove();container.closest('.dcxTacticalMap')?.classList.remove('dcx-map-orbit-active')
     }
    });
   }

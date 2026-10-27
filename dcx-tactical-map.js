@@ -27,7 +27,7 @@ function normalizePoint(p,id){
 }
 const clampZoom=v=>cap(v,1,19,13);
 const roomData=()=>({points:{},center:{...DEFAULT_CENTER},zoom:13});
-let data=roomData(),ref=null,sessionKey='',statusMessage='',root=null,board=null,overlay=null,sidebar=null,drawer=null,selectedId='',draftPos=null,map=null,mapLoaded=false,mapFailed=false,mapObjects=[],mapReady=false,pan=null,fallbackCenter={...DEFAULT_CENTER},fallbackZoom=13,initialized=false,watcher=null,leafletMap=null,leafletLayers=null,leafletTiles=null,fictionalMap=null,osmPending=false,mapVisible=false,resizeFrame=0;
+let data=roomData(),ref=null,sessionKey='',statusMessage='',root=null,board=null,overlay=null,sidebar=null,drawer=null,selectedId='',draftPos=null,map=null,mapLoaded=false,mapFailed=false,mapObjects=[],mapReady=false,pan=null,fallbackCenter={...DEFAULT_CENTER},fallbackZoom=13,initialized=false,watcher=null,leafletMap=null,leafletLayers=null,leafletTiles=null,fictionalMap=null,osmPending=false,mapVisible=false,resizeFrame=0,hybridMap=null,hybridHost=null,hybridPending=false,hybridEpoch=0,hybridError='';
 function context(){
  const api=window.OPH?.Realtime,db=api?.getFirebaseDatabase?.(),auth=api?.getFirebaseAuth?.();
  const uid=auth?.currentUser?.uid;
@@ -45,12 +45,13 @@ function config(){
  return {apiKey:clean(v.apiKey,256),mapId:clean(v.mapId,128),center:vec(v.center||DEFAULT_CENTER)};
 }
 function getMapCenter(){
+ if(hybridMap)return hybridMap.center();
  if(fictionalMap)return fictionalMap.center();
  if(map){const c=map.getCenter();if(c)return {lat:c.lat(),lng:c.lng()}}
  if(leafletMap){const c=leafletMap.getCenter();return {lat:c.lat,lng:c.lng}}
  return {...fallbackCenter}
 }
-function getMapZoom(){return fictionalMap?Math.round(fictionalMap.zoom()):map?Math.round(map.getZoom()||13):leafletMap?Math.round(leafletMap.getZoom()):fallbackZoom}
+function getMapZoom(){return hybridMap?Math.round(hybridMap.zoom()):fictionalMap?Math.round(fictionalMap.zoom()):map?Math.round(map.getZoom()||13):leafletMap?Math.round(leafletMap.getZoom()):fallbackZoom}
 function updateFromDb(value){
  const raw=value&&typeof value==='object'?value:{};
  const pts=raw.points&&typeof raw.points==='object'?raw.points:{};
@@ -411,6 +412,7 @@ function clearObjects(){
 function allPoints(){return {...(window.DCX?.FictionalAtlas?.seedPoints||{}),...data.points}}
 function renderMapObjects(){
  if(!board)return;
+ if(hybridMap)hybridMap.setPoints(allPoints());
  if(fictionalMap){fictionalMap.setPoints(allPoints());return}
  if(map){
   clearObjects();const overlays=Object.values(data.points);
@@ -470,6 +472,63 @@ function selectPreset(p){
  // The example pins are read-only; a Keymaster can create a new pin next to one.
  if(HOST&&p.preset)status('PONTO DE EXEMPLO // PARA PUBLICAR UM NOVO LOCAL, USE + CRIAR PONTO');
 }
+
+async function setProvider(next){
+ const requested=next==='hybrid'?'hybrid':'fictional';
+ const epoch=++hybridEpoch;
+ if(requested==='fictional'){
+  hybridPending=false;hybridError='';
+  if(hybridMap){hybridMap.destroy();hybridMap=null}
+  if(hybridHost){hybridHost.remove();hybridHost=null}
+  if(fictionalMap)fictionalMap.resize();
+  announceProvider();
+  status('MAPA DCX 2D ATIVO // SEM DEPENDÊNCIA EXTERNA');
+  return 'fictional';
+ }
+ if(hybridMap){hybridMap.resize();announceProvider();return 'hybrid'}
+ if(hybridPending)return 'loading';
+ if(!window.DCX?.HybridMapAdapter){
+  hybridError='ADAPTADOR GEOGRÁFICO NÃO CARREGADO';
+  status(hybridError,true);announceProvider();return 'fictional'
+ }
+ hybridPending=true;hybridError='';announceProvider();
+ const hostEl=$('dcxMapCanvas');
+ if(!hostEl){hybridPending=false;return 'fictional'}
+ const el=document.createElement('div');el.className='dcxMapHybrid';el.dataset.provider='hybrid';el.style.visibility='hidden';
+ hostEl.append(el);
+ // Keep Canvas DCX visible until map tiles and initial labels are ready.
+ const prior={center:getMapCenter(),zoom:getMapZoom()};
+ try{
+  const candidate=await window.DCX.HybridMapAdapter.create({
+   container:el,center:prior.center,zoom:prior.zoom,host:HOST,
+   onClick:coords=>{if(HOST)openEditor(null,coords)},
+   onSelect:p=>{if(p.preset)selectPreset(p);else if(HOST)openEditor(p);else selectPoint(p.id,false)},
+   onMouseMove:updateCoords,
+   onCameraChange:notifyCamera
+  });
+  if(epoch!==hybridEpoch){candidate.destroy();el.remove();return 'fictional'}
+  hybridMap=candidate;hybridHost=el;hybridPending=false;
+  hybridMap.setPoints(allPoints());
+  hybridMap.setLabelMode(window.DCX?.Cartography?.getLabelMode?.()||'complete');
+  el.style.visibility='visible';
+  requestAnimationFrame(()=>hybridMap?.resize());
+  status('GEO REAL ATIVO // BASE OPENFREEMAP // RÓTULOS DCX');
+  announceProvider();notifyCamera();
+  return 'hybrid'
+ }catch(error){
+  el.remove();hybridPending=false;hybridMap=null;hybridHost=null;
+  hybridError=error?.message||String(error);
+  console.warn('[DCX MAP] Falha ao carregar GEO REAL. Canvas 2D mantido:',error);
+  status('GEO REAL INDISPONÍVEL // MAPA 2D PRESERVADO: '+hybridError,true);
+  announceProvider();return 'fictional'
+ }
+}
+function announceProvider(){
+ document.dispatchEvent(new CustomEvent('dcx-map-provider',{
+  detail:{provider:hybridMap?'hybrid':'fictional',loading:hybridPending,error:hybridError}
+ }));
+}
+
 function startMap(){
  fallbackCenter={...((data.center&&data.center.lat!==DEFAULT_CENTER.lat)?data.center:DEFAULT_CENTER)};
  fallbackZoom=data.zoom||13;
@@ -526,19 +585,22 @@ function renderFallback(){
 }
 function notifyCamera(){document.dispatchEvent(new CustomEvent('dcx-map-camera',{detail:{zoom:getMapZoom(),center:getMapCenter()}}))}
 function zoom(d){
- if(fictionalMap)fictionalMap.setZoom(clampZoom(fictionalMap.zoom()+d));
+ if(hybridMap)hybridMap.setZoom(clampZoom(hybridMap.zoom()+d));
+ else if(fictionalMap)fictionalMap.setZoom(clampZoom(fictionalMap.zoom()+d));
  else if(map)map.setZoom(Math.min(19,Math.max(1,(map.getZoom()||13)+d)));
  else if(leafletMap)leafletMap.setZoom(clampZoom(leafletMap.getZoom()+d));
  else{fallbackZoom=clampZoom(fallbackZoom+d);renderFallback();notifyCamera()}
 }
 function moveTo(p){
- if(fictionalMap)fictionalMap.flyTo(p,Math.max(fictionalMap.zoom(),14));
+ if(hybridMap)hybridMap.flyTo(p,Math.max(hybridMap.zoom(),14));
+ else if(fictionalMap)fictionalMap.flyTo(p,Math.max(fictionalMap.zoom(),14));
  else if(map){map.panTo({lat:p.lat,lng:p.lng});if(map.getZoom()<14)map.setZoom(14)}
  else if(leafletMap){leafletMap.flyTo([p.lat,p.lng],Math.max(leafletMap.getZoom(),14),{duration:.5})}
  else{fallbackCenter={lat:p.lat,lng:p.lng};fallbackZoom=Math.max(fallbackZoom,14);renderFallback();notifyCamera()}
 }
 function centerMap(p,z){
- if(fictionalMap)fictionalMap.setCenter(p,clampZoom(z));
+ if(hybridMap)hybridMap.setCenter(p,clampZoom(z));
+ else if(fictionalMap)fictionalMap.setCenter(p,clampZoom(z));
  else if(map){map.panTo(p);map.setZoom(z||13)}
  else if(leafletMap){leafletMap.setView([p.lat,p.lng],clampZoom(z))}
  else{fallbackCenter={...p};fallbackZoom=clampZoom(z);renderFallback();notifyCamera()}
@@ -573,7 +635,8 @@ function bindBoard(){
  board.addEventListener('keydown',e=>{if(e.key==='+'||e.key==='=')zoom(1);if(e.key==='-')zoom(-1)});
  if(typeof ResizeObserver==='function'){
   const observer=new ResizeObserver(()=>{
-   if(fictionalMap)fictionalMap.resize();else if(leafletMap)leafletMap.invalidateSize({pan:false});
+   if(hybridMap)hybridMap.resize();
+  if(fictionalMap)fictionalMap.resize();else if(leafletMap)leafletMap.invalidateSize({pan:false});
    else if(!map&&root&&mapFailed)renderFallback();
   });
   observer.observe(board);
@@ -686,7 +749,10 @@ function start(){
 }
 window.DCX=window.DCX||{};
 window.DCX.Cartography={get points(){return Object.values(allPoints())},selectPoint,zoom,openEditor,
+ setProvider,getProvider:()=>hybridMap?'hybrid':'fictional',getProviderStatus:()=>({loading:hybridPending,error:hybridError}),
+ setLabelMode:mode=>{fictionalMap?.setLabelMode(mode);hybridMap?.setLabelMode(mode)},
+ getLabelMode:()=>hybridMap?.getLabelMode?.()||fictionalMap?.getLabelMode?.()||'complete',
  createAtCenter:()=>openEditor(null,getMapCenter()),centerMap,
- getCamera:()=>({zoom:getMapZoom(),center:getMapCenter()}),get engine(){return fictionalMap}};
+ getCamera:()=>({zoom:getMapZoom(),center:getMapCenter()}),get engine(){return hybridMap||fictionalMap}};
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
 })();

@@ -63,13 +63,13 @@ function palette(){
  const scheme=schemes.get(selectedTheme())||schemes.get('arc-cyan');
  return {...scheme,
   // Higher surface luminance than the previous black-base map.
-  background:blend(scheme.bg,'#9cbbca',.30),
-  land:blend(scheme.bg,'#8eb2ac',.35),
-  park:blend(scheme.bg,'#6cc79b',.34),
-  building:blend(scheme.bg,scheme.alt,.30),
-  road:blend(scheme.main,'#edfaff',.37),
-  minorRoad:blend(scheme.alt,'#c9d9f7',.32),
-  water:blend(scheme.bg,'#2a789d',.49),
+  background:blend(scheme.bg,'#78919e',.16),
+  land:blend(scheme.bg,'#8eb2ac',.21),
+  park:blend(scheme.bg,'#6cc79b',.20),
+  building:blend(scheme.bg,scheme.alt,.19),
+  road:blend(scheme.main,'#c2e0ed',.18),
+  minorRoad:blend(scheme.alt,'#a9bad0',.18),
+  water:blend(scheme.bg,'#2a789d',.34),
   boundary:blend(scheme.main,'#e5efff',.14),
   halo:blend(scheme.bg,'#0b1223',.30)
  }

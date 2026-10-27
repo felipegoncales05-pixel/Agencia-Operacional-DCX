@@ -19,14 +19,14 @@ function read(){
  }catch{return {fx:'off',level:2,hud:true,sidebar:'wide'}}
 }
 let preferences=read(),settings=[],hudCards=[],layout=null,nav=null;
-const icons={master:'◈',operation:'⌘',missions:'➤',characters:'◇',soundtrack:'♫',players:'◉',teams:'▦',credentials:'▣',polls:'✓',handouts:'▤',notes:'✎',yumiya:'YK',typography:'Aa',settings:'⚙'};
+const icons={'tactical-map':'⌖',master:'◈',operation:'⌘',missions:'➤',characters:'◇',soundtrack:'♫',players:'◉',teams:'▦',credentials:'▣',polls:'✓',handouts:'▤',notes:'✎',yumiya:'YK',typography:'Aa',settings:'⚙'};
 const groups=[
- {name:'CENTRO DE COMANDO',items:['master','operation','missions','characters','soundtrack']},
+ {name:'CENTRO DE COMANDO',items:['master','operation','missions','tactical-map','characters','soundtrack']},
  {name:'GESTÃO DE AGENTES',items:['players','teams','credentials','polls']},
  {name:'ARQUIVOS E SINAIS',items:['handouts','notes','yumiya']},
  {name:'TERMINAL',items:['typography','settings']}
 ];
-const tabLabels={master:'CENTRO DE OPERAÇÕES',operation:'CONTROLE DA OPERAÇÃO',missions:'MISSÕES',characters:'PERSONAGENS',soundtrack:'SOUNDTRACK',players:'PLAYER DATA',teams:'EQUIPES // STATUS',credentials:'CREDENCIAIS',polls:'VOTAÇÕES',handouts:'HANDOUTS',notes:'ANOTAÇÕES',yumiya:'YUMIYA // REMOTE',typography:'FONT STUDIO',settings:'CONFIGURAÇÕES'};
+const tabLabels={'tactical-map':'MAPA TÁTICO',master:'CENTRO DE OPERAÇÕES',operation:'CONTROLE DA OPERAÇÃO',missions:'MISSÕES',characters:'PERSONAGENS',soundtrack:'SOUNDTRACK',players:'PLAYER DATA',teams:'EQUIPES // STATUS',credentials:'CREDENCIAIS',polls:'VOTAÇÕES',handouts:'HANDOUTS',notes:'ANOTAÇÕES',yumiya:'YUMIYA // REMOTE',typography:'FONT STUDIO',settings:'CONFIGURAÇÕES'};
 function persist(){try{localStorage.setItem(STORAGE,JSON.stringify(preferences))}catch{}}
 function element(tag,cls,text){
  const e=document.createElement(tag);if(cls)e.className=cls;
@@ -105,7 +105,6 @@ function setupSidebar(){
   const name=element('h3','dcxVcNavHeading',group.name);section.append(name);
   for(const id of group.items){
    const b=map.get(id);if(!b)continue;
-   const raw=qAll.call(null,'')||[]; // no-op-safe placeholder not used
    const text=[...b.childNodes].filter(n=>n.nodeType===Node.TEXT_NODE).map(n=>n.textContent).join(' ').trim()||tabLabels[id];
    [...b.childNodes].filter(n=>n.nodeType===Node.TEXT_NODE).forEach(n=>n.remove());
    b.setAttribute('aria-label',text);
@@ -118,6 +117,7 @@ function setupSidebar(){
  const footer=element('div','dcxVcSidebarFooter');
  footer.append(element('span','dcxVcSignalDot'),element('span','', 'DCX NETWORK // LOCAL UI'));
  tabs.replaceChildren(fragment);
+ consoleEl.insertBefore(layout,tabs);
  side.append(brand,mobileClose,tabs,footer);
  const context=element('div','dcxVcContext');
  const heading=element('div','dcxVcContextHeading');heading.append(element('small','', 'DCX // WORKSPACE'),element('h1','', 'CENTRO DE OPERAÇÕES'));
@@ -127,7 +127,6 @@ function setupSidebar(){
  const metrics=element('div','dcxVcMetrics');metrics.id='dcxVcMetrics';main.append(metrics);
  for(const view of views)main.append(view);
  layout.append(side,main);
- consoleEl.insertBefore(layout,tabs);
  const toggle=createAction('☰ MENU',()=>layout.classList.toggle('mobile-open'),'dcxVcMenuToggle');
  toggle.id='dcxVcMenuToggle';
  const head=consoleEl.querySelector('.top .actions');head?.prepend(toggle);

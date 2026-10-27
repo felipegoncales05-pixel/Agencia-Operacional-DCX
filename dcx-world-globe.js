@@ -144,13 +144,14 @@ function show(on,currentZoom,center){
 function setCamera(detail){
  const currentZoom=Number(detail?.zoom??13);
  const center=detail?.center;
- show(currentZoom<=4,currentZoom,center);
+ if(getMap()?.engine?.supportsGlobe?.()){show(false,currentZoom,center);return}
+ show(currentZoom<=5,currentZoom,center);
 }
 function zoomGlobe(delta){
  if(!active)return false;
  const next=clamp(zoom+delta,1,19);
  zoom=next;
- if(next>4)openMapAt(latitude,longitude);
+ if(next>5)openMapAt(latitude,longitude);
  else request();
  return true;
 }
@@ -224,6 +225,8 @@ function mount(){
  });
  window.addEventListener('resize',request,{passive:true});
  document.addEventListener('dcx-map-camera',e=>setCamera(e.detail));
+ document.addEventListener('dcx-map-provider',()=>setCamera(getMap()?.getCamera?.()));
+ document.addEventListener('dcx-map-point-selected',request);
  show(false,13,{lat:-17,lng:-48});
  setTimeout(()=>{if(window.DCX?.Cartography?.getCamera)setCamera(window.DCX.Cartography.getCamera())},160);
 }

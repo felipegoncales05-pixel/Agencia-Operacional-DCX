@@ -91,7 +91,7 @@ function createShell(){
  const hero=text('header','dcxMapHero');
  const caption=text('div','dcxMapHeroTitle');
  caption.append(text('small','', 'DCX // CYBER CARTOGRAPHY'),text('h1','', 'MAPA TÁTICO'));
- const hint=text('p','',HOST?'M1: criar marcador · M2: arrastar câmera · roda: zoom · clique em um ping para editar':'Arraste com o mouse ou toque para mover · roda para zoom · clique nos pings para investigar');
+ const hint=text('p','',HOST?'M1: segure para mover · M2: criar ping no local · roda: zoom · M1 em ping: editar':'Arraste com o mouse ou toque para mover · roda para zoom · clique nos pings para investigar');
  caption.append(hint);
  const actions=text('div','dcxMapHeroActions');
  actions.append(tab('−','',()=>zoom(-1)),tab('+','',()=>zoom(1)));
@@ -615,16 +615,21 @@ function centerMap(p,z){
 }
 function bindBoard(){
  let down=null;
- board.addEventListener('contextmenu',e=>{if(HOST)e.preventDefault()});
+ board.addEventListener('contextmenu',e=>{
+  if(!HOST||hybridMap||hybridPending||map||leafletMap||fictionalMap)return;
+  e.preventDefault();
+  const rect=board.getBoundingClientRect();
+  openEditor(null,screenPoint(e.clientX-rect.left,e.clientY-rect.top));
+ });
  board.addEventListener('pointerdown',e=>{
-  if(map||leafletMap||fictionalMap)return;
+  if(map||leafletMap||fictionalMap||hybridMap||hybridPending)return;
   if(e.target.closest('.dcxMapPin'))return;
-  if((HOST&&e.button!==2)||(!HOST&&e.button!==0))return;
+  if(e.button!==0)return;
   down={x:e.clientX,y:e.clientY,c:{...fallbackCenter},moved:false};
   board.setPointerCapture?.(e.pointerId);
  });
  board.addEventListener('pointermove',e=>{
-  if(map||leafletMap||fictionalMap)return;
+  if(map||leafletMap||fictionalMap||hybridMap||hybridPending)return;
   if(!down){const r=board.getBoundingClientRect();updateCoords(screenPoint(e.clientX-r.left,e.clientY-r.top));return}
   const a=latLngToWorld(down.c,fallbackZoom);
   const diffX=e.clientX-down.x,diffY=e.clientY-down.y;
@@ -635,11 +640,11 @@ function bindBoard(){
  board.addEventListener('pointerup',e=>{if(!down)return;down=null});
  board.addEventListener('pointercancel',()=>down=null);
  board.addEventListener('click',e=>{
-  if(map||leafletMap||fictionalMap||!HOST||e.target.closest('.dcxMapPin'))return;
+  if(map||leafletMap||fictionalMap||hybridMap||hybridPending||!HOST||e.target.closest('.dcxMapPin'))return;
   const r=board.getBoundingClientRect();
-  openEditor(null,screenPoint(e.clientX-r.left,e.clientY-r.top));
+  // Only M2 creates pings; M1 remains a navigation gesture.
  });
- board.addEventListener('wheel',e=>{if(map||leafletMap||fictionalMap)return;e.preventDefault();zoom(e.deltaY<0?1:-1)},{passive:false});
+ board.addEventListener('wheel',e=>{if(map||leafletMap||fictionalMap||hybridMap||hybridPending)return;e.preventDefault();zoom(e.deltaY<0?1:-1)},{passive:false});
  board.addEventListener('keydown',e=>{if(e.key==='+'||e.key==='=')zoom(1);if(e.key==='-')zoom(-1)});
  if(typeof ResizeObserver==='function'){
   const observer=new ResizeObserver(()=>{

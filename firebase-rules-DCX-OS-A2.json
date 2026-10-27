@@ -126,6 +126,10 @@
           "tacticalMap": {
             ".read": "auth != null",
             ".write": "auth != null && auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1'"
+          },
+          "factionSecrets": {
+            ".read": "auth != null && auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1'",
+            ".write": "auth != null && auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1'"
           }
         }
       }

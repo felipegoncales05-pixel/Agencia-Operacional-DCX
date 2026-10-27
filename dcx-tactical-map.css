@@ -22,3 +22,10 @@
 .dcxFictionLabel{pointer-events:none}
 html[data-dcx-visual-fx] body:has(.dcxMapPane.active):after,html[data-dcx-visual-fx] body:has(.kmWorkspaceView[data-km-view="tactical-map"].active):after{animation:none!important;opacity:.035!important}
 html[data-dcx-visual-fx] body:has(.dcxMapPane.active) .app,html[data-dcx-visual-fx] body:has(.kmWorkspaceView[data-km-view="tactical-map"].active) .app{filter:none!important}
+
+/* DCXPING11 // editor portal outside clipping and visible saving errors */
+body>.dcxMapEditor,
+:fullscreen>.dcxMapEditor{position:fixed!important;z-index:2147482000!important;right:16px;top:7dvh;bottom:5dvh;max-height:88dvh;overflow-y:auto}
+.dcxMapEditorFeedback{font:800 11px/1.55 ui-monospace,monospace;color:#97e6f4;white-space:pre-wrap;overflow-wrap:anywhere;min-height:1em;margin:0}
+.dcxMapEditorFeedback[data-error=true]{color:#ff9bac;border-left:3px solid #ff6079;padding:8px;background:#47152170;border-radius:5px}
+@media(max-width:600px){body>.dcxMapEditor,:fullscreen>.dcxMapEditor{top:5dvh;bottom:4dvh;right:8px;width:calc(100vw - 16px)}}

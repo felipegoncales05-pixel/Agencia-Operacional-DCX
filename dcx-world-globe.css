@@ -1,3 +1,43 @@
-/* DCX // hologlobe cinematic interface */
-.dcxWorldGlobe[hidden]{display:none!important}.dcxWorldGlobe{position:absolute;inset:0;z-index:50;background:radial-gradient(circle at center,#0a2235 0%,#02060c 68%);overflow:hidden;color:#d4f8ff}.dcxWorldGlobe canvas{width:100%;height:100%;display:block;cursor:grab;touch-action:none}.dcxWorldGlobe canvas:active{cursor:grabbing}.dcxGlobeLegend{position:absolute;top:15px;left:15px;z-index:2;display:grid;gap:8px;pointer-events:none}.dcxGlobeLegend small{color:#66daef;font:800 9px ui-monospace,monospace;letter-spacing:.14em}.dcxGlobeLegend b{font:900 clamp(15px,2vw,25px) ui-monospace,monospace;color:#e5faff}.dcxGlobeLegend span{color:#ff879d;font:850 10px ui-monospace,monospace}.dcxGlobeFooter{position:absolute;bottom:17px;left:16px;right:16px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;color:#91deec;pointer-events:none;font:9px ui-monospace,monospace}.dcxGlobeEnter{position:absolute;right:16px;top:17px;border:1px solid #53c4db;background:#071923ec;color:#dbfaff;padding:11px 14px;font:900 10px ui-monospace,monospace;border-radius:9px;cursor:pointer}.dcxGlobeEnter:hover{background:#124257}
-@media(max-width:700px){.dcxGlobeLegend{top:8px;left:8px}.dcxGlobeEnter{top:auto;bottom:42px;right:8px}.dcxGlobeFooter{left:8px;right:8px}}
+/* DCX // orbital cartography: the globe is part of the existing tactical map.
+   The flat map remains mounted behind it for the reverse zoom transition. */
+.dcxWorldGlobe[hidden]{display:none!important}
+.dcxWorldGlobe{
+ position:absolute;inset:0;z-index:50;
+ display:block;overflow:hidden;
+ color:#d4f8ff;background:radial-gradient(ellipse at 50% 44%,#0d2b40 0%,#06111f 39%,#01040b 85%);
+ opacity:0;visibility:hidden;pointer-events:none;transform:scale(1.035);
+ transition:opacity .58s ease,transform .7s ease,visibility 0s linear .58s;
+}
+.dcxWorldGlobe.is-active{
+ opacity:1;visibility:visible;pointer-events:auto;transform:scale(1);
+ transition:opacity .58s ease,transform .7s ease,visibility 0s;
+}
+.dcxWorldGlobe canvas{width:100%;height:100%;display:block;cursor:grab;touch-action:none;outline-offset:-4px}
+.dcxWorldGlobe canvas:active{cursor:grabbing}
+.dcxWorldGlobe canvas:focus-visible{outline:2px solid #66ddf7}
+.dcxGlobeLegend{
+ position:absolute;top:18px;left:18px;z-index:2;display:grid;gap:8px;pointer-events:none;
+ text-shadow:0 2px 9px #000;
+}
+.dcxGlobeLegend small{color:#66daef;font:800 9px ui-monospace,monospace;letter-spacing:.14em}
+.dcxGlobeLegend b{font:900 clamp(15px,2vw,25px) ui-monospace,monospace;color:#e5faff}
+.dcxGlobeLegend span{color:#ff879d;font:850 10px ui-monospace,monospace}
+.dcxGlobeFooter{
+ position:absolute;bottom:17px;left:16px;right:16px;display:flex;justify-content:space-between;
+ gap:10px;flex-wrap:wrap;color:#91deec;pointer-events:none;font:9px ui-monospace,monospace;
+}
+.dcxGlobeEnter{
+ position:absolute;right:16px;top:17px;border:1px solid #53c4db;background:#071923ec;
+ color:#dbfaff;padding:11px 14px;font:900 10px ui-monospace,monospace;
+ border-radius:9px;cursor:pointer;box-shadow:0 0 18px #36b0cc44;
+}
+.dcxGlobeEnter:hover,.dcxGlobeEnter:focus-visible{background:#124257;outline-color:#9feaff}
+@media(max-width:700px){
+ .dcxGlobeLegend{top:10px;left:10px;right:10px}
+ .dcxGlobeLegend b{font-size:14px;max-width:66%}
+ .dcxGlobeEnter{top:auto;bottom:45px;right:8px}
+ .dcxGlobeFooter{left:8px;right:8px;bottom:10px;font-size:8px}
+}
+@media(prefers-reduced-motion:reduce){
+ .dcxWorldGlobe,.dcxWorldGlobe.is-active{transition:none;transform:none}
+}

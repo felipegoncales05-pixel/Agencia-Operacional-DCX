@@ -305,6 +305,15 @@ async function initOSM(reason='Modo leve da DCX'){
   }
   if(note)note.textContent='MAPA DCX // SEM RÓTULOS DE RUAS REAIS // TOKYO';
   renderMapObjects();
+  // The map may be initialized inside a hidden workspace. Refresh as soon as it becomes visible.
+  if(typeof IntersectionObserver==='function'){
+   const io=new IntersectionObserver(items=>{
+    if(items.some(x=>x.isIntersecting&&x.intersectionRect.width>0)){
+     leafletMap?.invalidateSize({pan:false,animate:false});
+    }
+   },{threshold:0});
+   io.observe(layer);
+  }
   // Leaflet can mount while its tab is hidden. Fix dimensions when selected.
   requestAnimationFrame(()=>leafletMap?.invalidateSize({pan:false}));
   setTimeout(()=>leafletMap?.invalidateSize({pan:false}),300);
@@ -504,7 +513,7 @@ function initFallback(){
  renderFallback();
 }
 function renderFallback(){
- const stage=$('dcxMapOverlay');if(!stage||map||leafletMap)return;
+ const stage=$('dcxMapOverlay');if(!stage||map||leafletMap||fictionalMap)return;
  stage.replaceChildren();
  const grid=text('div','dcxMapGrid');stage.append(grid);
  const center=latLngToWorld(fallbackCenter,fallbackZoom);
@@ -512,7 +521,7 @@ function renderFallback(){
  grid.style.backgroundSize=size+'px '+size+'px';
  grid.style.backgroundPosition=(-center.x%size)+'px '+(-center.y%size)+'px';
  const halo=text('div','dcxMapHalo');stage.append(halo);
- for(const p of Object.values(data.points)){
+ for(const p of Object.values(allPoints())){
   const pos=locate(p),btn=text('button','dcxMapPin dcxMapPin-'+p.type);
   btn.type='button';btn.style.left=pos.x+'px';btn.style.top=pos.y+'px';btn.title=p.title;
   if(p.type==='risk'){
@@ -579,11 +588,12 @@ function bindBoard(){
   observer.observe(board);
  }
  document.addEventListener('dcx-map-viewport-resized',()=>{
-  if(leafletMap)leafletMap.invalidateSize({pan:false});
+  if(fictionalMap)fictionalMap.resize();
+  else if(leafletMap)leafletMap.invalidateSize({pan:false,animate:false});
   else if(!map&&mapFailed)renderFallback();
  });
  document.querySelectorAll('[data-tab="tactical-map"],[data-workspace-target="map"]').forEach(b=>
-  b.addEventListener('click',()=>setTimeout(()=>leafletMap?.invalidateSize({pan:false}),100))
+  b.addEventListener('click',()=>setTimeout(()=>{if(fictionalMap)fictionalMap.resize();else leafletMap?.invalidateSize({pan:false,animate:false})},100))
  );
 }
 function closeEditor(){drawer?.classList.add('hidden');draftPos=null}

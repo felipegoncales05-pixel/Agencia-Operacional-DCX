@@ -1,0 +1,31 @@
+/* DCX map ergonomics + collapsible player navigation */
+.dcxNavDock{display:flex;align-items:center;justify-content:space-between;gap:12px;max-width:1500px;margin:4px auto 8px;padding:0 15px;color:#9ebfcb;font:800 9px ui-monospace,monospace}
+.dcxNavCurrent{letter-spacing:.1em}.dcxNavCollapse,.dcxNavRestore{border:1px solid #35566a;background:#0a1923;color:#d7f4ff;padding:8px 12px;border-radius:9px;font:800 10px ui-monospace,monospace;cursor:pointer}
+.dcxNavCollapse:hover,.dcxNavRestore:hover{border-color:var(--cyan,#73e4f0)}.dcxNavRestore{margin:5px 0 9px auto}
+.dcxNavRestore[hidden]{display:none!important}
+.app.dcxNavCollapsed>.top,.app.dcxNavCollapsed>.roomBar,.app.dcxNavCollapsed>.dcxVcPlayerHud,.app.dcxNavCollapsed>.playerWorkspaceBar,.app.dcxNavCollapsed>.dcxNavDock{display:none!important}
+.app.dcxNavCollapsed>.dcxNavRestore{display:block!important}
+.dcxMapOptimized{--dcx-map-ui-zoom:1;width:100%;max-width:100%;min-width:0}
+.dcxMapOptimized .dcxMapLayout{grid-template-columns:minmax(0,1fr) clamp(215px,23vw,300px);min-height:0;align-items:stretch;gap:9px}
+.dcxMapOptimized .dcxMapField{grid-template-rows:auto minmax(0,1fr) auto;min-height:0}
+.dcxMapOptimized .dcxMapCanvas{height:clamp(330px,calc(100dvh - 280px),930px);min-height:330px}
+.dcxMapOptimized .dcxMapSidebar{max-height:clamp(330px,calc(100dvh - 280px),930px);overflow:hidden}
+.dcxMapOptimized .dcxMapHero{margin-top:0;padding:calc(12px * var(--dcx-map-ui-zoom));gap:7px}
+.dcxMapOptimized .dcxMapHeroTitle h1{font-size:calc(29px * var(--dcx-map-ui-zoom))}
+.dcxMapOptimized .dcxMapHeroTitle p{font-size:calc(10px * var(--dcx-map-ui-zoom))}
+.dcxMapOptimized .dcxMapSideHeader{padding:calc(13px * var(--dcx-map-ui-zoom))}
+.dcxMapOptimized .dcxMapSideHeader h2{font-size:calc(15px * var(--dcx-map-ui-zoom))}
+.dcxMapOptimized .dcxMapItem{padding:calc(9px * var(--dcx-map-ui-zoom))}
+.dcxMapOptimized .dcxMapItem b{font-size:calc(11px * var(--dcx-map-ui-zoom))}
+.dcxMapOptimized .dcxMapDetail{font-size:calc(11px * var(--dcx-map-ui-zoom))}
+.dcxMapErgoControls{display:flex;gap:5px;align-items:center;flex-wrap:wrap;border:1px solid #2a4f60;border-radius:9px;padding:5px;background:#081923}
+.dcxMapErgoControls label{font:800 9px ui-monospace,monospace;color:#8fc9dc}.dcxMapErgoControls input{width:75px;accent-color:var(--cyan,#68e2e8)}.dcxMapErgoControls output{min-width:34px;font:800 9px ui-monospace,monospace;color:#d7eefa}
+.dcxMapErgoBtn{border:1px solid #365c6f;border-radius:7px;padding:7px 8px;background:#102734;color:#d6f6fc;font:800 9px ui-monospace,monospace;cursor:pointer}
+.dcxMapErgoBtn:hover{border-color:var(--cyan,#62cfe3)}
+.dcxMapPanelsHidden .dcxMapLayout{grid-template-columns:minmax(0,1fr)!important}
+.dcxMapPanelsHidden .dcxMapSidebar{display:none!important}
+.dcxTacticalMap:fullscreen{background:#02090f!important;padding:12px!important;box-sizing:border-box;overflow:auto;min-width:100vw;height:100dvh}
+.dcxTacticalMap:fullscreen .dcxMapCanvas{height:calc(100dvh - 200px);max-height:none!important}
+.dcxTacticalMap:fullscreen .dcxMapSidebar{max-height:calc(100dvh - 200px)}
+@media(max-width:1050px){.dcxMapOptimized .dcxMapLayout{grid-template-columns:1fr!important}.dcxMapOptimized .dcxMapSidebar{max-height:320px}.dcxMapOptimized .dcxMapCanvas{height:clamp(390px,55dvh,720px)}}
+@media(max-width:620px){.dcxMapOptimized .dcxMapHeroTitle h1{font-size:24px}.dcxMapOptimized .dcxMapCanvas{height:55dvh;min-height:300px}.dcxMapErgoControls input{width:58px}.dcxNavDock{padding:0 8px}.dcxMapErgoBtn{font-size:8px;padding:7px}}

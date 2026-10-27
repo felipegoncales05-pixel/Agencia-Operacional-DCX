@@ -723,9 +723,27 @@ function openEditor(point,pos){
   }catch(err){
    const denied=/permission.?denied|PERMISSION_DENIED/i.test(String(err?.code||'')+' '+String(err?.message||''));
    const msg=denied?
-    'FIREBASE NEGOU A PUBLICAÇÃO. Confira as regras de rooms/{sala}/dcx/tacticalMap e a autenticação do Keymaster.':
+    'FIREBASE NEGOU A PUBLICAÇÃO. O UID autenticado precisa estar autorizado nas regras publicadas do Realtime Database.':
     'NÃO FOI POSSÍVEL PUBLICAR: '+(err?.message||String(err));
-   feedback.dataset.error='true';feedback.textContent=msg;
+   feedback.dataset.error='true';feedback.replaceChildren();
+   feedback.append(text('span','',msg));
+   if(denied){
+    const session=context();
+    const uid=session?.uid||'NÃO IDENTIFICADO';
+    const room=session?.room||'FRIA-01';
+    feedback.append(text('small','dcxMapPermissionPath','CAMINHO: rooms/'+room+'/dcx/tacticalMap/points'));
+    feedback.append(text('small','dcxMapPermissionUid','UID KEYMASTER: '+uid));
+    const copy=tab('COPIAR UID','▣',async()=>{
+     try{
+      await navigator.clipboard.writeText(uid);
+      copy.textContent='✓ UID COPIADO';
+     }catch{
+      copy.textContent='COPIE O UID EXIBIDO ACIMA';
+     }
+    },'dcxMapCopyUid');
+    if(session?.uid)feedback.append(copy);
+    feedback.append(text('small','dcxMapPermissionHelp','VERIFIQUE FIREBASE → AUTHENTICATION → USUÁRIOS E REALTIME DATABASE → REGRAS. O UID AUTORIZADO EM .write DEVE SER O MESMO DA SESSÃO ACIMA.'));
+   }
    status(msg,true);console.error('[DCX MAP] Não foi possível publicar o ping',err);
   }finally{submit.disabled=false}
  });

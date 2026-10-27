@@ -56,7 +56,14 @@ function head(){
  const footer=node('div','dcxAtlasBottom');
  footer.append(node('span','','DCX // GEOINT · CARTOGRAFIA FICCIONAL'));
  const ctrl=node('div','dcxAtlasZoom');
- ctrl.append(btn('−',()=>window.DCX?.Cartography?.zoom(-1)),btn('+',()=>window.DCX?.Cartography?.zoom(1)));
+ ctrl.append(btn('⌖',()=>chooseCity(selectedCity)),btn('−',()=>window.DCX?.Cartography?.zoom(-1)),btn('+',()=>window.DCX?.Cartography?.zoom(1)));
+ ctrl.append(btn('▣',async()=>{
+  const root=$('dcxTacticalMap');if(!root)return;
+  try{if(document.fullscreenElement===root)await document.exitFullscreen();
+    else await root.requestFullscreen();
+    setTimeout(()=>engine()?.resize(),110);
+  }catch(e){console.warn('[DCX MAP] Tela inteira não disponível',e)}
+ },'dcxAtlasFullScreen'));
  footer.append(ctrl);
  shell.append(footer);
  root.prepend(shell);

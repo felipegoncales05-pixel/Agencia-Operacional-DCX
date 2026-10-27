@@ -164,6 +164,7 @@ function update(){
 }
 function start(){
  head();document.addEventListener('dcx-map-camera',update);
+ window.addEventListener('dcx-map-point-selected',event=>{const p=event.detail?.point;if(p)showPoint(p)});
  window.addEventListener('dcx-map-ready',()=>{window.DCX?.Cartography?.setLabelMode?.(labelMode);update();refresh()});
  document.addEventListener('dcx-map-provider',()=>{update();refresh()});
  if(engine())engine().setLabelMode(labelMode);

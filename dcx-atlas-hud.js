@@ -7,6 +7,9 @@ const btn=(label,cb,cls='')=>{const b=node('button','dcxAtlasBtn '+cls,label);b.
 const data=()=>window.DCX?.FictionalAtlas||{};
 const engine=()=>window.DCX?.Cartography?.engine;
 let current='districts',selectedCity='tokyo',shell=null;
+const lex=()=>window.DCX?.AtlasLexicon;
+let labelMode=(()=>{try{return localStorage.getItem('dcx-atlas-label-mode')==='simple'?'simple':'complete'}catch{return 'complete'}})();
+function setLabelMode(value){labelMode=value==='simple'?'simple':'complete';try{localStorage.setItem('dcx-atlas-label-mode',labelMode)}catch{}engine()?.setLabelMode(labelMode);refresh();update()}
 function cities(){return data().CITIES||[]}
 function pointList(){return window.DCX?.Cartography?.points||[]}
 function chooseCity(id){
@@ -29,6 +32,10 @@ function head(){
  nav.append(btn('◎ GLOBAL',()=>{engine()?.global();update();refresh()},'global'),btn('⌖ TOKYO',()=>chooseCity('tokyo'),'tokyo'));
  const other=btn('◇ OUTRAS CIDADES',()=>{current='cities';refresh()},'cities');
  nav.append(other);
+ const modes=node('div','dcxAtlasViewModes');
+ modes.setAttribute('role','group');modes.setAttribute('aria-label','Detalhamento cartográfico');
+ modes.append(btn('SIMPLIFICADO',()=>setLabelMode('simple'),'dcxAtlasModeSimple'),btn('COMPLETO',()=>setLabelMode('complete'),'dcxAtlasModeComplete'));
+ nav.append(modes);
  if(/keymaster\.html$/i.test(location.pathname)){
   const make=btn('+ CRIAR PONTO',()=>window.DCX?.Cartography?.createAtCenter?.(),'dcxAtlasCreatePin');
   make.title='M1 no mapa cria no local clicado. M2 movimenta. Este botão cria no centro da câmera.';
@@ -48,7 +55,7 @@ function head(){
  left.append(scope);
  const right=node('aside','dcxAtlasDirectory');
  const tabs=node('div','dcxAtlasDirectoryTabs');
- const options=[['districts','DISTRITOS'],['roads','RUAS'],['points','PONTOS'],['cities','CIDADES']];
+ const options=[['countries','PAÍSES'],['cities','CIDADES'],['districts','DISTRITOS'],['neighborhoods','BAIRROS'],['roads','RUAS'],['points','PONTOS']];
  for(const [id,label] of options){
   const b=btn(label,()=>{current=id;refresh()});b.dataset.atlasCategory=id;tabs.append(b);
  }
@@ -109,18 +116,22 @@ function refresh(){
  list.replaceChildren();
  const city=cities().find(c=>c.id===selectedCity)||cities()[0];
  const add=(name,desc,fn,ico)=>list.append(makeRow(name,desc,fn,ico));
- if(current==='cities'){
-  cities().forEach(c=>add(c.name,c.local,()=>chooseCity(c.id),'◈'));
- }else if(current==='districts'){
-  if(city?.id!=='tokyo'){add(city?.name||'CENTRO','DISTRITO CENTRAL',()=>chooseCity(city?.id),'⌖');return}
-  for(const [name,japanese,lat,lng] of data().DISTRICTS||[]){
-   add(name,japanese,()=>window.DCX?.Cartography?.centerMap({lat,lng},14),'▦');
+ if(current==='countries'){
+  for(const item of lex()?.countryList(data().COUNTRIES||[])||[]){
+   add(item.name,'PAÍS // '+item.real,()=>{
+    const nearest=cities().filter(c=>lex()?.countryOf(c)===item.real).sort((a,b)=>Math.hypot(a.lat-item.lat,a.lng-item.lng)-Math.hypot(b.lat-item.lat,b.lng-item.lng))[0];
+    if(nearest)chooseCity(nearest.id);
+    else window.DCX?.Cartography?.centerMap({lat:item.lat,lng:item.lng},2)
+   },'◇');
   }
- }else if(current==='roads'){
-  if(city?.id!=='tokyo'){add('ROTAS DCX','VIAS DA CIDADE FICCIONAL',()=>chooseCity(city?.id),'〰');return}
-  for(const [name,lat,lng] of data().ROADS||[]){
-   add(name,'RUA FICTÍCIA',()=>window.DCX?.Cartography?.centerMap({lat,lng},15),'〰');
-  }
+ }else if(current==='cities'){
+  cities().forEach(c=>add(lex()?.aliasCity(c)||c.name,(lex()?.lookupCountry(c)||c.local)+' · '+c.name,()=>chooseCity(c.id),'◈'));
+ }else if(current==='districts'||current==='neighborhoods'||current==='roads'){
+  const rows=lex()?.locality(city,current)||[];
+  const className={districts:'DISTRITO',neighborhoods:'BAIRRO',roads:'VIA'}[current];
+  for(const p of rows)add(p.name,className+' · REFERÊNCIA: '+p.real,
+   ()=>window.DCX?.Cartography?.centerMap({lat:p.lat,lng:p.lng},current==='roads'?15:current==='neighborhoods'?13:12),
+   current==='roads'?'〰':'▦');
  }else{
   const pts=pointList();
   if(!pts.length)list.append(node('p','dcxAtlasNone','Nenhum ponto cadastrado.'));
@@ -133,14 +144,18 @@ function update(){
  const camera=window.DCX?.Cartography?.getCamera?.();
  const global=engine()?.isGlobal?.();
  const city=engine()?.getCity?.()||cities().find(c=>c.id===selectedCity);
- $('dcxAtlasPlace').textContent=global?'VISÃO GLOBAL':city?.name||'TOKYO';
- $('dcxAtlasLocalName').textContent=global?'TERRA // DCX':city?.local||'東京';
+ $('dcxAtlasPlace').textContent=global?'VISÃO GLOBAL':lex()?.aliasCity(city)||city?.name||'TOKYO';
+ $('dcxAtlasLocalName').textContent=global?'TERRA // DCX':(lex()?.lookupCountry(city)||'Japaon')+' · '+(city?.name||'TOKYO');
  if(camera){const p=camera.center;$('dcxAtlasLocationCoords').textContent=(p.lat||0).toFixed(3)+'° / '+(p.lng||0).toFixed(3)+'°'}
- document.querySelectorAll('.dcxAtlasNav .dcxAtlasBtn').forEach(b=>b.classList.toggle('active',global?b.classList.contains('global'):b.classList.contains(city?.id==='tokyo'?'tokyo':'cities')));
+ document.querySelectorAll('.dcxAtlasNav>.dcxAtlasBtn').forEach(b=>b.classList.toggle('active',global?b.classList.contains('global'):b.classList.contains(city?.id==='tokyo'?'tokyo':'cities')));
+ document.querySelector('.dcxAtlasModeSimple')?.classList.toggle('active',labelMode==='simple');
+ document.querySelector('.dcxAtlasModeComplete')?.classList.toggle('active',labelMode==='complete');
+ const status=document.querySelector('.dcxAtlasState');if(status)status.textContent='TOP-DOWN // '+(labelMode==='simple'?'SIMPLIFICADO':'COMPLETO');
 }
 function start(){
  head();document.addEventListener('dcx-map-camera',update);
- window.addEventListener('dcx-map-ready',()=>{update();refresh()});
+ window.addEventListener('dcx-map-ready',()=>{engine()?.setLabelMode(labelMode);update();refresh()});
+ if(engine())engine().setLabelMode(labelMode);
  document.querySelectorAll('[data-tab="tactical-map"],[data-workspace-target="map"]').forEach(b=>
   b.addEventListener('click',()=>setTimeout(()=>{engine()?.resize();update()},130))
  );

@@ -7,3 +7,9 @@
 .dcxMapHybrid .maplibregl-ctrl-attrib{background:#061924dc!important;color:#bddde5!important;font:10px ui-monospace,monospace!important}
 .dcxMapHybrid .maplibregl-ctrl-attrib a{color:#7edce8!important}
 @media(max-width:600px){.dcxHawaiiInset{font-size:8px;padding:5px 7px}}
+
+/* Orbital mode keeps the live native sphere over a deep blue cyberneon background. */
+.dcxMapHybrid.dcx-orbital-mode{background:radial-gradient(ellipse at 50% 43%,#123d57 0%,#061a2a 47%,#01040c 100%)!important}
+.dcxMapHybrid.dcx-orbital-mode .maplibregl-map{background:radial-gradient(ellipse at 50% 50%,#0c314a,#020611 75%)}
+.dcxMapHybrid.dcx-orbital-mode:after{content:"DCX // ÓRBITA PLANETÁRIA • GLOBO 3D";position:absolute;bottom:18px;left:15px;z-index:8;pointer-events:none;color:#87eaff;text-shadow:0 0 14px #21dfff;font:900 9px ui-monospace,monospace;letter-spacing:.12em}
+@media(max-width:640px){.dcxMapHybrid.dcx-orbital-mode:after{bottom:25px;left:8px;font-size:8px}}

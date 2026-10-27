@@ -56,3 +56,44 @@ html[data-dcx-visual-level="3"] body:after{opacity:.25!important}
 @media(prefers-reduced-motion:reduce){html[data-dcx-visual-fx] body:after{animation:none!important;opacity:.035!important}}
 @media(max-width:1120px){#dcxVcLayout{--vc-side:194px}.dcxVcMetrics,.dcxVcPlayerHud{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:780px){#dcxVcLayout{display:block!important}#dcxVcSidebar{position:fixed;top:0;left:0;bottom:0;z-index:151;width:min(290px,88vw);max-height:none;transform:translateX(-110%);transition:transform .22s;box-shadow:0 0 70px #000a}#dcxVcLayout.mobile-open #dcxVcSidebar{transform:translateX(0)}.dcxVcMobileClose,.dcxVcMenuToggle{display:inline-block}.dcxVcBackdrop{position:fixed;inset:0;border:0;background:#000a;z-index:150;cursor:pointer}#dcxVcLayout.mobile-open .dcxVcBackdrop{display:block}.dcxVcContext{padding:10px}.dcxVcSettingsGrid{grid-template-columns:1fr}.dcxVcQuick .dcxVcButton{font-size:8px;padding:6px}.dcxVcPlayerHud{padding:0 8px}.dcxVcMetric{padding:8px;min-height:49px}.dcxVcMetricGo{display:none}}
+
+/* VISUAL COMMAND V2 // preserve dialogs, readable effects and theme integration */
+#dcxVcLayout{--vc-side:clamp(206px,17vw,246px)}
+#dcxVcSidebar{top:82px;max-height:calc(100dvh - 97px);scrollbar-width:thin;scrollbar-color:#426178 #09141b}
+#dcxVcSidebar .kmWorkspaceTabs .kmWorkspaceTab .badge{right:3px;top:-3px}
+#dcxVcSidebar .kmWorkspaceTab:focus-visible,#dcxVcLayout button:focus-visible,.dcxVcButton:focus-visible{outline:2px solid var(--km-accent,var(--cyan,#7ce5f8));outline-offset:2px}
+#dcxVcLayout[data-sidebar=slim]{--vc-side:78px}
+.dcxVcContext,.dcxVcMetric{border-color:color-mix(in srgb,var(--km-accent,var(--cyan,#70deef)) 25%,#2c4152)}
+#dcxVcSidebar .kmWorkspaceTab.active{border-color:var(--km-accent,var(--cyan,#78dff6));box-shadow:inset 3px 0 0 var(--km-accent,var(--cyan,#78dff6))}
+.dcxVcNavIcon,.dcxVcLogo{color:var(--km-accent,var(--cyan,#7be5ff))}
+#dcxVcSidebar .kmWorkspaceTab.active .dcxVcNavIcon{background:color-mix(in srgb,var(--km-accent,var(--cyan,#70dcff)) 18%,#08141d)}
+.dcxVcMain>.kmWorkspaceView.active{display:block;min-width:0}
+.dcxVcMain>.kmWorkspaceView:not(.active){display:none!important}
+.dcxVcMain .kmWorkspaceView .kmGrid,.dcxVcMain .kmWorkspaceView .dcxAdminGrid{max-width:100%;min-width:0}
+.dcxVcMetrics .dcxVcMetricBody strong{font-variant-numeric:tabular-nums}
+html[data-km-density=compact] #dcxVcLayout{--vc-side:188px;gap:7px}
+html[data-km-density=compact] #dcxVcLayout[data-sidebar=slim]{--vc-side:64px}
+html[data-km-density=compact] .dcxVcNavSection{padding:7px 0 4px}
+html[data-km-density=compact] .dcxVcNavHeading{margin-bottom:3px}
+html[data-km-density=compact] .dcxVcBrand{padding:4px 3px 8px}
+html[data-km-density=compact] .dcxVcContextHeading h1{font-size:20px}
+html[data-km-density=compact] .dcxVcMetricBody strong,html[data-player-density=compact] .dcxVcMetricBody strong{font-size:12px}
+html[data-player-density=compact] .playerWorkspaceBar{gap:6px;padding:5px 10px!important}
+html[data-player-density=compact] .playerWorkspaceTab{padding:7px 9px!important;min-height:43px!important}
+html[data-player-density=compact] .dcxWorkspace{padding:8px 10px 15px!important}
+html[data-player-density=compact] .dcxPlayerDashboardShell .dcxFieldSidebarBrand{padding:7px!important}
+html[data-player-density=compact] .dcxVcPlayerHud{padding:0 10px;gap:6px}
+html[data-player-density=compact] .dcxDashHeroCopy p{font-size:10px!important;line-height:1.45!important}
+html[data-player-density=compact] .dcxDashHeroActions{gap:5px!important}
+html[data-player-density=compact] .dcxDashHeroActions .btn{padding:6px 9px!important}
+html[data-dcx-visual-fx=retro] body,html[data-dcx-visual-fx=oldpc] body,html[data-dcx-visual-fx=vhs] body{filter:none!important}
+html[data-dcx-visual-fx=retro] .app,html[data-dcx-visual-fx=oldpc] .app,html[data-dcx-visual-fx=vhs] .app{filter:saturate(1.16) contrast(1.045)}
+html[data-dcx-visual-fx=oldpc] .app{filter:saturate(1.28) contrast(1.10) sepia(.07)}
+html[data-dcx-visual-fx=vhs] .app{filter:saturate(1.17) contrast(1.12)}
+html[data-dcx-visual-fx=oldpc] .app,html[data-dcx-visual-fx=vhs] .app{overflow:visible!important}
+html[data-dcx-visual-fx=oldpc] .top,html[data-dcx-visual-fx=vhs] .top{border-radius:20px}
+html[data-dcx-visual-fx=oldpc] .dcxVcSidebar,html[data-dcx-visual-fx=vhs] .dcxVcSidebar{border-radius:18px}
+html[data-dcx-visual-fx=oldpc] #dcxVcMain,html[data-dcx-visual-fx=vhs] #dcxVcMain{border-radius:18px}
+html[data-dcx-visual-fx=retro] body:after,html[data-dcx-visual-fx=oldpc] body:after,html[data-dcx-visual-fx=vhs] body:after{will-change:transform}
+@media(max-width:780px){#dcxVcLayout{display:block!important}#dcxVcSidebar{top:0!important;max-height:100dvh!important;width:min(310px,88vw)!important}#dcxVcLayout[data-sidebar=slim] #dcxVcSidebar{width:min(310px,88vw)!important}#dcxVcLayout[data-sidebar=slim] .dcxVcBrandText,#dcxVcLayout[data-sidebar=slim] .dcxVcNavHeading,#dcxVcLayout[data-sidebar=slim] .dcxVcNavText{display:initial!important}#dcxVcLayout[data-sidebar=slim] #dcxVcSidebar .kmWorkspaceTab{justify-content:flex-start;padding:9px 10px}#dcxVcSidebar .kmWorkspaceTabs{display:block!important}#dcxVcLayout .dcxVcMenuToggle{display:inline-block}html[data-dcx-visual-fx=oldpc] .app,html[data-dcx-visual-fx=vhs] .app{border:0!important}#dcxVcMain{margin-top:8px}}
+@media(max-width:520px){.dcxVcQuick{max-width:100%;flex-wrap:wrap}.dcxVcQuick .dcxVcButton{min-height:29px}.dcxVcContextHeading h1{font-size:19px}.dcxVcMetrics,.dcxVcPlayerHud{grid-template-columns:repeat(2,minmax(0,1fr))}.dcxVcMetric{min-height:46px}.dcxVcMetricIcon{width:27px;min-width:27px;height:27px}.dcxVcSettingsHead h2{font-size:16px}}

@@ -133,33 +133,47 @@ async function updatePublic(id,f,roster){
  await db.ref('rooms/'+room+'/dcx/meta/factions/'+id).set(sanitize(f,roster));
 }
 async function saveFaction(values){
- if(!HOST||pending)return;
- const record=current();
- const id=record?.id||db.ref('rooms/'+room+'/dcx/meta/factions').push().key;
- const roster=record?privateRoster(id):{};
- const currentPublic=record?.membersPublic;
- const isMakingPublic=values.membersPublic&&!currentPublic;
- if(record&&!secretReady){feedback='ARQUIVO PRIVADO INDISPONÍVEL: SALVAMENTO BLOQUEADO PARA PROTEGER AS FICHAS.';renderStatus();return}
- pending=true;feedback='PUBLICANDO FACÇÃO...';renderStatus();
+ if(!HOST||pending||!connected)return;
+ const record=current(),id=record?.id||db.ref('rooms/'+room+'/dcx/meta/factions').push().key;
+ const changingVisibility=!!record&&!!values.membersPublic!==!!record.membersPublic;
+ if(changingVisibility&&!secretReady){
+  feedback='PARA ALTERAR A VISIBILIDADE DAS FICHAS, O ARQUIVO PRIVADO PRECISA ESTAR AUTORIZADO NO FIREBASE.';
+  renderStatus();return;
+ }
+ pending=true;feedback='SALVANDO FACÇÃO...';renderStatus();
  try{
-  await updatePublic(id,values,roster);
-  selection=id;editor='';feedback='FACÇÃO PUBLICADA COM SUCESSO.';
- }catch(e){
-  feedback='NÃO FOI POSSÍVEL PUBLICAR: '+(e?.code||e?.message);
-  console.error('[DCX FACTIONS] save',e)
- }finally{pending=false;render()}
+  if(!record){
+   await db.ref('rooms/'+room+'/dcx/meta/factions/'+id).set(sanitize(values,{}));
+  }else if(changingVisibility){
+   // Full overwrite only after private roster has loaded.
+   await updatePublic(id,values,privateRoster(id));
+  }else{
+   // Preserve published member data even when private rules are unavailable.
+   const patch=sanitize(values,{});
+   delete patch.members;delete patch.memberCount;delete patch.membersPublic;
+   await db.ref('rooms/'+room+'/dcx/meta/factions/'+id).update(patch);
+  }
+  selection=id;editor='';feedback='FACÇÃO SALVA COM SUCESSO.';
+ }catch(e){feedback='ERRO AO SALVAR FACÇÃO: '+(e?.code||e?.message);console.error(e)}
+ finally{pending=false;render()}
 }
 async function deleteFaction(){
- const f=current();if(!HOST||!f||pending)return;
- if(!confirm('Excluir a facção '+f.title+' e todas as fichas dela?'))return;
- if(!secretReady){feedback='CONFIRA O ARQUIVO PRIVADO ANTES DE EXCLUIR UMA FACÇÃO.';render();return}
- pending=true;renderStatus();
+ const f=current();if(!HOST||!f||pending||!connected)return;
+ if(!confirm('Excluir a facção '+f.title+'? Esta ação não pode ser desfeita.'))return;
+ pending=true;feedback='EXCLUINDO FACÇÃO...';renderStatus();
  try{
-  await db.ref('rooms/'+room+'/dcx').update({
-   ['meta/factions/'+f.id]:null,['factionSecrets/'+f.id]:null
-  });
-  selection='';editor='';feedback='FACÇÃO REMOVIDA.';
- }catch(e){feedback='FALHA AO REMOVER: '+(e?.code||e?.message)}
+  // Public deletion is independent of the private roster's permissions.
+  await db.ref('rooms/'+room+'/dcx/meta/factions/'+f.id).remove();
+  if(secretReady){
+   try{await db.ref('rooms/'+room+'/dcx/factionSecrets/'+f.id).remove()}
+   catch(e){console.warn('[DCX FACTIONS] private cleanup',e);
+    feedback='FACÇÃO REMOVIDA, MAS AS FICHAS PRIVADAS PRECISAM SER LIMPAS NO FIREBASE.';}
+  }else{
+   feedback='FACÇÃO REMOVIDA. FICHAS PRIVADAS PODEM EXIGIR LIMPEZA APÓS ATUALIZAR AS REGRAS.';
+  }
+  selection='';editor='';
+  if(!feedback.startsWith('FACÇÃO REMOVIDA'))feedback='FACÇÃO REMOVIDA.';
+ }catch(e){feedback='ERRO AO EXCLUIR FACÇÃO: '+(e?.code||e?.message);console.error(e)}
  finally{pending=false;render()}
 }
 async function saveMember(memberId,info){

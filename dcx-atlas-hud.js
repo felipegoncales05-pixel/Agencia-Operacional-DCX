@@ -9,7 +9,13 @@ const engine=()=>window.DCX?.Cartography?.engine;
 let current='districts',selectedCity='tokyo',shell=null;
 const lex=()=>window.DCX?.AtlasLexicon;
 let labelMode=(()=>{try{return localStorage.getItem('dcx-atlas-label-mode')==='simple'?'simple':'complete'}catch{return 'complete'}})();
-function setLabelMode(value){labelMode=value==='simple'?'simple':'complete';try{localStorage.setItem('dcx-atlas-label-mode',labelMode)}catch{}engine()?.setLabelMode(labelMode);refresh();update()}
+function setLabelMode(value){labelMode=value==='simple'?'simple':'complete';try{localStorage.setItem('dcx-atlas-label-mode',labelMode)}catch{}window.DCX?.Cartography?.setLabelMode?.(labelMode);refresh();update()}
+function setProvider(kind){
+ const api=window.DCX?.Cartography;
+ if(!api?.setProvider)return;
+ api.setProvider(kind).then(()=>{engine()?.setLabelMode?.(labelMode);update();refresh()});
+ update();
+}
 function cities(){return data().CITIES||[]}
 function pointList(){return window.DCX?.Cartography?.points||[]}
 function chooseCity(id){
@@ -36,6 +42,11 @@ function head(){
  modes.setAttribute('role','group');modes.setAttribute('aria-label','Detalhamento cartográfico');
  modes.append(btn('SIMPLIFICADO',()=>setLabelMode('simple'),'dcxAtlasModeSimple'),btn('COMPLETO',()=>setLabelMode('complete'),'dcxAtlasModeComplete'));
  nav.append(modes);
+ const providers=node('div','dcxAtlasProviderModes');
+ providers.setAttribute('role','group');providers.setAttribute('aria-label','Tipo de mapa');
+ const offline=btn('DCX 2D',()=>setProvider('fictional'),'dcxAtlasProvider2d');
+ const real=btn('GEO REAL',()=>setProvider('hybrid'),'dcxAtlasProviderGeo');
+ providers.append(offline,real);nav.append(providers);
  if(/keymaster\.html$/i.test(location.pathname)){
   const make=btn('+ CRIAR PONTO',()=>window.DCX?.Cartography?.createAtCenter?.(),'dcxAtlasCreatePin');
   make.title='M1 no mapa cria no local clicado. M2 movimenta. Este botão cria no centro da câmera.';
@@ -148,13 +159,20 @@ function update(){
  $('dcxAtlasLocalName').textContent=global?'TERRA // DCX':(lex()?.lookupCountry(city)||'Japaon')+' · '+(city?.name||'TOKYO');
  if(camera){const p=camera.center;$('dcxAtlasLocationCoords').textContent=(p.lat||0).toFixed(3)+'° / '+(p.lng||0).toFixed(3)+'°'}
  document.querySelectorAll('.dcxAtlasNav>.dcxAtlasBtn').forEach(b=>b.classList.toggle('active',global?b.classList.contains('global'):b.classList.contains(city?.id==='tokyo'?'tokyo':'cities')));
+ const provider=window.DCX?.Cartography?.getProvider?.()||'fictional';
+ const info=window.DCX?.Cartography?.getProviderStatus?.()||{};
+ document.querySelector('.dcxAtlasProvider2d')?.classList.toggle('active',provider==='fictional'&&!info.loading);
+ document.querySelector('.dcxAtlasProviderGeo')?.classList.toggle('active',provider==='hybrid');
+ const geoBtn=document.querySelector('.dcxAtlasProviderGeo');
+ if(geoBtn){geoBtn.textContent=info.loading?'CARREGANDO GEO…':'GEO REAL';geoBtn.disabled=!!info.loading}
  document.querySelector('.dcxAtlasModeSimple')?.classList.toggle('active',labelMode==='simple');
  document.querySelector('.dcxAtlasModeComplete')?.classList.toggle('active',labelMode==='complete');
  const status=document.querySelector('.dcxAtlasState');if(status)status.textContent='TOP-DOWN // '+(labelMode==='simple'?'SIMPLIFICADO':'COMPLETO');
 }
 function start(){
  head();document.addEventListener('dcx-map-camera',update);
- window.addEventListener('dcx-map-ready',()=>{engine()?.setLabelMode(labelMode);update();refresh()});
+ window.addEventListener('dcx-map-ready',()=>{window.DCX?.Cartography?.setLabelMode?.(labelMode);update();refresh()});
+ document.addEventListener('dcx-map-provider',()=>{update();refresh()});
  if(engine())engine().setLabelMode(labelMode);
  document.querySelectorAll('[data-tab="tactical-map"],[data-workspace-target="map"]').forEach(b=>
   b.addEventListener('click',()=>setTimeout(()=>{engine()?.resize();update()},130))

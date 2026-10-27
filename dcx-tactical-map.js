@@ -262,9 +262,9 @@ async function initOSM(reason='Chave Google Maps não configurada'){
    minZoom:1,maxZoom:19,zoomControl:false,attributionControl:true,
    scrollWheelZoom:true,dragging:!HOST,worldCopyJump:true,
    preferCanvas:true,zoomSnap:1,keyboard:true});
-  leafletTiles=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{
+  leafletTiles=L.tileLayer('https://basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png',{
    minZoom:1,maxZoom:19,
-   attribution:'&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>',
+   attribution:'&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions" target="_blank" rel="noopener noreferrer">CARTO</a>',
    updateWhenIdle:true,keepBuffer:1
   });
   let failedTiles=0;
@@ -273,6 +273,8 @@ async function initOSM(reason='Chave Google Maps não configurada'){
   });
   leafletTiles.addTo(leafletMap);
   leafletLayers=L.layerGroup().addTo(leafletMap);
+  const city=L.divIcon({className:'dcxMapFictionCityLabel',html:'TOKYO',iconSize:[110,28],iconAnchor:[55,14]});
+  L.marker([35.6762,139.6503],{icon:city,interactive:false}).addTo(leafletMap);
   leafletMap.on('mousemove',e=>updateCoords({lat:e.latlng.lat,lng:e.latlng.lng}));
   leafletMap.on('zoomend moveend',()=>{fallbackCenter=getMapCenter();fallbackZoom=getMapZoom();notifyCamera()});
   if(HOST){
@@ -293,7 +295,7 @@ async function initOSM(reason='Chave Google Maps não configurada'){
    layer.addEventListener('pointerup',e=>{if(e.button===2)mouse=null});
    layer.addEventListener('pointercancel',()=>mouse=null);
   }
-  if(note)note.textContent='OPENSTREETMAP // RUAS E LOCALIZAÇÕES REAIS // VISÃO TÁTICA DCX';
+  if(note)note.textContent='MAPA DCX // SEM RÓTULOS DE RUAS REAIS // TOKYO';
   renderMapObjects();
   // Leaflet can mount while its tab is hidden. Fix dimensions when selected.
   requestAnimationFrame(()=>leafletMap?.invalidateSize({pan:false}));

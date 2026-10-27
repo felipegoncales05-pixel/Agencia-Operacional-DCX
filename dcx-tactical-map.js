@@ -27,7 +27,7 @@ function normalizePoint(p,id){
 }
 const clampZoom=v=>cap(v,1,19,13);
 const roomData=()=>({points:{},center:{...DEFAULT_CENTER},zoom:13});
-let data=roomData(),ref=null,sessionKey='',statusMessage='',root=null,board=null,overlay=null,sidebar=null,drawer=null,selectedId='',draftPos=null,map=null,mapLoaded=false,mapFailed=false,mapObjects=[],mapReady=false,pan=null,fallbackCenter={...DEFAULT_CENTER},fallbackZoom=13,initialized=false,watcher=null,leafletMap=null,leafletLayers=null,leafletTiles=null,fictionalMap=null;
+let data=roomData(),ref=null,sessionKey='',statusMessage='',root=null,board=null,overlay=null,sidebar=null,drawer=null,selectedId='',draftPos=null,map=null,mapLoaded=false,mapFailed=false,mapObjects=[],mapReady=false,pan=null,fallbackCenter={...DEFAULT_CENTER},fallbackZoom=13,initialized=false,watcher=null,leafletMap=null,leafletLayers=null,leafletTiles=null,fictionalMap=null,osmPending=false,mapVisible=false,resizeFrame=0;
 function context(){
  const api=window.OPH?.Realtime,db=api?.getFirebaseDatabase?.(),auth=api?.getFirebaseAuth?.();
  const uid=auth?.currentUser?.uid;
@@ -95,6 +95,13 @@ function createShell(){
  const actions=text('div','dcxMapHeroActions');
  actions.append(tab('−','',()=>zoom(-1)),tab('+','',()=>zoom(1)));
  actions.append(tab('CENTRALIZAR','⌖',()=>{centerMap(data.center,data.zoom)}));
+ const modes=text('div','dcxMapModeTools');
+ const detailBtn=tab('ATLAS DETALHADO','◈',()=>initFictional(),'dcxMapDetailToggle');
+ detailBtn.title='Modo vetorial opcional (WebGL): demanda mais processamento';
+ const lightBtn=tab('MODO LEVE','▤',()=>switchToLight(),'dcxMapLightToggle');
+ lightBtn.title='Mapa leve com os nomes fictícios da campanha';
+ modes.append(lightBtn,detailBtn);
+ actions.append(modes);
  if(HOST)actions.append(tab('SALVAR CENTRO','◈',async()=>{try{await updateMapCenter();status('CENTRO DO MAPA ATUALIZADO PARA TODOS.')}catch(e){status(e.message,true)}},'dcxMapSaveCenter'));
  hero.append(caption,actions);
  const layout=text('div','dcxMapLayout');
@@ -248,7 +255,9 @@ function loadLeaflet(){
  }).catch(e=>{window.DCX_LeafletPromise=null;throw e});
  return window.DCX_LeafletPromise;
 }
-async function initOSM(reason='Chave Google Maps não configurada'){
+async function initOSM(reason='Modo leve da DCX'){
+ if(leafletMap||osmPending)return;
+ osmPending=true;
  const note=q('.dcxMapSourceNotice');
  if(note)note.textContent='CARREGANDO RUAS E CIDADES // OPENSTREETMAP';
  status('CARREGANDO MAPA GEOGRÁFICO…');
@@ -273,8 +282,7 @@ async function initOSM(reason='Chave Google Maps não configurada'){
   });
   leafletTiles.addTo(leafletMap);
   leafletLayers=L.layerGroup().addTo(leafletMap);
-  const city=L.divIcon({className:'dcxMapFictionCityLabel',html:'TOKYO',iconSize:[110,28],iconAnchor:[55,14]});
-  L.marker([35.6762,139.6503],{icon:city,interactive:false}).addTo(leafletMap);
+  addFictionalLabels(L);
   leafletMap.on('mousemove',e=>updateCoords({lat:e.latlng.lat,lng:e.latlng.lng}));
   leafletMap.on('zoomend moveend',()=>{fallbackCenter=getMapCenter();fallbackZoom=getMapZoom();notifyCamera()});
   if(HOST){
@@ -300,19 +308,72 @@ async function initOSM(reason='Chave Google Maps não configurada'){
   // Leaflet can mount while its tab is hidden. Fix dimensions when selected.
   requestAnimationFrame(()=>leafletMap?.invalidateSize({pan:false}));
   setTimeout(()=>leafletMap?.invalidateSize({pan:false}),300);
-  status('MAPA DE RUAS CARREGADO // '+reason+'.');
+  status('MAPA LEVE CARREGADO // '+reason+'.');
  }catch(e){
   console.error('[DCX MAP] Falha no mapa geográfico alternativo',e);
   mapFailed=true;
   initFallback();
   status('MAPA GEOGRÁFICO INDISPONÍVEL // '+e.message+' — GRADE TÁTICA ATIVA',true);
- }
+ }finally{osmPending=false}
 }
+
+// Street names are fictional annotations anchored to Tokyo districts;
+// the underlying map tiles contain no real street-name labels.
+function addFictionalLabels(L){
+ if(!leafletMap)return;
+ const places=[
+  ['TOKYO',35.6762,139.6503,'city'],
+  ['YOKOHAMA',35.4437,139.6380,'city'],
+  ['CHIBA',35.6073,140.1063,'city'],
+  ['SAITAMA',35.8617,139.6455,'city'],
+  ['KYOTO',35.0116,135.7681,'city'],
+  ['OSAKA',34.6937,135.5023,'city'],
+  ['NAGOYA',35.1815,136.9066,'city'],
+  ['HIROSHIMA',34.3853,132.4553,'city'],
+  ['SAPPORO',43.0618,141.3545,'city'],
+  ['FUKUOKA',33.5902,130.4017,'city']
+ ];
+ const roadNames=window.DCX?.FictionalAtlas?.roadNames||[];
+ const positions=[
+  [35.6622,139.702],[35.6971,139.775],[35.6903,139.694],
+  [35.7101,139.783],[35.7224,139.800],[35.6667,139.754],
+  [35.6776,139.771],[35.633,139.777],[35.736,139.721],
+  [35.655,139.665],[35.686,139.640],[35.615,139.739],
+  [35.709,139.677],[35.742,139.764],[35.693,139.806],
+  [35.673,139.727],[35.641,139.708],[35.711,139.744],
+  [35.625,139.654],[35.679,139.689]
+ ];
+ for(let i=0;i<positions.length&&i<roadNames.length;i++)places.push([roadNames[i],positions[i][0],positions[i][1],'road']);
+ const icons=places.map(([name,lat,lng,type])=>{
+  const el=document.createElement('span');el.className=type==='city'?'dcxFictionCityName':'dcxFictionRoadName';el.textContent=name;
+  return {lat,lng,type,el}
+ });
+ const overlay=L.layerGroup().addTo(leafletMap);
+ for(const item of icons){
+  const div=L.divIcon({className:'dcxFictionLabel',html:item.el.outerHTML,
+   iconSize:[item.type==='city'?170:210,26],iconAnchor:[item.type==='city'?85:105,13]});
+  L.marker([item.lat,item.lng],{icon:div,interactive:false,keyboard:false})
+   .addTo(overlay);
+ }
+ const update=()=>{
+  const z=leafletMap?.getZoom()||13;
+  for(const item of overlay.getLayers()){
+   const node=item.getElement?.();
+   if(!node)continue;
+   const isRoad=node.querySelector('.dcxFictionRoadName');
+   const isCity=node.querySelector('.dcxFictionCityName');
+   node.style.display=(isRoad&&z<12)||(isCity&&z<7)?'none':'';
+  }
+ };
+ leafletMap.on('zoomend',update);
+ leafletMap.whenReady(update);
+}
+
 function renderLeafletObjects(){
  if(!leafletMap||!leafletLayers||!window.L)return;
  const L=window.L;
  leafletLayers.clearLayers();
- for(const p of Object.values(data.points)){
+ for(const p of Object.values(allPoints())){
   if(p.type==='risk'){
    const danger=L.circle([p.lat,p.lng],{radius:RADIUS[p.radius].meters,
     color:'#fa647c',weight:2,opacity:.85,fillColor:'#fb3858',fillOpacity:.23,
@@ -362,35 +423,57 @@ function renderMapObjects(){
  }else if(leafletMap){renderLeafletObjects()}
  else if(mapFailed){renderFallback()}
 }
+function switchToLight(){
+ if(fictionalMap){
+  fallbackCenter=fictionalMap.center();fallbackZoom=clampZoom(fictionalMap.zoom());
+  fictionalMap.destroy();fictionalMap=null;
+  const parent=$('dcxMapOverlay');if(parent)parent.replaceChildren();
+ }
+ if(leafletMap){leafletMap.invalidateSize({pan:false});status('MODO LEVE ATIVO');return}
+ initOSM('Geografia da DCX com consumo reduzido de recursos');
+}
 async function initFictional(){
+ if(fictionalMap){status('ATLAS DETALHADO JÁ ATIVO');return}
  const atlas=window.DCX?.FictionalAtlas;
- if(!atlas){await initOSM('Atlas DCX indisponível');return}
+ if(!atlas){status('ATLAS DETALHADO INDISPONÍVEL NESTA VERSÃO.',true);return}
  const parent=$('dcxMapOverlay');
- const element=text('div','dcxMapVector');element.id='dcxMapVector';
- parent.classList.remove('dcxMapFallback');parent.replaceChildren(element);
- const note=q('.dcxMapSourceNotice');if(note)note.textContent='DCX // TOKYO // RUAS FICTÍCIAS // CIDADES REAIS';
+ if(!parent)return;
+ if(!root?.getBoundingClientRect().width||!board?.getBoundingClientRect().height){
+  status('ABRA A ABA MAPA ANTES DE INICIAR O MODO DETALHADO.');return;
+ }
+ const el=text('div','dcxMapVector');el.id='dcxMapVector';el.style.visibility='hidden';
+ parent.append(el);
+ const note=q('.dcxMapSourceNotice');if(note)note.textContent='CARREGANDO MAPA DETALHADO // MODO GPU OPCIONAL';
  try{
-  fictionalMap=await atlas.create({
-   container:element,center:fallbackCenter,zoom:fallbackZoom,host:HOST,
-   onSelect:p=>{if(p.preset){selectPreset(p)}else if(HOST)openEditor(p);else selectPoint(p.id,false)},
+  const candidate=await atlas.create({
+   container:el,center:getMapCenter(),zoom:getMapZoom(),host:HOST,
+   onSelect:p=>{if(p.preset)selectPreset(p);else if(HOST)openEditor(p);else selectPoint(p.id,false)},
    onClick:p=>{if(HOST)openEditor(null,p)},
    onMouseMove:updateCoords,
    onCameraChange:()=>{fallbackCenter=getMapCenter();fallbackZoom=getMapZoom();notifyCamera()}
   });
+  // The raster map stays visible until the vector map reports a successful load.
+  if(leafletMap){leafletMap.remove();leafletMap=null;leafletLayers=null;leafletTiles=null}
+  parent.replaceChildren(el);el.style.visibility='';
+  fictionalMap=candidate;
   renderMapObjects();
-  status('ATLAS DCX ATIVO // TOKYO // RUAS FICTÍCIAS');
+  status('ATLAS DETALHADO ATIVO // MODO GPU');
  }catch(error){
-  console.warn('[DCX MAP] Atlas vetorial indisponível',error);
-  if(fictionalMap){fictionalMap.destroy();fictionalMap=null}
-  parent.replaceChildren();await initOSM('Atlas vetorial indisponível');
+  console.warn('[DCX MAP] Atlas GPU não disponível; modo leve preservado',error);
+  el.remove();
+  if(note)note.textContent='DCX // TOKYO // MODO LEVE // NOMES FICTÍCIOS';
+  status('ATLAS GPU INDISPONÍVEL: '+(error.message||error)+' // MODO LEVE MANTIDO',true);
+  if(!leafletMap)initOSM('Recuperação do atlas detalhado');
  }
 }
+
 function selectPreset(p){
  const detail=$('dcxMapDetail');if(detail)detail.replaceChildren(makeDetail(p));
 }
 function startMap(){
  fallbackCenter={...(data.center||config().center)};fallbackZoom=data.zoom||13;
- initFictional();
+ // Default renderer is lightweight (raster). GPU is opt-in.
+ initOSM('Tóquio DCX — ruas fictícias e navegação fluida');
 }
 function latLngToWorld(p,zoom){
  const lat=Math.max(-85,Math.min(85,p.lat)),sin=Math.sin(lat*Math.PI/180);

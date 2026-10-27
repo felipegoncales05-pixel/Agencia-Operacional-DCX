@@ -71,11 +71,15 @@ function attach(){
 }
 function startWatch(){let attempts=0;const spin=()=>{if(attach()||++attempts>=150)clearInterval(watcher)};watcher=setInterval(spin,1200);spin()}
 function writePoint(raw,id){
- const c=context();if(!c||!ref)return Promise.reject(new Error('Conecte o Keymaster ao Firebase antes de salvar.'));
- if(!HOST)return Promise.reject(new Error('Somente Keymaster pode editar.'));
+ if(!HOST)return Promise.reject(new Error('Somente o Keymaster pode editar.'));
+ const c=context();
+ if(!c)return Promise.reject(new Error('Firebase desconectado. Autentique o Keymaster e entre na sala para publicar.'));
+ // Publishing must not depend on whether the asynchronous Firebase listener
+ // finished attaching. Authorization is still enforced by database rules.
+ const roomRef=c.db.ref('rooms/'+c.room+'/dcx/tacticalMap');
  const node=normalizePoint(raw,id||'temp');
  const safe={lat:node.lat,lng:node.lng,type:node.type,title:node.title,description:node.description,icon:node.icon,image:node.image,stars:node.stars,threatCount:node.threatCount,threatType:node.threatType,radius:node.radius,updatedAt:Date.now()};
- const target=id?ref.child('points').child(id):ref.child('points').push();
+ const target=id?roomRef.child('points').child(id):roomRef.child('points').push();
  return target.set(safe);
 }
 function removePoint(id){if(!HOST||!ref)return Promise.reject(new Error('Sem permissão para excluir.'));return ref.child('points').child(id).remove()}
@@ -132,7 +136,8 @@ function createShell(){
  root.append(hero,layout,footer);
  if(HOST){
   drawer=text('section','dcxMapEditor hidden');drawer.id='dcxMapEditor';
-  root.append(drawer);
+  // Render editing controls outside map's overflow/paint isolation.
+  document.body.append(drawer);
  }
  pane.append(root);bindBoard();renderAll();
 }
@@ -669,6 +674,9 @@ function openEditor(point,pos){
  selectedId=point?.id||'';
  draftPos=point?{lat:point.lat,lng:point.lng}:pos;
  if(!draftPos){status('Selecione uma posição com o mouse.',true);return}
+ // In fullscreen, dialogs must be children of the fullscreen element.
+ const portal=document.fullscreenElement||document.body;
+ if(drawer.parentElement!==portal)portal.append(drawer);
  drawer.classList.remove('hidden');drawer.replaceChildren();
  const form=document.createElement('form');form.className='dcxMapForm';
  const head=text('div','dcxMapEditHead');
@@ -691,6 +699,7 @@ function openEditor(point,pos){
  risk.hidden=category.value!=='risk';
  const posText=text('div','dcxMapEditCoordinates','COORDENADAS '+draftPos.lat.toFixed(5)+', '+draftPos.lng.toFixed(5));
  form.append(posText);
+ const feedback=text('p','dcxMapEditorFeedback','');feedback.setAttribute('role','status');feedback.setAttribute('aria-live','polite');form.append(feedback);
  const actions=text('div','dcxMapEditActions');
  const submit=tab(point&&!point.preset?'SALVAR ALTERAÇÕES':'PUBLICAR NO MAPA','✓',()=>{},'dcxMapSubmit');
  submit.type='submit';submit.onclick=null;actions.append(submit);
@@ -701,12 +710,24 @@ function openEditor(point,pos){
  form.append(actions);
  form.addEventListener('submit',async e=>{
   e.preventDefault();submit.disabled=true;
-  const photo=image.value.trim();if(photo&&!safeUrl(photo)){status('Imagem deve usar endereço HTTPS válido.',true);submit.disabled=false;return}
+  feedback.dataset.error='false';feedback.textContent='PUBLICANDO PING NA SALA...';
+  const photo=image.value.trim();if(photo&&!safeUrl(photo)){
+   feedback.dataset.error='true';feedback.textContent='A imagem precisa usar HTTPS válido.';
+   status(feedback.textContent,true);submit.disabled=false;return
+  }
   const record={...draftPos,type:category.value,title:name.value,description:desc.value,icon:symbols.value,image:photo,stars:Number(star.value),
    threatCount:Number(count.value),threatType:threat.value,radius:radius.value};
-  try{await writePoint(record,point?.preset?'':point?.id||'');closeEditor();status('PONTO PUBLICADO NO FIREBASE.');}
-  catch(err){status('NÃO FOI POSSÍVEL SALVAR: '+err.message,true)}
-  finally{submit.disabled=false}
+  try{
+   await writePoint(record,point?.preset?'':point?.id||'');
+   closeEditor();status('PONTO PUBLICADO NO FIREBASE.');
+  }catch(err){
+   const denied=/permission.?denied|PERMISSION_DENIED/i.test(String(err?.code||'')+' '+String(err?.message||''));
+   const msg=denied?
+    'FIREBASE NEGOU A PUBLICAÇÃO. Confira as regras de rooms/{sala}/dcx/tacticalMap e a autenticação do Keymaster.':
+    'NÃO FOI POSSÍVEL PUBLICAR: '+(err?.message||String(err));
+   feedback.dataset.error='true';feedback.textContent=msg;
+   status(msg,true);console.error('[DCX MAP] Não foi possível publicar o ping',err);
+  }finally{submit.disabled=false}
  });
  drawer.append(form);name.focus();
 }

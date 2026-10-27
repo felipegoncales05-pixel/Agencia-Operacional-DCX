@@ -8,7 +8,7 @@ const state=(()=>{try{return JSON.parse(localStorage.getItem(STORE)||'{}')}catch
 function save(){try{localStorage.setItem(STORE,JSON.stringify(state))}catch{}}
 function button(label,cls,onClick){const b=document.createElement('button');b.type='button';b.className=cls;b.textContent=label;b.addEventListener('click',onClick);return b}
 function player(){
- const app=document.querySelector('body>.app'),nav=$('playerWorkspaceBar'),top=app?.querySelector(':scope>.top');
+ const nav=$('playerWorkspaceBar'),app=nav?.closest('.app')||document.querySelector('.app'),top=app?.querySelector('.top');
  if(!app||!nav||!top||$('dcxNavCollapse'))return;
  const collapsed=()=>!!state.navCollapsed;
  const restore=button('☰ MOSTRAR PAINEL','dcxNavRestore',()=>set(false));restore.id='dcxNavRestore';restore.setAttribute('aria-label','Mostrar cabeçalho, conexão e abas de navegação');
@@ -17,15 +17,22 @@ function player(){
  const summary=document.createElement('span');summary.className='dcxNavCurrent';summary.id='dcxNavCurrent';dock.append(summary,collapse);
  nav.insertAdjacentElement('afterend',dock);
  app.prepend(restore);
+ // Keep restore available even when terminal sections are rearranged by themes.
  function update(){
   const active=nav.querySelector('.playerWorkspaceTab.active');
   summary.textContent='DCX // '+(active?.querySelector('b')?.textContent||'OPERAÇÕES');
   app.classList.toggle('dcxNavCollapsed',collapsed());
+  document.documentElement.classList.toggle('dcxNavCollapsedGlobal',collapsed());
+  document.body.classList.toggle('dcxNavCollapsedGlobal',collapsed());
   restore.hidden=!collapsed();collapse.hidden=collapsed();
   collapse.setAttribute('aria-expanded',String(!collapsed()));
   restore.setAttribute('aria-expanded',String(!collapsed()));
  }
- function set(v){state.navCollapsed=!!v;save();update()}
+ function set(v){state.navCollapsed=!!v;save();update();
+  window.dispatchEvent(new Event('resize'));
+  window.dispatchEvent(new Event('dcx-map-viewport-resized'));
+  setTimeout(()=>window.DCX?.Cartography?.engine?.resize?.(),150)
+ }
  nav.addEventListener('click',()=>requestAnimationFrame(update));
  const mo=new MutationObserver(()=>requestAnimationFrame(update));
  mo.observe(nav,{subtree:true,attributes:true,attributeFilter:['class']});

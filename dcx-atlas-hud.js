@@ -48,7 +48,7 @@ function head(){
  colors.append(colorText,select);nav.append(colors);
  if(/keymaster\.html$/i.test(location.pathname)){
   const make=btn('+ CRIAR PONTO',()=>window.DCX?.Cartography?.createAtCenter?.(),'dcxAtlasCreatePin');
-  make.title='M1 no mapa cria no local clicado. M2 movimenta. Este botão cria no centro da câmera.';
+  make.title='M1: segurar e arrastar para mover. M2: criar ping na posição do cursor. Este botão cria no centro da câmera.';
   nav.append(make);
  }
  const state=node('span','dcxAtlasState','TOP-DOWN // MAPA 2D');

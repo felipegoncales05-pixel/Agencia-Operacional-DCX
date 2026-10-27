@@ -445,7 +445,7 @@ function create({container,center=TOKYO,zoom=13,host=false,onClick,onSelect,onMo
     return {x:event.clientX-box.left,y:event.clientY-box.top};
    }
    function cursorDown(e){
-    if((host&&e.button!==2)||(!host&&e.button!==0))return;
+    if(e.button!==0)return;
     dragging={x:e.clientX,y:e.clientY,start:{...geo},world:{...worldCenter},startTime:performance.now()};
     moved=false;canvas.setPointerCapture?.(e.pointerId);e.preventDefault();
    }
@@ -473,7 +473,7 @@ function create({container,center=TOKYO,zoom=13,host=false,onClick,onSelect,onMo
    function click(e){
     if(ignoreClick){ignoreClick=false;return}
     if(dragging||moved)return;
-    if(host&&e.button!==0)return;
+    if(e.button!==0)return;
     const xy=drawPosition(e);
     for(let i=pointNodes.length-1;i>=0;i--){
      const marker=pointNodes[i];
@@ -482,14 +482,14 @@ function create({container,center=TOKYO,zoom=13,host=false,onClick,onSelect,onMo
      }
     }
     if(mode==='global'){
-     if(host){onClick?.(toGeo(xy.x,xy.y));return}
+     if(host)return;
      for(const cityData of CITIES){
       const p=projectGlobal(cityData.lat,cityData.lng);
       if(Math.hypot(xy.x-p.x,xy.y-p.y)<20){focusCity(cityData.id);return}
      }
      return;
     }
-    if(host)onClick?.(toGeo(xy.x,xy.y));
+    // Empty M1 clicks only focus the map; M2 creates a Keymaster ping.
    }
    function wheel(e){e.preventDefault();setZoom(z+(e.deltaY<0?1:-1))}
    canvas.addEventListener('pointerdown',cursorDown);
@@ -498,7 +498,12 @@ function create({container,center=TOKYO,zoom=13,host=false,onClick,onSelect,onMo
    canvas.addEventListener('pointercancel',cursorUp);
    canvas.addEventListener('click',click);
    canvas.addEventListener('wheel',wheel,{passive:false});
-   canvas.addEventListener('contextmenu',e=>e.preventDefault());
+   canvas.addEventListener('contextmenu',e=>{
+    e.preventDefault();
+    if(!host||dragging)return;
+    const xy=drawPosition(e);
+    onClick?.(toGeo(xy.x,xy.y));
+   });
    const api={
     setPoints(rows){pointList=Object.values(rows||{});schedule()},
     zoom:()=>z,center:()=>mode==='global'?{...worldCenter}:{...geo},

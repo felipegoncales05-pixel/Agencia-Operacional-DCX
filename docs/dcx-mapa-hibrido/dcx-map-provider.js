@@ -7,8 +7,7 @@
 'use strict';
 const TOKYO={lat:35.6762,lng:139.6503};
 const USA={lat:39,lng:-98};
-const HAWAII={lat:21.3099,lng:-157.8581};
-const STYLE='https://tiles.openfreemap.org/styles/dark';
+const STYLE='https://tiles.openfreemap.org/styles/liberty';
 const MAPLIBRE_JS='https://cdn.jsdelivr.net/npm/maplibre-gl@5.8.0/dist/maplibre-gl.js';
 const MAPLIBRE_CSS='https://cdn.jsdelivr.net/npm/maplibre-gl@5.8.0/dist/maplibre-gl.css';
 const RADIUS={small:250,medium:650,large:1400};
@@ -45,7 +44,8 @@ function styleWithoutRealLabels(style){
   if(!layer.layout?.['text-field'])continue;
   // Hide labels from original map BEFORE first paint.
   // Only the separately authored DCX parody layer adds place names.
-  layer.layout.visibility='none';
+  const layerType=String(layer.id+' '+(layer['source-layer']||'')).toLowerCase();
+  if(/road|street|highway|transport|poi|housenumber|address/.test(layerType))layer.layout.visibility='none';
  }
  return result;
 }
@@ -76,8 +76,8 @@ function nearestCity(lat,lng,all){
 }
 function labels(lex,atlas,city){
  const features=[],add=(lng,lat,name,kind)=>features.push(jsonFeature({type:'Point',coordinates:[lng,lat]},{label:name,kind}));
- for(const item of lex?.countryList?.(atlas?.COUNTRIES||[])||[])add(item.lng,item.lat,item.name,'country');
- for(const item of atlas?.CITIES||[])add(item.lng,item.lat,lex?.aliasCity?.(item)||item.name,'city');
+ for(const [name,lat,lng] of atlas?.COUNTRIES||[])add(lng,lat,name,'country');
+ for(const item of atlas?.CITIES||[])add(item.lng,item.lat,item.name,'city');
  if(city&&lex?.locality){
   for(const kind of ['districts','neighborhoods','roads']){
    for(const item of lex.locality(city,kind))
@@ -125,25 +125,6 @@ function addPoints(map){
    'circle-stroke-width':2,'circle-stroke-color':'#04121c'
   }});
 }
-function ensureHawaiiInset(container,map,selectCity){
- const inset=document.createElement('button');
- inset.className='dcxHawaiiInset';inset.type='button';
- inset.textContent='◇ HAVAY // HAWAII · INSET';
- inset.title='Havaí mostrado junto aos Estados Unidos na visão global. Clique para abrir suas coordenadas reais.';
- inset.setAttribute('aria-label','Abrir Havaí, ilha dos Estados Unidos, nas coordenadas geográficas reais');
- container.append(inset);
- inset.addEventListener('click',event=>{event.stopPropagation();selectCity(HAWAII,11)});
- function place(){
-  if(map.getZoom()>4){inset.hidden=true;return}
-  const pos=map.project([-119,27]);
-  const rect=container.getBoundingClientRect();
-  const x=pos.x+12,y=pos.y+25;
-  inset.hidden=x<0||y<0||x>rect.width-80||y>rect.height-30;
-  if(!inset.hidden){inset.style.left=Math.round(x)+'px';inset.style.top=Math.round(y)+'px'}
- }
- map.on('move',place);map.on('zoomend',place);
- place();return ()=>{map.off('move',place);map.off('zoomend',place);inset.remove()}
-}
 function create({container,center=TOKYO,zoom=12,host=false,onClick=noop,onSelect=noop,onMouseMove=noop,onCameraChange=noop}={}){
  return Promise.all([bootstrap(),remoteStyle()]).then(([GL,style])=>new Promise((resolve,reject)=>{
   let map;
@@ -157,7 +138,7 @@ function create({container,center=TOKYO,zoom=12,host=false,onClick=noop,onSelect
    if(host)map.dragPan.disable();
   }catch(e){reject(e);return}
   let ready=false,destroyed=false,lastCityId='',pointsById=new Map(),lastPoints={};
-  let labelMode='complete',disposeInset=noop,pointer=null;
+  let labelMode='complete',disposeTheme=noop,pointer=null;
   const timeout=setTimeout(()=>{if(!ready){map.remove();reject(Error('Não foi possível desenhar o mapa híbrido.'))}},18000);
   function camera(){const c=map.getCenter();return {lat:c.lat,lng:c.lng}}
   const atlas=()=>window.DCX?.FictionalAtlas||{};
@@ -175,9 +156,40 @@ function create({container,center=TOKYO,zoom=12,host=false,onClick=noop,onSelect
   function applyVisibility(){
    if(!ready)return;
    const whole=labelMode==='complete';
-   for(const kind of ['city','district','neighborhood','road']){
+   for(const kind of ['district','neighborhood','road']){
     if(map.getLayer('dcx-label-'+kind))map.setLayoutProperty('dcx-label-'+kind,'visibility',whole?'visible':'none');
    }
+   for(const layer of map.getStyle()?.layers||[]){
+    if(layer.type!=='symbol'||layer.id.startsWith('dcx-'))continue;
+    const src=String(layer.id+' '+(layer['source-layer']||''));
+    if(/road|street|highway|transport/i.test(src)){
+     map.setLayoutProperty(layer.id,'visibility',whole?'visible':'none');
+    }
+   }
+  }
+  function applyTheme(){
+   if(!ready)return;
+   const colors=window.DCX?.MapColors?.palette?.();if(!colors)return;
+   for(const layer of map.getStyle()?.layers||[]){
+    const id=layer.id,src=String(id+' '+(layer['source-layer']||'')).toLowerCase();
+    try{
+     if(layer.type==='background')map.setPaintProperty(id,'background-color',colors.background);
+     else if(layer.type==='fill'&&!id.startsWith('dcx-')){
+      let col=colors.land;
+      if(/water|lake|ocean|river/.test(src))col=colors.water;
+      else if(/park|green|forest|wood|grass/.test(src))col=colors.park;
+      else if(/building/.test(src))col=colors.building;
+      map.setPaintProperty(id,'fill-color',col);
+     }else if(layer.type==='line'&&!id.startsWith('dcx-')){
+      if(/road|street|highway|transport/.test(src))map.setPaintProperty(id,'line-color',/minor|service|path/.test(src)?colors.minorRoad:colors.road);
+      else if(/boundary|border|admin/.test(src))map.setPaintProperty(id,'line-color',colors.boundary);
+     }
+    }catch(e){}
+   }
+   for(const kind of ['country','city','district','neighborhood','road']){
+    if(map.getLayer('dcx-label-'+kind))map.setPaintProperty('dcx-label-'+kind,'text-color',colors.road);
+   }
+   const surface=container.closest('.dcxTacticalMap');if(surface)surface.style.setProperty('--map-neon',colors.main);
   }
   function setPoints(rows){
    lastPoints=rows||{};
@@ -220,7 +232,7 @@ function create({container,center=TOKYO,zoom=12,host=false,onClick=noop,onSelect
     const el=map.getCanvasContainer();
     el.addEventListener('contextmenu',e=>e.preventDefault());
     el.addEventListener('pointerdown',e=>{
-     if(e.button!==2||e.target.closest('.dcxHawaiiInset'))return;pointer={x:e.clientX,y:e.clientY};
+     if(e.button!==2)return;pointer={x:e.clientX,y:e.clientY};
      el.setPointerCapture?.(e.pointerId);e.preventDefault();
     });
     el.addEventListener('pointermove',e=>{
@@ -232,7 +244,8 @@ function create({container,center=TOKYO,zoom=12,host=false,onClick=noop,onSelect
     el.addEventListener('pointerup',e=>{if(e.button===2)pointer=null});
     el.addEventListener('pointercancel',()=>pointer=null);
    }
-   disposeInset=ensureHawaiiInset(container,map,setCenter);
+   disposeTheme=window.DCX?.MapColors?.observe?.(applyTheme)||noop;
+   applyTheme();
    updateLabels(true);applyVisibility();refreshPoints();
    resolve({
     setPoints,zoom:()=>map.getZoom(),center:camera,
@@ -247,7 +260,7 @@ function create({container,center=TOKYO,zoom=12,host=false,onClick=noop,onSelect
     setLabelMode:mode=>{labelMode=mode==='simple'?'simple':'complete';applyVisibility();return labelMode},
     getStatus:()=>({painted:ready,width:container.clientWidth,height:container.clientHeight,provider:'MapLibre+OpenFreeMap'}),
     destroy:()=>{
-     destroyed=true;disposeInset();clearTimeout(timeout);map.remove()
+     destroyed=true;disposeTheme();clearTimeout(timeout);map.remove()
     }
    });
   }
@@ -256,5 +269,5 @@ function create({container,center=TOKYO,zoom=12,host=false,onClick=noop,onSelect
  }));
 }
 window.DCX=window.DCX||{};
-window.DCX.HybridMapAdapter={TOKYO,USA,HAWAII,create,styleWithoutRealLabels,polygonAround};
+window.DCX.HybridMapAdapter={TOKYO,USA,create,styleWithoutRealLabels,polygonAround};
 })();

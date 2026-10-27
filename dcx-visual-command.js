@@ -2,14 +2,15 @@
 (()=>{
 'use strict';
 const HOST=/keymaster\.html$/i.test(location.pathname);
-const STORAGE='dcx-visual-command-v1';
+const STORAGE='dcx-visual-command-v2-'+(HOST?'keymaster':'player');
+const LEGACY_STORAGE='dcx-visual-command-v1';
 const FX=['off','retro','oldpc','vhs'];
 const $=id=>document.getElementById(id);
 const q=s=>document.querySelector(s);
 const safeText=(v,f='—')=>{const s=String(v||'').trim();return s||f};
 function read(){
  try{
-  const v=JSON.parse(localStorage.getItem(STORAGE)||'{}');
+  const v=JSON.parse(localStorage.getItem(STORAGE)||localStorage.getItem(LEGACY_STORAGE)||'{}');
   return {
    fx:FX.includes(v.fx)?v.fx:'off',
    level:[1,2,3].includes(Number(v.level))?Number(v.level):2,
@@ -41,6 +42,9 @@ function apply(){
  root.dataset.dcxVisualLevel=String(preferences.level);
  root.dataset.dcxVisualHud=preferences.hud?'on':'off';
  if(HOST&&layout)layout.dataset.sidebar=preferences.sidebar;
+ const collapse=$('dcxVcSideToggle');
+ if(collapse){collapse.textContent=preferences.sidebar==='slim'?'▣ EXPANDIR':'◧ RECOLHER';collapse.setAttribute('aria-expanded',String(preferences.sidebar!=='slim'));}
+ qAll('#kmWorkspaceTabs .kmWorkspaceTab').forEach(b=>b.title=b.getAttribute('aria-label')||b.textContent?.trim()||'ABRIR ABA');
  settings.forEach(node=>{
   const {modeSelect,levelInput,hudCheck,slimCheck}=node;
   if(modeSelect)modeSelect.value=preferences.fx;
@@ -100,6 +104,7 @@ function setupSidebar(){
  const buttons=qAll('#kmWorkspaceTabs .kmWorkspaceTab[data-tab]');
  const map=new Map(buttons.map(b=>[b.dataset.tab,b]));
  const fragment=document.createDocumentFragment();
+ const placed=new Set();
  for(const group of groups){
   const section=element('section','dcxVcNavSection');
   const name=element('h3','dcxVcNavHeading',group.name);section.append(name);
@@ -110,9 +115,20 @@ function setupSidebar(){
    b.setAttribute('aria-label',text);
    const mark=element('span','dcxVcNavIcon',icons[id]||'•');mark.setAttribute('aria-hidden','true');
    const label=element('span','dcxVcNavText',text);
-   b.prepend(mark,label);section.append(b);
+   b.prepend(mark,label);section.append(b);placed.add(id);
   }
   fragment.append(section);
+ }
+ const extra=buttons.filter(b=>!placed.has(b.dataset.tab));
+ if(extra.length){
+  const other=element('section','dcxVcNavSection');other.append(element('h3','dcxVcNavHeading','OUTRAS FERRAMENTAS'));
+  for(const b of extra){
+   const old=String(b.textContent||'').trim();
+   [...b.childNodes].filter(n=>n.nodeType===Node.TEXT_NODE).forEach(n=>n.remove());
+   const mark=element('span','dcxVcNavIcon','◈');mark.setAttribute('aria-hidden','true');
+   b.prepend(mark,element('span','dcxVcNavText',old));b.setAttribute('aria-label',old);other.append(b);
+  }
+  fragment.append(other);
  }
  const footer=element('div','dcxVcSidebarFooter');
  footer.append(element('span','dcxVcSignalDot'),element('span','', 'DCX NETWORK // LOCAL UI'));
@@ -122,7 +138,7 @@ function setupSidebar(){
  const context=element('div','dcxVcContext');
  const heading=element('div','dcxVcContextHeading');heading.append(element('small','', 'DCX // WORKSPACE'),element('h1','', 'CENTRO DE OPERAÇÕES'));
  const btns=element('div','dcxVcContextTools');
- btns.append(createAction('◧ RECOLHER',()=>change({sidebar:preferences.sidebar==='slim'?'wide':'slim'}),'dcxVcSideToggle'));
+ const collapse=createAction('◧ RECOLHER',()=>change({sidebar:preferences.sidebar==='slim'?'wide':'slim'}),'dcxVcSideToggle');collapse.id='dcxVcSideToggle';btns.append(collapse);
  context.append(heading,btns);main.append(context);
  const metrics=element('div','dcxVcMetrics');metrics.id='dcxVcMetrics';main.append(metrics);
  for(const view of views)main.append(view);
@@ -131,7 +147,20 @@ function setupSidebar(){
  toggle.id='dcxVcMenuToggle';
  const head=consoleEl.querySelector('.top .actions');head?.prepend(toggle);
  const overlay=element('button','dcxVcBackdrop');overlay.type='button';overlay.setAttribute('aria-label','Fechar menu lateral');overlay.addEventListener('click',()=>layout.classList.remove('mobile-open'));layout.append(overlay);
- tabs.addEventListener('click',e=>{if(e.target.closest('.kmWorkspaceTab')){layout.classList.remove('mobile-open');window.requestAnimationFrame(updateHud)}});
+ tabs.addEventListener('click',e=>{
+  if(!e.target.closest('.kmWorkspaceTab'))return;
+  layout.classList.remove('mobile-open');
+  window.requestAnimationFrame(()=>{
+   updateHud();
+   const label=q('.dcxVcContextHeading h1');if(label){label.tabIndex=-1;label.focus({preventScroll:true})}
+  });
+ });
+ tabs.addEventListener('keydown',e=>{
+  const items=qAll('#kmWorkspaceTabs .kmWorkspaceTab:not([disabled])'),i=items.indexOf(e.target.closest('.kmWorkspaceTab'));
+  if(i<0)return;
+  if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();items[(i+(e.key==='ArrowDown'?1:-1)+items.length)%items.length]?.focus()}
+  if(e.key==='Home'||e.key==='End'){e.preventDefault();items[e.key==='Home'?0:items.length-1]?.focus()}
+ });
  const observer=new MutationObserver(()=>updateHud());
  observer.observe(tabs,{subtree:true,attributes:true,attributeFilter:['class']});
 }
@@ -218,7 +247,12 @@ function init(){
  const densityObserver=new MutationObserver(syncDensity);
  densityObserver.observe(document.documentElement,{attributes:true,attributeFilter:[HOST?'data-km-density':'data-player-density']});
  window.setInterval(updateHud,3000);
- console.info('[DCX] VISUAL COMMAND ready // UI only // sidebar, HUD, density, retro, old PC, VHS');
+ if(HOST)document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&layout?.classList.contains('mobile-open')){
+   layout.classList.remove('mobile-open');$('dcxVcMenuToggle')?.focus();
+  }
+ });
+ console.info('[DCX] VISUAL COMMAND V2 // UI only // sidebar, HUD, density, retro, old PC, VHS');
 }
 window.DCX=window.DCX||{};
 window.DCX.VisualCommand={setFx,toggleFx,toggleHud,get state(){return {...preferences}}};

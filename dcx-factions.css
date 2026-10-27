@@ -1,0 +1,60 @@
+/* DCX Factions // tactical dossiers */
+.dcxFactionsView{margin:12px 0;min-height:570px;border:1px solid #325368;border-radius:16px;background:#06131d;color:#d9edf7;overflow:hidden}
+.dcxFactionTop{padding:19px 23px;border-bottom:1px solid #27495c;background:linear-gradient(110deg,#0d2a39,#08121b)}
+.dcxFactionTop small,.dcxFactionKicker{font:800 10px ui-monospace,monospace;color:#79bacb;letter-spacing:.1em}
+.dcxFactionTop h2{font:900 clamp(24px,3vw,42px) ui-monospace,monospace;margin:6px 0;color:#f0fbff}
+.dcxFactionTop p{font-size:12px;color:#9abcca}
+.dcxFactionLayout{display:grid;grid-template-columns:minmax(215px,26%) minmax(0,1fr);min-height:480px}
+.dcxFactionAside{border-right:1px solid #27495c;background:#051019;padding:12px}
+.dcxFactionAsideHead{font:900 10px ui-monospace,monospace;letter-spacing:.08em;color:#93c6d7;margin:4px 0 12px}
+.dcxFactionMenu{display:grid;align-content:start;gap:6px;max-height:650px;overflow-y:auto}
+.dcxFactionButton{background:#112533;color:#d5f3ff;border:1px solid #31566a;border-radius:7px;padding:9px 12px;cursor:pointer;font:800 10px ui-monospace,monospace}
+.dcxFactionButton:hover,.dcxFactionButton.active{border-color:var(--cyan,#76e2f4);background:#123a4d}
+.dcxFactionButton.primary{background:#194558;border-color:#6bb7c8}
+.dcxFactionButton.danger{color:#ffabb5;border-color:#884453}
+.dcxFactionButton.secondary{background:transparent}
+.dcxFactionNav{width:100%;display:flex;align-items:center;gap:9px;text-align:left;padding:10px}
+.dcxFactionSymbol{font:900 24px serif;display:grid;place-items:center;color:#9ae6f0;min-width:32px}
+.dcxFactionNavText{min-width:0;flex:1;display:grid;gap:5px}
+.dcxFactionNavText strong{font:900 12px ui-monospace,monospace;overflow-wrap:anywhere}
+.dcxFactionNavText small{font:9px ui-monospace,monospace;color:#8ab3c6}
+.dcxFactionNavRank{font:900 16px ui-monospace,monospace;color:#e8d58e}
+.dcxFactionDetails{padding:20px;min-width:0}
+.dcxFactionHero{position:relative;display:grid;grid-template-columns:minmax(0,1fr);min-height:220px;overflow:hidden;border-radius:12px;border:1px solid #396177;background:#102634}
+.dcxFactionHero>.dcxFactionImage{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.48}
+.dcxFactionHeroCopy{position:relative;align-self:end;padding:20px;background:linear-gradient(0deg,#06121be8,transparent)}
+.dcxFactionHeroSymbol{display:block;font:40px serif;color:#9feafb}
+.dcxFactionHero h1{font:900 clamp(23px,3.4vw,46px) ui-monospace,monospace;color:#f4fbff;margin:4px 0 12px}
+.dcxFactionMetrics{display:flex;flex-wrap:wrap;gap:8px}
+.dcxFactionMetrics span{padding:7px;border:1px solid #507181;border-radius:6px;font:800 10px ui-monospace,monospace;background:#071b25}
+.dcxFactionHostility{color:#ff9faf}
+.dcxFactionDescription{white-space:pre-wrap;font:13px/1.7 ui-monospace,monospace;color:#bfdce8;margin:20px 0}
+.dcxFactionSectionHead{display:flex;justify-content:space-between;align-items:center;gap:9px;border-bottom:1px solid #35596a;padding:12px 0}
+.dcxFactionSectionHead h3{font:900 19px ui-monospace,monospace;margin:0}
+.dcxFactionSectionHead span{font:9px ui-monospace,monospace;color:#89b2c3}
+.dcxFactionClassified{display:grid;place-items:center;min-height:210px;border:1px dashed #633d65;margin:17px 0;border-radius:12px;background:#20102145;text-align:center;padding:15px}
+.dcxFactionGlitch{font:900 76px ui-monospace,monospace;color:#a3c5ec;text-shadow:4px 0 #fa4ca7,-4px 0 #42d6ef;animation:dcxFactionGlitch 2.7s steps(2,end) infinite}
+@keyframes dcxFactionGlitch{0%,92%,100%{transform:translateX(0)}93%{transform:translateX(-4px)}96%{transform:translateX(3px)}}
+.dcxFactionClassified strong{font:900 14px ui-monospace,monospace}
+.dcxFactionClassified small{color:#b29fb9;font:10px ui-monospace,monospace}
+.dcxFactionMemberGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-top:14px}
+.dcxFactionMember{border:1px solid #38586a;background:#081924;border-radius:11px;overflow:hidden}
+.dcxFactionMemberIcon{height:115px;display:grid;place-items:center;font:50px serif;color:#8dccdf;background:#142a37}
+.dcxFactionMemberIcon img{width:100%;height:100%;object-fit:cover}
+.dcxFactionMemberBody{padding:12px}
+.dcxFactionMemberBody h4{margin:0 0 5px;font:900 15px ui-monospace,monospace}
+.dcxFactionMemberBody small{display:block;color:#9dbecc;margin-bottom:12px}
+.dcxFactionMemberDetail{white-space:pre-wrap;overflow-wrap:anywhere;font:11px/1.6 ui-monospace,monospace}
+.dcxFactionMemberControls{display:flex;gap:6px;padding:8px}
+.dcxFactionMemberControls button{flex:1}
+.dcxFactionForm{display:grid;gap:13px;max-width:690px}
+.dcxFactionField{display:grid;gap:6px}
+.dcxFactionField>span,.dcxFactionToggle{font:900 10px ui-monospace,monospace;color:#9fcfe0}
+.dcxFactionField input,.dcxFactionField textarea,.dcxFactionField select{width:100%;box-sizing:border-box;background:#07141d;color:#ecfcff;border:1px solid #41667a;border-radius:8px;padding:11px;font:12px ui-monospace,monospace}
+.dcxFactionToggle{display:flex;align-items:center;gap:8px}
+.dcxFactionActions{display:flex;flex-wrap:wrap;gap:9px;margin:17px 0}
+.dcxFactionStatus{font:10px/1.6 ui-monospace,monospace;padding:9px 18px;color:#97ccd9}
+.dcxFactionStatus[data-error=true],.dcxFactionNotice{color:#ffabb6}
+.dcxFactionEmpty{padding:35px;text-align:center;color:#9ebcca;font:11px ui-monospace,monospace}
+@media(max-width:780px){.dcxFactionLayout{grid-template-columns:1fr}.dcxFactionAside{border-right:0;border-bottom:1px solid #35566a}.dcxFactionMenu{max-height:230px}.dcxFactionDetails{padding:12px}}
+@media(prefers-reduced-motion:reduce){.dcxFactionGlitch{animation:none}}

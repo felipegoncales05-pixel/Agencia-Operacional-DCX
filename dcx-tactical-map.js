@@ -24,7 +24,7 @@ function normalizePoint(p,id){
  const loc=vec(p),type=TYPES[p.type]?p.type:'interest';
  return {id:clean(id,72),lat:loc.lat,lng:loc.lng,type,title:clean(p.title,90)||'SEM IDENTIFICAÇÃO',description:clean(p.description,1800),icon:ICONS.some(x=>x[0]===p.icon)?p.icon:(type==='risk'?'warning':'pin'),image:safeUrl(p.image),stars:cap(p.stars,1,5,1),threatCount:cap(p.threatCount,0,9999,0),threatType:THREATS[p.threatType]?p.threatType:'unregistered',radius:RADIUS[p.radius]?p.radius:'medium',updatedAt:cap(p.updatedAt,0,1e15,0)};
 }
-const clampZoom=v=>cap(v,3,19,13);
+const clampZoom=v=>cap(v,1,19,13);
 const roomData=()=>({points:{},center:{...DEFAULT_CENTER},zoom:13});
 let data=roomData(),ref=null,sessionKey='',statusMessage='',root=null,board=null,overlay=null,sidebar=null,drawer=null,selectedId='',draftPos=null,map=null,mapLoaded=false,mapFailed=false,mapObjects=[],mapReady=false,pan=null,fallbackCenter={...DEFAULT_CENTER},fallbackZoom=13,initialized=false,watcher=null;
 function context(){
@@ -212,6 +212,7 @@ function initGoogle(){
    node.addEventListener('wheel',e=>{e.preventDefault();zoom(e.deltaY<0?1:-1)},{passive:false});
   }
   map.addListener('mousemove',e=>updateCoords({lat:e.latLng.lat(),lng:e.latLng.lng()}));
+  map.addListener('zoom_changed',()=>notifyCamera());
   const notice=document.querySelector('.dcxMapSourceNotice');if(notice)notice.textContent='GOOGLE MAPS // VISTA SUPERIOR // MODO CYBERNEON';
   renderMapObjects();
   status('GOOGLE MAPS CARREGADO // VISUALIZAÇÃO AO VIVO');
@@ -298,17 +299,18 @@ function renderFallback(){
  }
  updateCoords(fallbackCenter);
 }
+function notifyCamera(){document.dispatchEvent(new CustomEvent('dcx-map-camera',{detail:{zoom:getMapZoom(),center:getMapCenter()}}))}
 function zoom(d){
- if(map){map.setZoom(Math.min(19,Math.max(3,(map.getZoom()||13)+d)))}
- else{fallbackZoom=clampZoom(fallbackZoom+d);renderFallback()}
+ if(map){map.setZoom(Math.min(19,Math.max(1,(map.getZoom()||13)+d)))}
+ else{fallbackZoom=clampZoom(fallbackZoom+d);renderFallback();notifyCamera()}
 }
 function moveTo(p){
  if(map){map.panTo({lat:p.lat,lng:p.lng});if(map.getZoom()<14)map.setZoom(14)}
- else{fallbackCenter={lat:p.lat,lng:p.lng};fallbackZoom=Math.max(fallbackZoom,14);renderFallback()}
+ else{fallbackCenter={lat:p.lat,lng:p.lng};fallbackZoom=Math.max(fallbackZoom,14);renderFallback();notifyCamera()}
 }
 function centerMap(p,z){
  if(map){map.panTo(p);map.setZoom(z||13)}
- else{fallbackCenter={...p};fallbackZoom=clampZoom(z);renderFallback()}
+ else{fallbackCenter={...p};fallbackZoom=clampZoom(z);renderFallback();notifyCamera()}
 }
 function bindBoard(){
  let down=null;
@@ -429,6 +431,6 @@ function start(){
  ensureTabs();createShell();startMap();startWatch();
 }
 window.DCX=window.DCX||{};
-window.DCX.Cartography={get points(){return Object.values(data.points)},selectPoint,zoom,openEditor};
+window.DCX.Cartography={get points(){return Object.values(data.points)},selectPoint,zoom,openEditor,centerMap,getCamera:()=>({zoom:getMapZoom(),center:getMapCenter()})};
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
 })();

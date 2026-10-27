@@ -1,0 +1,258 @@
+/* DCX Hybrid Map Provider — opt-in integration adapter (MapLibre 5.x / OpenFreeMap).
+ * Designed to implement the same public API as DCX.FictionalAtlas.create(...)
+ * Built separately from production to prevent replacing the currently working
+ * Canvas 2D renderer until testing.  License: project internal.
+ */
+(()=>{
+'use strict';
+const TOKYO={lat:35.6762,lng:139.6503};
+const USA={lat:39,lng:-98};
+const HAWAII={lat:21.3099,lng:-157.8581};
+const STYLE='https://tiles.openfreemap.org/styles/dark';
+const MAPLIBRE_JS='https://cdn.jsdelivr.net/npm/maplibre-gl@5.8.0/dist/maplibre-gl.js';
+const MAPLIBRE_CSS='https://cdn.jsdelivr.net/npm/maplibre-gl@5.8.0/dist/maplibre-gl.css';
+const RADIUS={small:250,medium:650,large:1400};
+const noop=()=>{};
+const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
+const jsonFeature=(geometry,properties)=>({type:'Feature',geometry,properties});
+const fc=features=>({type:'FeatureCollection',features});
+let libraryPromise;
+function bootstrap(){
+ if(window.maplibregl?.Map)return Promise.resolve(window.maplibregl);
+ if(libraryPromise)return libraryPromise;
+ libraryPromise=new Promise((resolve,reject)=>{
+  if(!document.querySelector('[data-dcx-maplibre-css]')){
+   const css=document.createElement('link');css.rel='stylesheet';css.href=MAPLIBRE_CSS;
+   css.dataset.dcxMaplibreCss='true';document.head.append(css);
+  }
+  const js=document.createElement('script');js.src=MAPLIBRE_JS;js.async=true;
+  let settled=false;
+  const done=(error)=>{
+   if(settled)return;settled=true;clearTimeout(timer);
+   if(error)reject(error);else resolve(window.maplibregl);
+  };
+  const timer=setTimeout(()=>done(Error('Tempo esgotado para carregar MapLibre.')),15000);
+  js.onload=()=>window.maplibregl?.Map?done():done(Error('MapLibre não inicializou.'));
+  js.onerror=()=>done(Error('CDN de mapas indisponível.'));
+  document.head.append(js);
+ }).catch(error=>{libraryPromise=null;throw error});
+ return libraryPromise;
+}
+function styleWithoutRealLabels(style){
+ const result=JSON.parse(JSON.stringify(style));
+ for(const layer of result.layers||[]){
+  if(layer.type!=='symbol')continue;
+  if(!layer.layout?.['text-field'])continue;
+  // Hide labels from original map BEFORE first paint.
+  // Only the separately authored DCX parody layer adds place names.
+  layer.layout.visibility='none';
+ }
+ return result;
+}
+async function remoteStyle(){
+ const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),15000);
+ try{
+  const response=await fetch(STYLE,{signal:controller.signal,cache:'default'});
+  if(!response.ok)throw Error('Não foi possível ler o estilo OpenFreeMap: HTTP '+response.status);
+  return styleWithoutRealLabels(await response.json());
+ }finally{clearTimeout(timeout)}
+}
+function polygonAround(lat,lng,meters){
+ const R=6371008.8,ang=meters/R,phi1=lat*Math.PI/180,lambda1=lng*Math.PI/180,ring=[];
+ for(let i=0;i<=48;i++){
+  const bearing=2*Math.PI*i/48;
+  const phi2=Math.asin(Math.sin(phi1)*Math.cos(ang)+Math.cos(phi1)*Math.sin(ang)*Math.cos(bearing));
+  const lambda2=lambda1+Math.atan2(Math.sin(bearing)*Math.sin(ang)*Math.cos(phi1),Math.cos(ang)-Math.sin(phi1)*Math.sin(phi2));
+  ring.push([lambda2*180/Math.PI,phi2*180/Math.PI]);
+ }
+ return {type:'Polygon',coordinates:[ring]};
+}
+function nearestCity(lat,lng,all){
+ const cos=Math.cos(lat*Math.PI/180);
+ return all.reduce((a,b)=>{
+  const distance=x=>Math.hypot((x.lng-lng)*cos,x.lat-lat);
+  return !a||distance(b)<distance(a)?b:a
+ },null);
+}
+function labels(lex,atlas,city){
+ const features=[],add=(lng,lat,name,kind)=>features.push(jsonFeature({type:'Point',coordinates:[lng,lat]},{label:name,kind}));
+ for(const item of lex?.countryList?.(atlas?.COUNTRIES||[])||[])add(item.lng,item.lat,item.name,'country');
+ for(const item of atlas?.CITIES||[])add(item.lng,item.lat,lex?.aliasCity?.(item)||item.name,'city');
+ if(city&&lex?.locality){
+  for(const kind of ['districts','neighborhoods','roads']){
+   for(const item of lex.locality(city,kind))
+    add(item.lng,item.lat,item.name,kind==='districts'?'district':kind==='roads'?'road':'neighborhood');
+  }
+ }
+ return fc(features);
+}
+function addLabels(map){
+ map.addSource('dcx-hybrid-labels',{type:'geojson',data:fc([])});
+ const entries=[
+  {name:'country',minzoom:1,maxzoom:8,size:12,color:'#82c7e7'},
+  {name:'city',minzoom:3,maxzoom:16,size:11,color:'#bbecf4'},
+  {name:'district',minzoom:9,maxzoom:19,size:12,color:'#f2faff'},
+  {name:'neighborhood',minzoom:11,maxzoom:19,size:10,color:'#8bdeeb'},
+  {name:'road',minzoom:13,maxzoom:19,size:9,color:'#67cbd9'}
+ ];
+ for(const e of entries)map.addLayer({
+  id:'dcx-label-'+e.name,source:'dcx-hybrid-labels',type:'symbol',
+  minzoom:e.minzoom,maxzoom:e.maxzoom,
+  filter:['==',['get','kind'],e.name],
+  layout:{
+   'text-field':['get','label'],'text-size':e.size,
+   'text-font':['Noto Sans Regular'],
+   'text-allow-overlap':false,'text-ignore-placement':false,
+   'text-padding':5,'text-max-width':14
+  },
+  paint:{
+   'text-color':e.color,'text-halo-color':'#020914',
+   'text-halo-width':1.4,'text-halo-blur':.5
+  }
+ });
+}
+function addPoints(map){
+ map.addSource('dcx-hybrid-points',{type:'geojson',data:fc([])});
+ map.addSource('dcx-hybrid-risks',{type:'geojson',data:fc([])});
+ map.addLayer({id:'dcx-risk-fill',type:'fill',source:'dcx-hybrid-risks',
+  paint:{'fill-color':'#ff315e','fill-opacity':.19}});
+ map.addLayer({id:'dcx-risk-outline',type:'line',source:'dcx-hybrid-risks',
+  paint:{'line-color':'#ff6f8e','line-opacity':.8,'line-width':1.5,'line-dasharray':[3,2]}});
+ map.addLayer({id:'dcx-hybrid-pins',type:'circle',source:'dcx-hybrid-points',
+  paint:{
+   'circle-radius':['match',['get','type'],'important',9,'risk',10,7],
+   'circle-color':['match',['get','type'],'important','#e4f478','risk','#fa617e','#6cddeb'],
+   'circle-stroke-width':2,'circle-stroke-color':'#04121c'
+  }});
+}
+function ensureHawaiiInset(container,map,selectCity){
+ const inset=document.createElement('button');
+ inset.className='dcxHawaiiInset';inset.type='button';
+ inset.textContent='◇ HAVAY // HAWAII · INSET';
+ inset.title='Havaí mostrado junto aos Estados Unidos na visão global. Clique para abrir suas coordenadas reais.';
+ inset.setAttribute('aria-label','Abrir Havaí, ilha dos Estados Unidos, nas coordenadas geográficas reais');
+ container.append(inset);
+ inset.addEventListener('click',event=>{event.stopPropagation();selectCity(HAWAII,11)});
+ function place(){
+  if(map.getZoom()>4){inset.hidden=true;return}
+  const pos=map.project([-119,27]);
+  const rect=container.getBoundingClientRect();
+  const x=pos.x+12,y=pos.y+25;
+  inset.hidden=x<0||y<0||x>rect.width-80||y>rect.height-30;
+  if(!inset.hidden){inset.style.left=Math.round(x)+'px';inset.style.top=Math.round(y)+'px'}
+ }
+ map.on('move',place);map.on('zoomend',place);
+ place();return ()=>{map.off('move',place);map.off('zoomend',place);inset.remove()}
+}
+function create({container,center=TOKYO,zoom=12,host=false,onClick=noop,onSelect=noop,onMouseMove=noop,onCameraChange=noop}={}){
+ return Promise.all([bootstrap(),remoteStyle()]).then(([GL,style])=>new Promise((resolve,reject)=>{
+  let map;
+  try{
+   map=new GL.Map({container,style,center:[center.lng,center.lat],zoom,
+    minZoom:1,maxZoom:19,dragRotate:false,attributionControl:true,
+    pitchWithRotate:false,renderWorldCopies:true,maxPitch:0,antialias:false,
+    fadeDuration:0,localIdeographFontFamily:'sans-serif'
+   });
+   map.touchZoomRotate.disableRotation();
+   if(host)map.dragPan.disable();
+  }catch(e){reject(e);return}
+  let ready=false,destroyed=false,lastCityId='',pointsById=new Map(),lastPoints={};
+  let labelMode='complete',disposeInset=noop,pointer=null,ignoreNextClick=false;
+  const timeout=setTimeout(()=>{if(!ready){map.remove();reject(Error('Não foi possível desenhar o mapa híbrido.'))}},18000);
+  function camera(){const c=map.getCenter();return {lat:c.lat,lng:c.lng}}
+  const atlas=()=>window.DCX?.FictionalAtlas||{};
+  const lex=()=>window.DCX?.AtlasLexicon;
+  const cities=()=>atlas().CITIES||[];
+  const city=()=>nearestCity(camera().lat,camera().lng,cities());
+  function updateLabels(force=false){
+   if(destroyed||!ready)return;
+   const nearest=city();
+   const targetId=map.getZoom()>=8?nearest?.id||'':'';
+   if(!force&&targetId===lastCityId)return;
+   lastCityId=targetId;
+   map.getSource('dcx-hybrid-labels')?.setData(labels(lex(),atlas(),targetId?nearest:null));
+  }
+  function applyVisibility(){
+   if(!ready)return;
+   const whole=labelMode==='complete';
+   for(const kind of ['city','district','neighborhood','road']){
+    if(map.getLayer('dcx-label-'+kind))map.setLayoutProperty('dcx-label-'+kind,'visibility',whole?'visible':'none');
+   }
+  }
+  function setPoints(rows){
+   lastPoints=rows||{};
+   pointsById=new Map();
+   const pins=[],danger=[];
+   for(const [id,p] of Object.entries(lastPoints)){
+    if(!p||!Number.isFinite(Number(p.lat))||!Number.isFinite(Number(p.lng)))continue;
+    pointsById.set(id,{...p,id});
+    pins.push(jsonFeature({type:'Point',coordinates:[Number(p.lng),Number(p.lat)]},{id,type:p.type||'interest'}));
+    if(p.type==='risk')danger.push(jsonFeature(
+     polygonAround(Number(p.lat),Number(p.lng),RADIUS[p.radius]||RADIUS.medium),{id}));
+   }
+   if(ready){
+    map.getSource('dcx-hybrid-points')?.setData(fc(pins));
+    map.getSource('dcx-hybrid-risks')?.setData(fc(danger));
+   }
+  }
+  function refreshPoints(){setPoints(lastPoints)}
+  function pick(e){
+   const id=e.features?.[0]?.properties?.id;
+   if(id&&pointsById.has(id)){ignoreNextClick=true;onSelect(pointsById.get(id))}
+  }
+  function setCenter(p,z){map.jumpTo({center:[p.lng,p.lat],zoom:z??map.getZoom()})}
+  function start(){
+   ready=true;clearTimeout(timeout);
+   addLabels(map);addPoints(map);
+   map.on('click','dcx-hybrid-pins',pick);
+   map.on('click','dcx-risk-fill',pick);
+   map.on('click',e=>{
+    if(ignoreNextClick){ignoreNextClick=false;return}
+    if(host)onClick({lat:e.lngLat.lat,lng:e.lngLat.lng})
+   });
+   map.on('mousemove',e=>onMouseMove({lat:e.lngLat.lat,lng:e.lngLat.lng}));
+   map.on('moveend',()=>{
+    updateLabels();onCameraChange();
+   });
+   if(host){
+    const el=map.getCanvasContainer();
+    el.addEventListener('contextmenu',e=>e.preventDefault());
+    el.addEventListener('pointerdown',e=>{
+     if(e.button!==2)return;pointer={x:e.clientX,y:e.clientY};
+     el.setPointerCapture?.(e.pointerId);e.preventDefault();
+    });
+    el.addEventListener('pointermove',e=>{
+     if(!pointer)return;
+     const dx=e.clientX-pointer.x,dy=e.clientY-pointer.y;
+     pointer={x:e.clientX,y:e.clientY};
+     map.panBy([-dx,-dy],{duration:0});
+    });
+    el.addEventListener('pointerup',e=>{if(e.button===2)pointer=null});
+    el.addEventListener('pointercancel',()=>pointer=null);
+   }
+   disposeInset=ensureHawaiiInset(container,map,setCenter);
+   updateLabels(true);applyVisibility();refreshPoints();
+   resolve({
+    setPoints,zoom:()=>map.getZoom(),center:camera,
+    setZoom:z=>map.setZoom(clamp(z,1,19)),setCenter,
+    flyTo:(p,z)=>map.flyTo({center:[p.lng,p.lat],zoom:z??map.getZoom(),duration:500}),
+    resize:()=>map.resize(),goCity:id=>{
+     const found=cities().find(c=>c.id===id);if(found)setCenter(found,12)
+    },
+    global:()=>setCenter({lat:15,lng:0},2),
+    getCity:city,isGlobal:()=>map.getZoom()<=4,
+    getLabelMode:()=>labelMode,
+    setLabelMode:mode=>{labelMode=mode==='simple'?'simple':'complete';applyVisibility();return labelMode},
+    getStatus:()=>({painted:ready,width:container.clientWidth,height:container.clientHeight,provider:'MapLibre+OpenFreeMap'}),
+    destroy:()=>{
+     destroyed=true;disposeInset();clearTimeout(timeout);map.remove()
+    }
+   });
+  }
+  map.once('load',start);
+  map.on('error',e=>console.warn('[DCX HYBRID] erro na cartografia',e.error||e));
+ }));
+}
+window.DCX=window.DCX||{};
+window.DCX.HybridMapAdapter={TOKYO,USA,HAWAII,create,styleWithoutRealLabels,polygonAround};
+})();

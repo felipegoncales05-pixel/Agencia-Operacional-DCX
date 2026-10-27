@@ -120,10 +120,14 @@ function addPoints(map){
   paint:{'line-color':'#ff6f8e','line-opacity':.8,'line-width':1.5,'line-dasharray':[3,2]}});
  map.addLayer({id:'dcx-hybrid-pins',type:'circle',source:'dcx-hybrid-points',
   paint:{
-   'circle-radius':['match',['get','type'],'important',9,'risk',10,7],
+   'circle-radius':['match',['get','type'],'important',11,'risk',12,10],
    'circle-color':['match',['get','type'],'important','#e4f478','risk','#fa617e','#6cddeb'],
-   'circle-stroke-width':2,'circle-stroke-color':'#04121c'
+   'circle-stroke-width':2.5,'circle-stroke-color':'#04121c'
   }});
+ // Transparent-but-rendered hitboxes sit on top of place names and tiny pins.
+ map.addLayer({id:'dcx-hybrid-pin-hits',type:'circle',source:'dcx-hybrid-points',
+  paint:{'circle-radius':22,'circle-color':'#ffffff','circle-opacity':0.008,
+   'circle-stroke-width':0}});
 }
 function create({container,center=TOKYO,zoom=12,host=false,onClick=noop,onSelect=noop,onMouseMove=noop,onCameraChange=noop}={}){
  return Promise.all([bootstrap(),remoteStyle()]).then(([GL,style])=>new Promise((resolve,reject)=>{
@@ -186,8 +190,18 @@ function create({container,center=TOKYO,zoom=12,host=false,onClick=noop,onSelect
      }
     }catch(e){}
    }
-   for(const kind of ['country','city','district','neighborhood','road']){
-    if(map.getLayer('dcx-label-'+kind))map.setPaintProperty('dcx-label-'+kind,'text-color',colors.road);
+   // Strong black outlines on ALL place names, including the provider's native labels.
+   // This must include Japanese and other script labels, not just DCX text layers.
+   for(const layer of map.getStyle()?.layers||[]){
+    if(layer.type!=='symbol')continue;
+    const isText=!!layer.layout?.['text-field'];
+    if(!isText)continue;
+    try{
+     map.setPaintProperty(layer.id,'text-halo-color','#020407');
+     map.setPaintProperty(layer.id,'text-halo-width',2.35);
+     map.setPaintProperty(layer.id,'text-halo-blur',0.35);
+     if(layer.id.startsWith('dcx-label-'))map.setPaintProperty(layer.id,'text-color','#edf9ff');
+    }catch(e){}
    }
    const surface=container.closest('.dcxTacticalMap');if(surface)surface.style.setProperty('--map-neon',colors.main);
   }
@@ -209,12 +223,20 @@ function create({container,center=TOKYO,zoom=12,host=false,onClick=noop,onSelect
   }
   function refreshPoints(){setPoints(lastPoints)}
   function pick(e){
-   const hits=map.queryRenderedFeatures(e.point,{layers:['dcx-hybrid-pins','dcx-risk-fill']});
-   for(const hit of hits){
-    const id=hit.properties?.id;
-    if(id&&pointsById.has(id)){onSelect(pointsById.get(id));return true}
-   }
-   return false;
+   const layers=['dcx-hybrid-pin-hits','dcx-hybrid-pins','dcx-risk-fill'].filter(id=>map.getLayer(id));
+   if(!layers.length)return false;
+   const x=e.point.x,y=e.point.y;
+   // A forgiving but bounded hit area makes Keymaster points usable on touchpads.
+   const features=map.queryRenderedFeatures([[x-14,y-14],[x+14,y+14]],{layers});
+   const pin=features.find(hit=>hit.layer?.id==='dcx-hybrid-pin-hits'||hit.layer?.id==='dcx-hybrid-pins');
+   const danger=features.find(hit=>hit.layer?.id==='dcx-risk-fill');
+   const hit=pin||danger;
+   const id=hit?.properties?.id;
+   if(!id||!pointsById.has(id))return false;
+   const selected=pointsById.get(id);
+   onSelect(selected);
+   window.dispatchEvent(new CustomEvent('dcx-map-point-selected',{detail:{point:selected}}));
+   return true;
   }
   function setCenter(p,z){map.jumpTo({center:[p.lng,p.lat],zoom:z??map.getZoom()})}
   function start(){
@@ -226,8 +248,10 @@ function create({container,center=TOKYO,zoom=12,host=false,onClick=noop,onSelect
    });
    map.on('mousemove',e=>onMouseMove({lat:e.lngLat.lat,lng:e.lngLat.lng}));
    map.on('moveend',()=>{updateLabels();onCameraChange()});
-   map.on('mouseenter','dcx-hybrid-pins',()=>{map.getCanvas().style.cursor='pointer'});
-   map.on('mouseleave','dcx-hybrid-pins',()=>{map.getCanvas().style.cursor=''});
+   for(const id of ['dcx-hybrid-pins','dcx-hybrid-pin-hits','dcx-risk-fill']){
+    map.on('mouseenter',id,()=>{map.getCanvas().style.cursor='pointer'});
+    map.on('mouseleave',id,()=>{map.getCanvas().style.cursor=''});
+   }
    if(host){
     const el=map.getCanvasContainer();
     el.addEventListener('contextmenu',e=>e.preventDefault());

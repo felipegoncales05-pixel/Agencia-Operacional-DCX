@@ -442,47 +442,36 @@ function switchToLight(){
  initOSM('Geografia da DCX com consumo reduzido de recursos');
 }
 async function initFictional(){
- if(fictionalMap){status('ATLAS DETALHADO JÁ ATIVO');return}
+ if(fictionalMap)return;
  const atlas=window.DCX?.FictionalAtlas;
- if(!atlas){status('ATLAS DETALHADO INDISPONÍVEL NESTA VERSÃO.',true);return}
- const parent=$('dcxMapOverlay');
- if(!parent)return;
- if(!root?.getBoundingClientRect().width||!board?.getBoundingClientRect().height){
-  status('ABRA A ABA MAPA ANTES DE INICIAR O MODO DETALHADO.');return;
- }
- const el=text('div','dcxMapVector');el.id='dcxMapVector';el.style.visibility='hidden';
- parent.append(el);
- const note=q('.dcxMapSourceNotice');if(note)note.textContent='CARREGANDO MAPA DETALHADO // MODO GPU OPCIONAL';
+ if(!atlas){mapFailed=true;initFallback();status('MOTOR DCX NÃO CARREGADO',true);return}
+ const parent=$('dcxMapOverlay');if(!parent)return;
+ parent.replaceChildren();
+ const el=text('div','dcxMapOffline');el.id='dcxMapOffline';parent.append(el);
  try{
-  const candidate=await atlas.create({
-   container:el,center:getMapCenter(),zoom:getMapZoom(),host:HOST,
-   onSelect:p=>{if(p.preset)selectPreset(p);else if(HOST)openEditor(p);else selectPoint(p.id,false)},
+  fictionalMap=await atlas.create({container:el,center:fallbackCenter,zoom:fallbackZoom,host:HOST,
+   onSelect:p=>p.preset?selectPreset(p):HOST?openEditor(p):selectPoint(p.id,false),
    onClick:p=>{if(HOST)openEditor(null,p)},
    onMouseMove:updateCoords,
    onCameraChange:()=>{fallbackCenter=getMapCenter();fallbackZoom=getMapZoom();notifyCamera()}
   });
-  // The raster map stays visible until the vector map reports a successful load.
-  if(leafletMap){leafletMap.remove();leafletMap=null;leafletLayers=null;leafletTiles=null}
-  parent.replaceChildren(el);el.style.visibility='';
-  fictionalMap=candidate;
   renderMapObjects();
-  status('ATLAS DETALHADO ATIVO // MODO GPU');
- }catch(error){
-  console.warn('[DCX MAP] Atlas GPU não disponível; modo leve preservado',error);
-  el.remove();
-  if(note)note.textContent='DCX // TOKYO // MODO LEVE // NOMES FICTÍCIOS';
-  status('ATLAS GPU INDISPONÍVEL: '+(error.message||error)+' // MODO LEVE MANTIDO',true);
-  if(!leafletMap)initOSM('Recuperação do atlas detalhado');
- }
+  status('DCX // MAPA FICCIONAL OFFLINE ATIVO');
+  window.dispatchEvent(new CustomEvent('dcx-map-ready'));
+ }catch(e){console.error('[DCX MAP] Motor offline',e);mapFailed=true;initFallback();status('FALHA NO MOTOR 2D: '+e.message,true)}
+}
+function switchToLight(){
+ status('MAPA 2D OFFLINE // DESEMPENHO OTIMIZADO');
+ fictionalMap?.resize();
 }
 
 function selectPreset(p){
  const detail=$('dcxMapDetail');if(detail)detail.replaceChildren(makeDetail(p));
 }
 function startMap(){
- fallbackCenter={...(data.center||config().center)};fallbackZoom=data.zoom||13;
- // Default renderer is lightweight (raster). GPU is opt-in.
- initOSM('Tóquio DCX — ruas fictícias e navegação fluida');
+ fallbackCenter={...((data.center&&data.center.lat!==DEFAULT_CENTER.lat)?data.center:DEFAULT_CENTER)};
+ fallbackZoom=data.zoom||13;
+ initFictional();
 }
 function latLngToWorld(p,zoom){
  const lat=Math.max(-85,Math.min(85,p.lat)),sin=Math.sin(lat*Math.PI/180);
@@ -669,7 +658,7 @@ function ensureTabs(){
     document.querySelectorAll('.playerWorkspacePane').forEach(p=>p.classList.toggle('active',p.dataset.workspace==='map'));
     document.querySelectorAll('.playerWorkspaceTab').forEach(n=>n.classList.toggle('active',n===b));
     try{sessionStorage.setItem('dcx-map-tab-active','1')}catch{}
-    setTimeout(()=>{window.google?.maps?.event?.trigger?.(map,'resize');if(!map)renderFallback()},100);
+    setTimeout(()=>fictionalMap?.resize(),100);
    });
    nav.querySelectorAll('.playerWorkspaceTab:not([data-workspace-target="map"])').forEach(tab=>tab.addEventListener('click',()=>{const p=$('dcxMapPlayerPane');if(p)p.classList.remove('active')}));
   }
@@ -694,6 +683,6 @@ function start(){
  }
 }
 window.DCX=window.DCX||{};
-window.DCX.Cartography={get points(){return Object.values(data.points)},selectPoint,zoom,openEditor,centerMap,getCamera:()=>({zoom:getMapZoom(),center:getMapCenter()})};
+window.DCX.Cartography={get points(){return Object.values(allPoints())},selectPoint,zoom,openEditor,centerMap,getCamera:()=>({zoom:getMapZoom(),center:getMapCenter()}),get engine(){return fictionalMap}};
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
 })();

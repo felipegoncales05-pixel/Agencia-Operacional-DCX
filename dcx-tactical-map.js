@@ -508,6 +508,8 @@ async function setProvider(next){
   });
   if(epoch!==hybridEpoch){candidate.destroy();el.remove();return 'fictional'}
   hybridMap=candidate;hybridHost=el;hybridPending=false;
+  if(fictionalMap){fictionalMap.destroy();fictionalMap=null;document.getElementById('dcxMapOffline')?.remove()}
+  fallbackCenter=candidate.center();fallbackZoom=Math.round(candidate.zoom());
   hybridMap.setPoints(allPoints());
   hybridMap.setLabelMode(window.DCX?.Cartography?.getLabelMode?.()||'complete');
   el.style.visibility='visible';
@@ -519,7 +521,8 @@ async function setProvider(next){
   el.remove();hybridPending=false;hybridMap=null;hybridHost=null;
   hybridError=error?.message||String(error);
   console.warn('[DCX MAP] Falha ao carregar GEO REAL. Canvas 2D mantido:',error);
-  status('GEO REAL INDISPONÍVEL // MAPA 2D PRESERVADO: '+hybridError,true);
+  if(!fictionalMap)initFictional();
+  status('GEO REAL INDISPONÍVEL // MAPA DE EMERGÊNCIA: '+hybridError,true);
   announceProvider();return 'fictional'
  }
 }
@@ -532,7 +535,12 @@ function announceProvider(){
 function startMap(){
  fallbackCenter={...((data.center&&data.center.lat!==DEFAULT_CENTER.lat)?data.center:DEFAULT_CENTER)};
  fallbackZoom=data.zoom||13;
- initFictional();
+ // GEO REAL is the sole default; Canvas 2D is a standby error fallback only.
+ if(window.DCX?.HybridMapAdapter){
+  setProvider('hybrid').then(mode=>{
+   if(mode!=='hybrid'&&!fictionalMap)initFictional();
+  });
+ }else initFictional();
 }
 function latLngToWorld(p,zoom){
  const lat=Math.max(-85,Math.min(85,p.lat)),sin=Math.sin(lat*Math.PI/180);

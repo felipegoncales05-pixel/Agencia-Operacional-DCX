@@ -1,0 +1,58 @@
+/* DCX Visual Command // Sidebar, HUD and optional display effects */
+#dcxVcLayout{--vc-side:232px;display:grid;grid-template-columns:var(--vc-side) minmax(0,1fr);gap:12px;align-items:start;min-height:calc(100vh - 155px)}
+#dcxVcLayout[data-sidebar=slim]{--vc-side:78px}
+#dcxVcSidebar{position:sticky;top:78px;max-height:calc(100vh - 92px);overflow:auto;background:linear-gradient(180deg,#071620,#060c11);border:1px solid #324b5a;border-radius:15px;padding:12px;min-width:0}
+.dcxVcBrand{display:flex;gap:11px;align-items:center;border-bottom:1px solid #243d4d;padding:7px 4px 17px}
+.dcxVcLogo{font:1000 25px system-ui,sans-serif;letter-spacing:-.06em;color:var(--cyan,#72e0f3)}.dcxVcBrandText{display:grid;gap:5px;min-width:0}.dcxVcBrandText strong{color:#e6f7ff;font-size:10px;letter-spacing:.08em}.dcxVcBrandText small{color:#83a5b8;font-size:8px}
+#dcxVcSidebar .kmWorkspaceTabs{all:unset;display:block!important;position:static!important;background:transparent!important;border:0!important;overflow:visible!important;padding:0!important}
+.dcxVcNavSection{padding:13px 0 7px;border-bottom:1px solid #1c3544}.dcxVcNavHeading{color:#7298ad;font:850 8px/1.4 ui-monospace,monospace;letter-spacing:.13em;padding:0 10px;margin:0 0 8px}
+#dcxVcSidebar .kmWorkspaceTab{position:relative;display:flex!important;align-items:center;text-align:left;gap:11px;min-height:37px;width:100%;margin:3px 0;padding:9px 10px;background:transparent;border:1px solid transparent;border-radius:9px;font:900 10px/1.3 ui-monospace,monospace;letter-spacing:.02em;white-space:normal;color:#bbd0dd;box-sizing:border-box;cursor:pointer}
+#dcxVcSidebar .kmWorkspaceTab:hover{background:#10242f;border-color:#3e5a6a}
+#dcxVcSidebar .kmWorkspaceTab.active{color:#e9fdff;background:#10303e;border-color:var(--cyan,#74cfff);box-shadow:inset 3px 0 0 var(--cyan,#74cfff)}
+.dcxVcNavIcon{display:grid;place-items:center;width:28px;min-width:28px;height:28px;border:1px solid #31586b;border-radius:7px;background:#091923;color:var(--cyan,#74d6ee);font:900 16px system-ui,sans-serif}.dcxVcNavText{overflow-wrap:anywhere}.dcxVcSidebarFooter{display:flex;gap:7px;align-items:center;padding:15px 6px 5px;color:#8badbd;font:800 8px ui-monospace,monospace}.dcxVcSignalDot{width:7px;height:7px;flex-shrink:0;border-radius:50%;background:#50ecb1;box-shadow:0 0 10px #3febb7}
+#dcxVcLayout[data-sidebar=slim] .dcxVcBrandText,#dcxVcLayout[data-sidebar=slim] .dcxVcNavHeading,#dcxVcLayout[data-sidebar=slim] .dcxVcNavText,#dcxVcLayout[data-sidebar=slim] .dcxVcSidebarFooter span:last-child{display:none!important}
+#dcxVcLayout[data-sidebar=slim] #dcxVcSidebar .kmWorkspaceTab{justify-content:center;padding:7px 5px}#dcxVcLayout[data-sidebar=slim] .dcxVcNavIcon{width:32px;height:32px}
+.dcxVcMain{min-width:0}.dcxVcContext{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:17px 20px;margin-bottom:12px;border:1px solid #304d60;border-radius:15px;background:linear-gradient(125deg,#0d2430,#050d13)}.dcxVcContextHeading small{color:var(--cyan,#75dafa);font:900 9px ui-monospace,monospace;letter-spacing:.16em}.dcxVcContextHeading h1{margin:7px 0 0;font:900 clamp(21px,2.7vw,36px) system-ui,sans-serif;letter-spacing:-.035em}.dcxVcButton{padding:8px 9px;min-height:31px;border:1px solid #35566c;border-radius:8px;background:#0b1822;color:#bfdfeb;cursor:pointer;font:800 9px ui-monospace,monospace}.dcxVcButton:hover,.dcxVcButton[aria-pressed=true]{color:#effbff;border-color:var(--cyan,#67dcff)}.dcxVcQuick{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+#dcxVcMain .kmWorkspaceView{padding:0!important}#dcxVcMain .kmSingle{max-width:none}
+.dcxVcMetrics,.dcxVcPlayerHud{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin:0 0 13px}
+.dcxVcPlayerHud{max-width:1500px;margin:10px auto;padding:0 18px;box-sizing:border-box}
+.dcxVcMetric{display:flex;align-items:center;gap:11px;padding:12px;min-height:62px;background:#0a1821;border:1px solid #2b495c;border-radius:11px;min-width:0}.dcxVcMetricIcon{display:grid;place-items:center;min-width:33px;width:33px;height:33px;border:1px solid #3a697d;border-radius:9px;color:var(--cyan,#67dcff);font:900 16px system-ui,sans-serif}.dcxVcMetricBody{display:grid;min-width:0;gap:5px}.dcxVcMetricBody small{font:800 8px ui-monospace,monospace;color:#87b3c4;letter-spacing:.1em}.dcxVcMetricBody strong{font:900 14px ui-monospace,monospace;color:#e3f5fa;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.dcxVcMetricGo{margin-left:auto;border:0;background:transparent;color:#7de1f1;cursor:pointer}
+.dcxVcSettings{border:1px solid #30596b;border-radius:14px;background:linear-gradient(150deg,#0d2531,#07131c);padding:18px;margin:12px 0}.dcxVcSettingsHead small{font-size:9px;letter-spacing:.15em;color:#82d9eb}.dcxVcSettingsHead h2{margin:8px 0;font-size:20px;color:#e8faff}.dcxVcSettingsHead p,.dcxVcSettingsFoot{font:10px/1.65 ui-monospace,monospace;color:#97b6c7}.dcxVcSettingsGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:16px 0}.dcxVcSettingsGrid label{display:grid;gap:9px;color:#a3c8d8;font:900 10px ui-monospace,monospace}.dcxVcSettingsGrid select{padding:10px;background:#081822;border:1px solid #3b5f70;border-radius:8px;color:#d7f8ff}.dcxVcSettingsGrid input[type=range]{accent-color:var(--cyan,#7ddbec)}.dcxVcCheck{display:flex!important;align-items:center;gap:8px!important}.dcxVcMobileClose,.dcxVcMenuToggle,.dcxVcBackdrop{display:none}
+/* Compact really means compact: the original QOL CSS had larger paddings. */
+html[data-km-density=compact] .app,html[data-player-density=compact] .app{padding:7px 10px!important;max-width:1900px!important}
+html[data-km-density=compact] .top,html[data-player-density=compact] .top{padding:6px 10px!important;gap:5px!important}
+html[data-km-density=compact] .roomBar,html[data-player-density=compact] .roomBar{padding:5px 9px!important;gap:5px!important}
+html[data-km-density=compact] .btn,html[data-player-density=compact] .btn{padding:5px 9px!important;min-height:28px!important;font-size:9px!important}
+html[data-km-density=compact] .dcxPanel,html[data-km-density=compact] .adminPanel,html[data-player-density=compact] .dcxPanel{padding:9px!important;border-radius:9px!important}
+html[data-km-density=compact] .kmWorkspaceView,html[data-player-density=compact] .playerWorkspacePane{padding:5px!important}
+html[data-km-density=compact] .dcxPanelHead,html[data-player-density=compact] .dcxPanelHead{margin-bottom:6px!important;gap:6px!important}
+html[data-km-density=compact] .dcxPanelHead p,html[data-player-density=compact] .dcxPanelHead p{font-size:9px!important;line-height:1.35!important}
+html[data-km-density=compact] .dcxStats,html[data-km-density=compact] .dcxInfoGrid{gap:5px!important}
+html[data-km-density=compact] .dcxStat,html[data-km-density=compact] .dcxInfo{padding:7px!important}
+html[data-km-density=compact] #dcxVcSidebar .kmWorkspaceTab{min-height:30px;padding:5px!important;font-size:9px!important}
+html[data-km-density=compact] .dcxVcContext{padding:8px 12px!important;margin-bottom:7px!important}
+html[data-km-density=compact] .dcxVcMetric,html[data-player-density=compact] .dcxVcMetric{min-height:43px;padding:7px;gap:7px}
+html[data-km-density=compact] .dcxVcMetrics,html[data-player-density=compact] .dcxVcPlayerHud{gap:5px;margin-bottom:6px}
+html[data-player-density=compact] .dcxDashHero{min-height:150px!important;padding:12px 16px!important}
+html[data-player-density=compact] .dcxDashHero h1{font-size:clamp(27px,4vw,44px)!important}
+html[data-player-density=compact] .dcxPlayerDashboardShell{gap:7px!important}
+html[data-player-density=compact] .dcxFieldTool{min-height:43px!important;padding:6px!important}
+html[data-player-density=compact] .dcxFieldSidebar{padding:7px!important}
+html[data-player-density=compact] .dcxWorkspace{padding:7px!important}
+html[data-dcx-visual-hud=off] .dcxVcMetrics,html[data-dcx-visual-hud=off] .dcxVcPlayerHud{display:none!important}
+/* Retro effects - overlays are transparent, noninteractive, respect reduced motion. */
+html[data-dcx-visual-fx=retro] body,html[data-dcx-visual-fx=oldpc] body,html[data-dcx-visual-fx=vhs] body{filter:saturate(1.15) contrast(1.045)}
+html[data-dcx-visual-fx=oldpc] body{filter:saturate(1.35) contrast(1.12) sepia(.1)}
+html[data-dcx-visual-fx=vhs] body{filter:saturate(1.22) contrast(1.16)}
+html[data-dcx-visual-fx=retro] body:after,html[data-dcx-visual-fx=oldpc] body:after,html[data-dcx-visual-fx=vhs] body:after{content:"";position:fixed;inset:0;z-index:9999;pointer-events:none;opacity:.12;background:repeating-linear-gradient(0deg,#000a 0px,#000a 1px,transparent 2px,transparent 4px),repeating-linear-gradient(90deg,#00ffdb0a 0 2px,transparent 2px 7px);animation:dcxVcNoise .32s steps(3) infinite}
+html[data-dcx-visual-fx=oldpc] body:after{opacity:.09;background:repeating-linear-gradient(0deg,transparent 0px,#0009 2px,transparent 4px),radial-gradient(ellipse at center,transparent 50%,#04040870 100%);animation:dcxVcNoise .7s steps(2) infinite}
+html[data-dcx-visual-fx=vhs] body:after{opacity:.19;background:repeating-linear-gradient(0deg,transparent 0px,transparent 4px,#151a2966 5px,transparent 7px),linear-gradient(90deg,#f4433630,transparent 9%,transparent 92%,#28e5f933);animation:dcxVcVhs 1.7s steps(4) infinite}
+html[data-dcx-visual-fx=oldpc] .app,html[data-dcx-visual-fx=vhs] .app{border:2px solid #6e849544;border-radius:26px;box-shadow:inset 0 0 50px #0008,0 0 35px #111a2c66;overflow:clip}
+html[data-dcx-visual-fx=oldpc] .top,html[data-dcx-visual-fx=oldpc] .dcxPanel{border-radius:18px}
+html[data-dcx-visual-level="1"] body:after{opacity:.045!important}
+html[data-dcx-visual-level="3"] body:after{opacity:.25!important}
+@keyframes dcxVcNoise{0%{transform:translateY(-2px)}50%{transform:translateY(2px)}100%{transform:translateY(0px)}}
+@keyframes dcxVcVhs{0%,100%{transform:translateY(0px)}40%{transform:translateY(-4px)}52%{transform:translateY(4px)}}
+@media(prefers-reduced-motion:reduce){html[data-dcx-visual-fx] body:after{animation:none!important;opacity:.035!important}}
+@media(max-width:1120px){#dcxVcLayout{--vc-side:194px}.dcxVcMetrics,.dcxVcPlayerHud{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:780px){#dcxVcLayout{display:block!important}#dcxVcSidebar{position:fixed;top:0;left:0;bottom:0;z-index:151;width:min(290px,88vw);max-height:none;transform:translateX(-110%);transition:transform .22s;box-shadow:0 0 70px #000a}#dcxVcLayout.mobile-open #dcxVcSidebar{transform:translateX(0)}.dcxVcMobileClose,.dcxVcMenuToggle{display:inline-block}.dcxVcBackdrop{position:fixed;inset:0;border:0;background:#000a;z-index:150;cursor:pointer}#dcxVcLayout.mobile-open .dcxVcBackdrop{display:block}.dcxVcContext{padding:10px}.dcxVcSettingsGrid{grid-template-columns:1fr}.dcxVcQuick .dcxVcButton{font-size:8px;padding:6px}.dcxVcPlayerHud{padding:0 8px}.dcxVcMetric{padding:8px;min-height:49px}.dcxVcMetricGo{display:none}}

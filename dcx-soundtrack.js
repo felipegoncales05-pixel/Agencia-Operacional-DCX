@@ -66,7 +66,7 @@ function embedSrc(track,api=false,autoplay=false){
  if(state.loop==='one')params.set('playlist',track.youtubeId);
  return 'https://www.youtube.com/embed/'+track.youtubeId+'?'+params.toString();
 }
-let state=empty(),ref=null,connected='',session=null,local={enabled:false,volume:75},localRoom='',playerFrameKey='',audio=null,audioKey='',localSongId='',statusMessage='',youtubePlayer=null,youtubeGeneration=0,masterCursorId='',localCursorId='',autoplayBlocked=false,attemptedMediaKey='',apiReady=false;
+let state=empty(),ref=null,connected='',session=null,local={enabled:false,volume:75},localRoom='',playerFrameKey='',audio=null,audioKey='',localSongId='',statusMessage='',youtubePlayer=null,youtubeGeneration=0,masterCursorId='',localCursorId='',autoplayBlocked=false,attemptedMediaKey='',apiReady=false,spotifyController=null,spotifyGeneration=0;
 function context(){
  const api=window.OPH?.Realtime,auth=api?.getFirebaseAuth?.(),db=api?.getFirebaseDatabase?.();
  const user=auth?.currentUser;
@@ -184,6 +184,33 @@ function attachYoutubeControls(frame){
   }});
  }).catch(()=>{if(generation===youtubeGeneration)status('Player YouTube abriu, mas o controle de volume remoto está indisponível.',true)});
 }
+function loadSpotifyApi(){
+ if(window.DCX_SpotifyIframeAPI)return Promise.resolve(window.DCX_SpotifyIframeAPI);
+ if(window.DCX_SpotifyApiPromise)return window.DCX_SpotifyApiPromise;
+ window.DCX_SpotifyApiPromise=new Promise((resolve,reject)=>{
+  const previous=window.onSpotifyIframeApiReady;
+  window.onSpotifyIframeApiReady=api=>{
+   window.DCX_SpotifyIframeAPI=api;
+   if(typeof previous==='function')try{previous(api)}catch{}
+   resolve(api);
+  };
+  const script=document.createElement('script');
+  script.src='https://open.spotify.com/embed/iframe-api/v1';script.async=true;
+  script.onerror=()=>{window.DCX_SpotifyApiPromise=null;reject(new Error('API do Spotify indisponível'))};
+  document.head.append(script);
+ });
+ return window.DCX_SpotifyApiPromise;
+}
+function spotifyFallback(area,track,notice){
+ if(!area||!area.isConnected)return;
+ area.replaceChildren();
+ const iframe=document.createElement('iframe');
+ iframe.src=embedSrc(track);iframe.loading='eager';
+ iframe.allow='autoplay; encrypted-media; clipboard-write; fullscreen; picture-in-picture';
+ iframe.referrerPolicy='strict-origin-when-cross-origin';
+ iframe.title='Spotify: '+track.title;area.append(iframe);
+ status(notice||'Spotify pronto. Para ouvir, pressione Play no player oficial.');
+}
 function hostMarkup(){
  return '<div class="soundtrackIntro"><div class="soundtrackEyebrow">KEYMASTER // AMBIENT CONTROL</div><h1>SOUNDTRACK <span>CONTROL</span></h1><p>Escolha a atmosfera da operação. Os jogadores decidem quando ativar o áudio em seus próprios dispositivos.</p></div>'+
  '<div class="soundtrackColumns"><div class="soundtrackCard"><div class="soundtrackSectionHead"><span>01 // CENTRAL DE REPRODUÇÃO</span><b id="dcxSoundtrackConnection">SINCRONIZANDO...</b></div>'+
@@ -191,12 +218,12 @@ function hostMarkup(){
  '<div class="soundtrackTransport"><button class="btn" data-st-act="previous" title="Faixa anterior" type="button">⏮ ANTERIOR</button><button class="btn gold" data-st-act="toggle" id="dcxSoundtrackToggle" type="button">▶ LIBERAR TRILHA</button><button class="btn" data-st-act="next" title="Próximo item da fila" type="button">PRÓXIMA ⏭</button></div>'+
  '<div class="soundtrackFields"><label>VOLUME GERAL <output id="dcxSoundtrackKmVolValue">75%</output><input id="dcxSoundtrackKmVolume" type="range" min="0" max="100" value="75"></label>'+
  '<label>REPETIÇÃO<select id="dcxSoundtrackKmLoop"><option value="off">SEM REPETIÇÃO</option><option value="one">REPETIR VÍDEO / FAIXA</option><option value="all">REPETIR PLAYLIST / ÁUDIO</option></select></label></div>'+
- '<p class="soundtrackNote">No YouTube, o vídeo completo depende da permissão de incorporação do autor. Cada jogador inicia no próprio player. O volume é ajustado pela API quando disponível.</p>'+
+ '<p class="soundtrackNote">No YouTube, o player tenta tocar automaticamente após a ativação do jogador. Spotify depende das regras da plataforma; links de áudio autorizados permitem mais controle. Cada jogador pode ajustar o som.</p>'+
  '<div class="soundtrackEmbed" id="dcxSoundtrackKmPreview"></div>'+
  '<div class="soundtrackMessage" id="dcxSoundtrackKmStatus" role="status" aria-live="polite"></div></div>'+
  '<div class="soundtrackCard"><div class="soundtrackSectionHead"><span>02 // BIBLIOTECA DA SALA</span><b>MÁX. 40 ITENS</b></div>'+
  '<div class="soundtrackAdd"><label>NOME DA FAIXA OU PLAYLIST<input type="text" id="dcxSoundtrackAddTitle" maxlength="90" placeholder="Ex.: Neblina no distrito 07"></label>'+
- '<label>LINK DO YOUTUBE (VÍDEO/PLAYLIST) OU ÁUDIO<input type="url" id="dcxSoundtrackAddUrl" maxlength="1800" placeholder="https://www.youtube.com/watch?v=..."></label>'+
+ '<label>LINK UNIVERSAL // YOUTUBE, SPOTIFY OU ÁUDIO<input type="url" id="dcxSoundtrackAddUrl" maxlength="1800" placeholder="https://www.youtube.com/watch?v=..."></label>'+
  '<button type="button" class="btn gold" id="dcxSoundtrackAdd">+ ADICIONAR À FILA</button></div>'+
  '<div id="dcxSoundtrackKmQueue" class="soundtrackQueue"></div></div></div>';
 }
@@ -248,7 +275,7 @@ function renderHost(){
  $('dcxSoundtrackKmVolume').value=String(state.volume);$('dcxSoundtrackKmVolValue').textContent=state.volume+'%';
  $('dcxSoundtrackKmLoop').value=state.loop;
  const list=$('dcxSoundtrackKmQueue');
- list.innerHTML=state.queue.length?state.queue.map((q,i)=>'<article class="soundtrackTrack '+(q.id===state.currentId?'active':'')+'"><span>'+(i+1).toString().padStart(2,'0')+'</span><div><b>'+esc(q.title)+'</b><small>'+ (q.kind==='youtube'?'YOUTUBE // '+esc(q.type.toUpperCase()):q.kind==='spotify'?'SPOTIFY // '+esc(q.type.toUpperCase()):'ÁUDIO DIRETO')+'</small></div><button class="btn" type="button" data-st-act="pick" data-id="'+esc(q.id)+'" title="Selecionar">▶</button><button class="btn" type="button" data-st-act="up" data-id="'+esc(q.id)+'" title="Subir">↑</button><button class="btn" type="button" data-st-act="down" data-id="'+esc(q.id)+'" title="Descer">↓</button><button class="btn" type="button" data-st-act="remove" data-id="'+esc(q.id)+'" title="Remover">×</button></article>').join(''):'<div class="soundtrackEmpty">Sua biblioteca está vazia. Adicione um vídeo ou playlist do YouTube.</div>';
+ list.innerHTML=state.queue.length?state.queue.map((q,i)=>'<article class="soundtrackTrack '+(q.id===state.currentId?'active':'')+'"><span>'+(i+1).toString().padStart(2,'0')+'</span><div><b>'+esc(q.title)+'</b><small>'+ (q.kind==='youtube'?'YOUTUBE // '+esc(q.type.toUpperCase()):q.kind==='spotify'?'SPOTIFY // '+esc(q.type.toUpperCase()):'ÁUDIO DIRETO')+'</small></div><button class="btn" type="button" data-st-act="pick" data-id="'+esc(q.id)+'" title="Selecionar">▶</button><button class="btn" type="button" data-st-act="up" data-id="'+esc(q.id)+'" title="Subir">↑</button><button class="btn" type="button" data-st-act="down" data-id="'+esc(q.id)+'" title="Descer">↓</button><button class="btn" type="button" data-st-act="remove" data-id="'+esc(q.id)+'" title="Remover">×</button></article>').join(''):'<div class="soundtrackEmpty">Sua biblioteca está vazia. Adicione um link YouTube, Spotify ou MP3.</div>';
  const prev=$('dcxSoundtrackKmPreview'),desired=['youtube','spotify'].includes(current?.kind)?embedSrc(current):'';
  if(prev?.dataset.src!==desired){prev.dataset.src=desired;prev.replaceChildren();if(desired){const frame=document.createElement('iframe');frame.src=desired;frame.loading='lazy';frame.allow='accelerometer; autoplay; encrypted-media; clipboard-write; fullscreen; picture-in-picture';frame.setAttribute('title','Prévia do player oficial da trilha sonora');frame.setAttribute('referrerpolicy','strict-origin-when-cross-origin');prev.append(frame)}}
  if(statusMessage)status(statusMessage);
@@ -263,7 +290,7 @@ function mountPlayer(){
  '<div class="soundtrackPlayerVolume"><label for="dcxSoundtrackPlayerVolume">VOLUME PESSOAL <b id="dcxSoundtrackPlayerVolumeValue">75%</b></label><input id="dcxSoundtrackPlayerVolume" type="range" min="0" max="100" value="75"></div>'+
  '<div id="dcxSoundtrackPlayerMedia" class="soundtrackPlayerMedia"></div>'+
  '<p class="soundtrackMessage" id="dcxSoundtrackPlayerStatus" role="status" aria-live="polite">Conectando à sala...</p>'+
- '<p class="soundtrackNote">Um clique libera a jukebox. As próximas músicas do YouTube ou áudio direto tentarão iniciar sozinhas. O Spotify mantém seu player oficial, sujeito às limitações da plataforma e do navegador.</p></div>';
+ '<p class="soundtrackNote">Um clique habilita a jukebox. YouTube e MP3 tentam iniciar as próximas faixas; o Spotify usa a API oficial, sem garantia de reprodução integral ou automática.</p></div>';
  document.body.append(container);
  const open=()=>{container.classList.remove('hidden','soundtrackCompact');container.setAttribute('aria-hidden','false');$('dcxSoundtrackClose').textContent='−';$('dcxSoundtrackClose').title='Minimizar player';renderPlayer()};
  const close=()=>{
@@ -305,14 +332,17 @@ function mountPlayer(){
   }else if(current?.kind==='audio'){
    if(audio){audio.play().then(()=>status('♫ Reproduzindo áudio.')).catch(()=>status('Toque no Play do reprodutor.',true))}
    else playAudio(current)
-  }else status('Para Spotify, use ▶ dentro do player oficial.');
+  }else if(current?.kind==='spotify'){
+    if(spotifyController?.play){try{spotifyController.play();status('Tentando reproduzir pelo player oficial do Spotify…')}catch{status('Use o Play dentro do Spotify.',true)}}
+    else status('Use o Play dentro do player oficial do Spotify.');
+  }
   updatePlayerControls();
  });
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!container.classList.contains('hidden'))close()});
 }
 function clearMedia(){
  const area=$('dcxSoundtrackPlayerMedia');
- if(audio){audio.pause();audio.src='';audio=null}youtubeGeneration++;apiReady=false;if(youtubePlayer){try{youtubePlayer.destroy()}catch{}youtubePlayer=null}
+ if(audio){audio.pause();audio.src='';audio=null}spotifyGeneration++;if(spotifyController){try{spotifyController.destroy()}catch{}spotifyController=null}youtubeGeneration++;apiReady=false;if(youtubePlayer){try{youtubePlayer.destroy()}catch{}youtubePlayer=null}
  if(area)area.replaceChildren();
  audioKey='';playerFrameKey='';localSongId='';
 }
@@ -321,14 +351,22 @@ function showSpotify(track){
  const key=track.id;
  if(playerFrameKey===key)return;
  clearMedia();playerFrameKey=key;
- const frame=document.createElement('iframe');
- frame.src=embedSrc(track);frame.loading='eager';
- frame.allow='accelerometer; autoplay; encrypted-media; clipboard-write; fullscreen; picture-in-picture';
- frame.referrerPolicy='strict-origin-when-cross-origin';
- frame.title='Spotify: '+track.title;
- area.append(frame);
- status('Player Spotify pronto. Clique em ▶ dentro do Spotify para ouvir.');
+ const generation=++spotifyGeneration;
+ const slot=document.createElement('div');slot.className='dcxSpotifySlot';area.append(slot);
+ status('Preparando o player Spotify oficial…');
+ loadSpotifyApi().then(api=>{
+  if(generation!==spotifyGeneration||!slot.isConnected||!local.enabled)return;
+  api.createController(slot,{uri:'spotify:'+track.type+':'+track.spotifyId,width:'100%',height:200},controller=>{
+   if(generation!==spotifyGeneration){try{controller.destroy()}catch{};return}
+   spotifyController=controller;
+   controller.addListener('playback_started',()=>{if(generation===spotifyGeneration)status('♫ Spotify reproduzindo pelo player oficial.')});
+   controller.addListener('ready',()=>{if(generation===spotifyGeneration&&local.enabled&&state.playing)try{controller.play()}catch{}});
+   if(local.enabled&&state.playing)try{controller.play()}catch{}
+   status('Spotify incorporado. A reprodução integral e o autoplay dependem do Spotify e do navegador.');
+  });
+ }).catch(()=>{if(generation===spotifyGeneration)spotifyFallback(area,track,'Não foi possível usar a API do Spotify; use Play no player oficial.')});
 }
+
 function showYoutube(track){
  const area=$('dcxSoundtrackPlayerMedia');if(!area)return;
  if(playerFrameKey===track.id){youtubeVolume();if(youtubePlayer?.setLoop)try{youtubePlayer.setLoop(state.loop==='one')}catch{};return}
@@ -368,7 +406,7 @@ function updatePlayerControls(){
  const b=$('dcxSoundtrackResume');if(!b)return;
  const current=state.queue.find(q=>q.id===localCursorId)||entry();
  b.hidden=!local.enabled||!state.playing||!current||(!autoplayBlocked&&current.kind!=='spotify');
- if(current?.kind==='spotify')b.textContent='▶ USE O PLAYER SPOTIFY';
+ if(current?.kind==='spotify')b.textContent='▶ TENTAR SPOTIFY';
  else b.textContent='▶ TOCAR AGORA';
 }
 function renderPlayer(){

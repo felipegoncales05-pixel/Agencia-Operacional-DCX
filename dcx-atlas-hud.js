@@ -48,9 +48,10 @@ function head(){
   const b=btn(label,()=>{current=id;refresh()});b.dataset.atlasCategory=id;tabs.append(b);
  }
  const list=node('div','dcxAtlasDirectoryList');list.id='dcxAtlasDirectoryList';
+ const detail=node('section','dcxAtlasPointDetail');detail.id='dcxAtlasPointDetail';detail.hidden=true;
  const legend=node('div','dcxAtlasLegend');
  legend.append(node('strong','','LEGENDA DCX'),node('p','','◇ IMPORTANTE   ◎ INTERESSE   ! PERIGO'));
- right.append(tabs,list,legend);
+ right.append(tabs,list,detail,legend);
  sides.append(left,right);shell.append(sides);
  const footer=node('div','dcxAtlasBottom');
  footer.append(node('span','','DCX // GEOINT · CARTOGRAFIA FICCIONAL'));
@@ -63,6 +64,25 @@ function head(){
  root.querySelector('.dcxMapHero')?.classList.add('dcxAtlasOldHero');
  root.querySelector('.dcxMapSourceNotice')?.classList.add('dcxAtlasOldNote');
  refresh();update();
+}
+function showPoint(p){
+ const detail=$('dcxAtlasPointDetail');if(!detail)return;
+ detail.replaceChildren();
+ if(!p){detail.hidden=true;return}
+ detail.hidden=false;
+ const top=node('div','dcxAtlasPointTop');
+ top.append(node('small','',p.type==='risk'?'ÁREA DE RISCO':p.type==='important'?'PONTO IMPORTANTE':'PONTO DE INTERESSE'));
+ top.append(btn('×',()=>{detail.hidden=true},'dcxAtlasPointClose'));
+ detail.append(top,node('strong','dcxAtlasPointTitle',p.title),node('p','dcxAtlasPointDescription',p.description||'Sem descrição.'));
+ if(p.type==='risk')detail.append(node('span','dcxAtlasThreats',Array(p.stars+1).join('★')+' · '+p.threatCount+' AMEAÇAS · '+p.threatType));
+ if(p.image&&/^https:\/\//i.test(p.image)){
+  const img=document.createElement('img');img.src=p.image;img.alt='Imagem de '+p.title;img.loading='lazy';img.referrerPolicy='no-referrer';
+  img.onerror=()=>img.remove();detail.append(img);
+ }
+ if(/keymaster\.html$/i.test(location.pathname)){
+  detail.append(btn('✎ EDITAR LOCAL',()=>window.DCX?.Cartography?.openEditor(p),'dcxAtlasEdit'));
+ }
+ if(current!=='points'){current='points';refresh()}
 }
 function makeRow(label,detail,click,icon='⌖'){
  const b=btn('',click,'dcxAtlasDirectoryRow');
@@ -93,7 +113,7 @@ function refresh(){
   const pts=pointList();
   if(!pts.length)list.append(node('p','dcxAtlasNone','Nenhum ponto cadastrado.'));
   pts.forEach(p=>add(p.title,p.type==='risk'?'ZONA DE RISCO · '+p.stars+'★':p.type==='important'?'PONTO IMPORTANTE':'PONTO DE INTERESSE',
-   ()=>window.DCX?.Cartography?.selectPoint(p.id),p.type==='risk'?'!':'◈'));
+   ()=>{window.DCX?.Cartography?.selectPoint(p.id);showPoint(p)},p.type==='risk'?'!':'◈'));
  }
 }
 function update(){
@@ -113,7 +133,24 @@ function start(){
   b.addEventListener('click',()=>setTimeout(()=>{engine()?.resize();update()},130))
  );
  const original=window.DCX?.Cartography;
- if(original){const sel=original.selectPoint;original.selectPoint=(...args)=>{sel?.(...args);update()}}
+ if(original){
+  const sel=original.selectPoint;
+  original.selectPoint=(...args)=>{
+   sel?.(...args);const point=pointList().find(p=>p.id===args[0]);
+   if(point)showPoint(point);update()
+  };
+ }
+ // Preset markers use the legacy detail pane; bridge clicks into the HUD.
+ const legacy=$('dcxMapDetail');
+ if(legacy&&typeof MutationObserver==='function'){
+  const observer=new MutationObserver(()=>{
+   const title=legacy.querySelector('.dcxMapDetailHeading h3')?.textContent;
+   if(!title)return;
+   const point=pointList().find(p=>p.title===title);
+   if(point&&!($('dcxAtlasPointDetail')?.textContent||'').includes(point.title))showPoint(point);
+  });
+  observer.observe(legacy,{childList:true});
+ }
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
 })();

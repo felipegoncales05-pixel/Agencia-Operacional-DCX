@@ -33,14 +33,16 @@
   }
 
   function switchWorkspace(name,save=true){
-    name=['dcx','characters'].includes(name)?name:'missions';
+    name=['dcx','characters','factions'].includes(name)?name:'missions';
     current=name;
     $('workspaceGolpe')?.classList.toggle('active',name==='missions');
     $('workspaceDCX')?.classList.toggle('active',name==='dcx');
     $('workspaceCharacters')?.classList.toggle('active',name==='characters');
+    $('workspaceFactions')?.classList.toggle('active',name==='factions');
     $('workspaceTabGolpe')?.classList.toggle('active',name==='missions');
     $('workspaceTabDCX')?.classList.toggle('active',name==='dcx');
     $('workspaceTabCharacters')?.classList.toggle('active',name==='characters');
+    $('workspaceTabFactions')?.classList.toggle('active',name==='factions');
     document.body.dataset.playerWorkspace=name;
     if(save){try{localStorage.setItem(STORE,name)}catch{}}
     if(name==='dcx')syncUnread();
@@ -88,6 +90,7 @@
     });
     $('workspaceTabDCX')?.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();switchWorkspace('dcx')});
     $('workspaceTabCharacters')?.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();switchWorkspace('characters')});
+    $('workspaceTabFactions')?.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();switchWorkspace('factions')});
     $('dcxOpenYumiya')?.addEventListener('click',e=>{e.preventDefault();call(()=>window.OPHPlayer?.toggleYumiyaChat?.(true),'YUMIYA')});
     $('dcxOpenTeam')?.addEventListener('click',e=>{e.preventDefault();call(()=>window.DCX?.Player?.toggleTeam?.(true),'EQUIPE')});
     $('dcxOpenNotes')?.addEventListener('click',e=>{e.preventDefault();call(()=>window.DCX?.Player?.toggleNotes?.(true),'ANOTACOES')});

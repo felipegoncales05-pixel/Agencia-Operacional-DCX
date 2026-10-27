@@ -4,7 +4,7 @@ window.DCX = window.DCX || {};
   const $=id=>document.getElementById(id);
   const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   let room=new URLSearchParams(location.search).get("room")||localStorage.getItem("oph-room")||window.OPH_CONFIG?.defaultRoom||"FRIA-01";
-  let db=null,uid="",playerId="",name="",teams={},operators={},notes={},connected=false,initialized=false,lastInteraction=Date.now(),heartbeatTimer=null,refs=[],selectedNote="",noteSaveTimer=null;
+  let db=null,uid="",playerId="",name="",teams={},operators={},notes={},connected=false,initialized=false,lastInteraction=Date.now(),heartbeatTimer=null,teamLoadTimer=null,teamsReady=false,teamSyncError="",operatorsError="",refs=[],selectedNote="",noteSaveTimer=null;
 
   function toast(t){const e=$("toast");if(!e)return;e.textContent=t;e.classList.add("show");setTimeout(()=>e.classList.remove("show"),1800)}
   function identity(){try{const d=JSON.parse(localStorage.getItem("oph-yumiya-identity-"+room)||"null");if(d?.name&&d?.playerId)return{name:String(d.name).trim().slice(0,48),playerId:String(d.playerId)}}catch(e){}const n=(localStorage.getItem("oph-name")||$("name")?.value||"").trim();let p=localStorage.getItem("oph-yumiya-player-id")||"";if(n&&!p){p="P-"+(crypto.randomUUID?.()||Math.random().toString(36).slice(2)+Date.now().toString(36)).replace(/-/g,"").slice(0,10).toUpperCase();localStorage.setItem("oph-yumiya-player-id",p)}return n&&p?{name:n.slice(0,48),playerId:p}:null}
@@ -43,10 +43,83 @@ window.DCX = window.DCX || {};
 
   async function heartbeat(){if(!connected||!uid||!playerId)return;try{await ref(`presence/${uid}`).set({uid,playerId,name,build:BUILD,visibility:document.visibilityState,focused:document.hasFocus(),lastInteraction,lastSeen:now()})}catch(e){console.warn("heartbeat",e)}}
   async function claimAccess(){const code=localStorage.getItem(accessStorageKey())||"";if(!code||!uid||!playerId)return;try{await ref(`access/claims/${uid}`).set({uid,key:code,playerId,name,ts:now(),build:BUILD})}catch(e){console.warn("claim",e)}}
+  function showSyncFailure(context,error){
+    const code=String(error?.code||"").toLowerCase(),message=String(error?.message||"");
+    const denied=/permission[_ -]?denied/i.test(code+" "+message);
+    const text=denied
+      ? "FIREBASE // LEITURA BLOQUEADA. VERIFIQUE AS REGRAS DE rooms/{sala}/dcx/"+context+"."
+      : "FALHA DE SINCRONIZAÇÃO // "+context.toUpperCase()+". CONFIRA A CONEXÃO E TENTE RECONECTAR.";
+    console.error("[DCX PLAYER] Falha ao ler "+context+" na sala "+room,error);
+    if(context==="teams"){teamSyncError=text;teamsReady=false;clearTimeout(teamLoadTimer)}
+    else operatorsError=text;
+    renderTeams();
+  }
   async function init(force=false){
-    try{const rt=window.OPH?.Realtime,rtAuth=rt?.getFirebaseAuth?.(),rtDb=rt?.getFirebaseDatabase?.();if(!rtAuth?.currentUser||!rtDb)return false;const target=rt?.getRoom?.()||room;if(initialized&&!force&&target===room)return true;refs.forEach(r=>{try{r.off()}catch(e){}});refs=[];clearInterval(heartbeatTimer);initialized=false;connected=false;db=rtDb;uid=rtAuth.currentUser.uid;room=target;const i=identity();if(!i){console.warn("DCX Player: identidade ainda não disponível");return false}playerId=i.playerId;name=i.name;if(await blocked(playerId)){setGate(true,"ACESSO BLOQUEADO PELO KEYMASTER");return false}
-      connected=true;const tr=ref("teams"),or=ref("operators"),nr=ref(`notes/${playerId}`);tr.on("value",s=>{teams=s.val()||{};renderTeams()});or.on("value",s=>{operators=s.val()||{};const newName=operators[playerId]?.identity?.name;if(newName&&newName!==name){name=newName;localStorage.setItem("oph-name",newName);if($("name"))$("name").value=newName}renderTeams()});nr.on("value",s=>{notes=s.val()||{};renderNotes()});refs.push(tr,or,nr);await heartbeat();await claimAccess();heartbeatTimer=setInterval(heartbeat,20000);return true;
-    }catch(e){console.error("DCX Player init",e);return false}
+    try{
+      const rt=window.OPH?.Realtime,rtAuth=rt?.getFirebaseAuth?.(),rtDb=rt?.getFirebaseDatabase?.();
+      if(!rtAuth?.currentUser||!rtDb){
+        teamsReady=false;
+        teamSyncError="EQUIPES INDISPONÍVEIS // CONECTE-SE À SALA PELO FIREBASE.";
+        renderTeams();
+        return false;
+      }
+      const target=rt?.getRoom?.()||room;
+      if(initialized&&!force&&target===room)return true;
+      refs.forEach(r=>{try{r.off()}catch(e){}});
+      refs=[];clearInterval(heartbeatTimer);clearTimeout(teamLoadTimer);
+      initialized=false;connected=false;teamsReady=false;teamSyncError="";operatorsError="";
+      teams={};operators={};notes={};
+      db=rtDb;uid=rtAuth.currentUser.uid;room=target;
+      const i=identity();
+      if(i&&await blocked(i.playerId)){
+        setGate(true,"ACESSO BLOQUEADO PELO KEYMASTER");
+        teamSyncError="ACESSO ÀS EQUIPES BLOQUEADO PARA ESTE OPERADOR.";
+        renderTeams();
+        return false;
+      }
+      playerId=i?.playerId||"";
+      name=i?.name||String(localStorage.getItem("oph-name")||"").trim().slice(0,48);
+      renderTeams();
+      // Public team and operator read subscriptions do not depend on private player identity.
+      // Previously an empty identity returned early and left the dashboard loading forever.
+      const tr=ref("teams"),or=ref("operators");
+      tr.on("value",s=>{
+        clearTimeout(teamLoadTimer);teams=s.val()||{};teamsReady=true;teamSyncError="";
+        renderTeams();
+      },e=>showSyncFailure("teams",e));
+      or.on("value",s=>{
+        operators=s.val()||{};operatorsError="";
+        const newName=playerId&&operators[playerId]?.identity?.name;
+        if(newName&&newName!==name){
+          name=newName;localStorage.setItem("oph-name",newName);
+          if($("name"))$("name").value=newName;
+        }
+        renderTeams();
+      },e=>showSyncFailure("operators",e));
+      refs.push(tr,or);
+      teamLoadTimer=setTimeout(()=>{
+        if(teamsReady||teamSyncError)return;
+        teamSyncError="SINCRONIZAÇÃO DEMORANDO // CONFIRA A CONEXÃO FIREBASE E A SALA.";
+        renderTeams();
+      },12000);
+      initialized=true;
+      if(!i){
+        // Teams remain visible, but private notes and presence require a player identity.
+        console.info("[DCX PLAYER] Equipes ativas; aguardando identificação para recursos pessoais.");
+        return true;
+      }
+      connected=true;
+      const nr=ref(`notes/${playerId}`);
+      nr.on("value",s=>{notes=s.val()||{};renderNotes()},e=>console.warn("[DCX PLAYER] Notas indisponíveis",e));
+      refs.push(nr);
+      await heartbeat();await claimAccess();
+      heartbeatTimer=setInterval(heartbeat,20000);
+      return true;
+    }catch(e){
+      console.error("DCX Player init",e);
+      teamsReady=false;teamSyncError="FALHA DE INICIALIZAÇÃO DAS EQUIPES // RECONECTE À SALA.";
+      renderTeams();return false;
+    }
   }
 
   function visibleTeamMembers(tid){return Object.entries(operators||{}).filter(([id,op])=>narrative(op).teamId===tid&&narrative(op).visible!==false)}
@@ -61,8 +134,10 @@ window.DCX = window.DCX || {};
   }
   function renderTeamShowcase(){
     const box=$("dcxDashTeams");if(!box)return;
+    if(teamSyncError){box.innerHTML='<div class="dcxDashTeamsEmpty" role="status">'+esc(teamSyncError)+'</div>';return}
+    if(!teamsReady){box.innerHTML='<div class="dcxDashTeamsEmpty" role="status">SINCRONIZANDO EQUIPES...</div>';return}
     const entries=sortedTeamEntries();
-    if(!entries.length){box.innerHTML='<div class="dcxDashTeamsEmpty">NENHUMA EQUIPE PUBLICADA.</div>';return}
+    if(!entries.length){box.innerHTML='<div class="dcxDashTeamsEmpty">NENHUMA EQUIPE PUBLICADA NESTA SALA.</div>';return}
     box.innerHTML=entries.map(([tid,t],index)=>{const members=visibleTeamMembers(tid),accent=teamAccent(index);return `<button type="button" class="dcxDashTeamCard" style="--team-accent:${accent}" onclick="DCX.Player.openTeamDetail('${esc(tid)}')"><span class="dcxDashTeamIcon">${teamIcon(t.symbol)}</span><h3>${esc(t.name||tid)}</h3><small>${members.length} MEMBRO${members.length===1?"":"S"} · ${esc(t.codename||"DCX")}</small><span class="dcxDashTeamState"><i></i>${esc(t.status||"OPERACIONAL")}</span><span class="dcxDashTeamAvatars">${members.slice(0,4).map(([id,op])=>avatarHtml(id,op)).join("")}${members.length>4?`<span class="dcxDashTeamAvatar">+${members.length-4}</span>`:""}</span></button>`}).join("")
   }
   function ensureTeamDetail(){
@@ -79,7 +154,20 @@ window.DCX = window.DCX || {};
     card.innerHTML=`<header class="dcxTeamDetailHead"><span class="dcxDashTeamIcon">${teamIcon(t.symbol)}</span><div><small>${esc(t.codename||"EQUIPE")} // ${esc(t.status||"OPERACIONAL")}</small><h2>${esc(t.name||tid)}</h2></div><button class="chatIconBtn" type="button" onclick="document.getElementById('dcxTeamDetailBackdrop').classList.add('hidden')">×</button></header>${t.description?`<p class="dcxTeamDetailDesc">${esc(t.description)}</p>`:""}<div class="dcxTeamDetailMembers">${members.map(([id,op])=>{const n=narrative(op);return`<div class="dcxTeamDetailMember" data-credential-pid="${esc(id)}" role="button" tabindex="0">${avatarHtml(id,op)}<div><b>${esc(operatorName(op,id))}${id===playerId?" · VOCÊ":""}</b><small>${esc(n.role||"OPERADOR")}${n.location?" · "+esc(n.location):""}</small></div><em>${esc(n.status||"OPERACIONAL")} // ${esc(n.commsStatus||"ONLINE")}</em></div>`}).join("")||'<div class="dcxEmpty">Sem membros visíveis.</div>'}</div>`;
     ov.classList.remove("hidden")
   }
-  function renderTeams(){const box=$("dcxTeamContent");if(!box)return;const entries=sortedTeamEntries();if(!entries.length){box.innerHTML=`<div class="dcxEmpty big">Nenhuma equipe operacional publicada.</div>`;renderTeamShowcase();return}box.innerHTML=entries.map(([tid,t],index)=>{const members=visibleTeamMembers(tid),accent=teamAccent(index);return `<article class="dcxPlayerTeamCard" style="--team-accent:${accent}"><button class="dcxPlayerTeamSummary" type="button" onclick="DCX.Player.openTeamDetail('${esc(tid)}')"><span class="dcxDashTeamIcon">${teamIcon(t.symbol)}</span><div class="dcxPlayerTeamHead"><div><span>${esc(t.codename||"EQUIPE")}</span><h3>${esc(t.name||tid)}</h3></div><b>${esc(t.status||"OPERACIONAL")}</b></div><span class="dcxPlayerTeamCount">${members.length} MEMBRO${members.length===1?"":"S"} →</span></button>${t.description?`<p>${esc(t.description)}</p>`:""}</article>`}).join("");renderTeamShowcase()}
+  function renderTeams(){
+    const box=$("dcxTeamContent");
+    renderTeamShowcase();
+    if(!box)return;
+    if(teamSyncError){box.innerHTML='<div class="dcxEmpty big" role="status">'+esc(teamSyncError)+'</div>';return}
+    if(!teamsReady){box.innerHTML='<div class="dcxEmpty big" role="status">Sincronizando equipes...</div>';return}
+    const entries=sortedTeamEntries();
+    if(!entries.length){box.innerHTML='<div class="dcxEmpty big">Nenhuma equipe operacional publicada nesta sala.</div>';return}
+    box.innerHTML=entries.map(([tid,t],index)=>{
+      const members=visibleTeamMembers(tid),accent=teamAccent(index);
+      return `<article class="dcxPlayerTeamCard" style="--team-accent:${accent}"><button class="dcxPlayerTeamSummary" type="button" onclick="DCX.Player.openTeamDetail('${esc(tid)}')"><span class="dcxDashTeamIcon">${teamIcon(t.symbol)}</span><div class="dcxPlayerTeamHead"><div><span>${esc(t.codename||"EQUIPE")}</span><h3>${esc(t.name||tid)}</h3></div><b>${esc(t.status||"OPERACIONAL")}</b></div><span class="dcxPlayerTeamCount">${members.length} MEMBRO${members.length===1?"":"S"} →</span></button>${t.description?`<p>${esc(t.description)}</p>`:""}</article>`;
+    }).join("");
+    if(operatorsError){box.insertAdjacentHTML("afterbegin",'<div class="dcxEmpty" role="status">'+esc(operatorsError)+'</div>')}
+  }
   function toggleTeam(force){const p=$("dcxTeamPanel");if(!p)return;const open=typeof force==="boolean"?force:p.classList.contains("hidden");p.classList.toggle("hidden",!open);if(open)renderTeams()}
 
   function noteEntries(){return Object.entries(notes||{}).filter(([id])=>id!=="_init").sort((a,b)=>(Number(b[1]?.updatedAt)||0)-(Number(a[1]?.updatedAt)||0))}

@@ -173,6 +173,7 @@ function create({container,center=TOKYO,zoom=13,host=false,onClick,onSelect,onMo
    if(z<=5)mode='global';
    let width=0,height=0,dpr=1,last=0,frame=0,pointList=[],destroyed=false;
    let dragging=null,moved=false,ignoreClick=false,visible=false,pointNodes=[],painted=false,renderError='',resizeObserver=null,visibilityObserver=null,watchTimer=null;
+   let labelMode='complete';
    function screenSize(){
     const r=container.getBoundingClientRect();
     if(r.width<30||r.height<30)return false;
@@ -307,6 +308,27 @@ function create({container,center=TOKYO,zoom=13,host=false,onClick,onSelect,onMo
     for(let x=0;x<width;x+=100){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,height);ctx.stroke()}
     for(let y=0;y<height;y+=100){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(width,y);ctx.stroke()}
    }
+   function drawCityLabels(){
+    const lex=window.DCX?.AtlasLexicon;
+    if(!lex||labelMode!=='complete')return;
+    const items=[];
+    if(z>=10)items.push(...lex.locality(city,'districts').map(p=>({...p,tier:1})));
+    if(z>=12)items.push(...lex.locality(city,'neighborhoods').map(p=>({...p,tier:2})));
+    if(z>=14)items.push(...lex.locality(city,'roads').map(p=>({...p,tier:3})));
+    const occupied=[];
+    for(const item of items){
+     const p=pointXY(item);if(p.x<30||p.y<22||p.x>width-30||p.y>height-22)continue;
+     ctx.font=item.tier===1?'bold 12px ui-monospace, monospace':item.tier===2?'bold 10px ui-monospace, monospace':'9px ui-monospace, monospace';
+     const w=ctx.measureText(item.name).width+15;
+     const h=item.tier===1?21:17;
+     if(occupied.some(b=>p.x-w/2<b.x+b.w+5&&p.x+w/2>b.x-5&&p.y-h/2<b.y+b.h+4&&p.y+h/2>b.y-4))continue;
+     ctx.textAlign='center';ctx.textBaseline='middle';ctx.lineWidth=3;ctx.strokeStyle='#020914';
+     ctx.strokeText(item.name,p.x,p.y);
+     ctx.fillStyle=item.tier===1?'#e1faff':item.tier===2?'#98daec':'#68bcca';
+     ctx.fillText(item.name,p.x,p.y);
+     occupied.push({x:p.x-w/2,y:p.y-h/2,w,h});
+    }
+   }
    function globalMap(){
     ctx.fillStyle='#030a14';ctx.fillRect(0,0,width,height);
     const s=worldScale();
@@ -340,14 +362,15 @@ function create({container,center=TOKYO,zoom=13,host=false,onClick,onSelect,onMo
      ctx.fillStyle=priority?'#ffadbe':'#addef2';ctx.fillText(value,x,y);
      occupied.push({x:x-w/2,y:y-h/2,w,h});return true;
     };
+    const lex=window.DCX?.AtlasLexicon;
     const zoomed=s>=2.1;
     if(s>=1.0){
      // Soviet state is represented as one geopolitical label in the RPG timeline.
-     placeLabel('UNIÃO SOVIÉTICA',ussr.x,ussr.y,true);
+     placeLabel(lex?.aliasCountry('UNIÃO SOVIÉTICA')||'UNIÃO SOVIÉTICA',ussr.x,ussr.y,true);
      for(const [name,lat,lng] of COUNTRIES){
       if(name==='UNIÃO SOVIÉTICA')continue;
       const p=projectGlobal(lat,lng);
-      placeLabel(name,p.x,p.y,false);
+      placeLabel(lex?.aliasCountry(name)||name,p.x,p.y,false);
      }
     }
     // Dots are clickable city targets; labels gain detail as the global zoom increases.
@@ -355,7 +378,7 @@ function create({container,center=TOKYO,zoom=13,host=false,onClick,onSelect,onMo
      const p=projectGlobal(c.lat,c.lng);if(p.x<0||p.x>width||p.y<0||p.y>height)continue;
      ctx.fillStyle='#7be9f3';ctx.shadowColor='#4bc6e7';ctx.shadowBlur=5;
      ctx.beginPath();ctx.arc(p.x,p.y,c.id==='tokyo'?4:2.5,0,2*Math.PI);ctx.fill();ctx.shadowBlur=0;
-     if(zoomed||c.id==='tokyo')placeLabel(c.name,p.x,p.y-14,c.id==='tokyo');
+     if(labelMode==='complete'&&(zoomed||c.id==='tokyo'))placeLabel(lex?.aliasCity(c)||c.name,p.x,p.y-14,c.id==='tokyo');
     }
     ctx.fillStyle='#6dbacf';ctx.font='9px ui-monospace, monospace';ctx.textAlign='left';ctx.fillText('MUNDO ALTERNATIVO // VISÃO GLOBAL 2D',20,height-22);
    }
@@ -384,7 +407,7 @@ function create({container,center=TOKYO,zoom=13,host=false,onClick,onSelect,onMo
     if(now-last<28){schedule();return}last=now;
     try{
      ctx.clearRect(0,0,width,height);
-     if(mode==='global')globalMap();else cityMap();
+     if(mode==='global')globalMap();else {cityMap();drawCityLabels()}
      drawPoints();
      painted=true;renderError='';
      canvas.dataset.dcxPainted='true';
@@ -482,7 +505,9 @@ function create({container,center=TOKYO,zoom=13,host=false,onClick,onSelect,onMo
     setZoom,setCenter:changeCenter,
     flyTo(p,nextZoom){changeCenter(p,nextZoom||14)},
     resize:()=>{painted=false;schedule()},
-    getStatus:()=>({painted,renderError,width,height}),
+    getStatus:()=>({painted,renderError,width,height,labelMode}),
+    setLabelMode(next){labelMode=next==='simple'?'simple':'complete';schedule();return labelMode},
+    getLabelMode:()=>labelMode,
     goCity:focusCity,
     global:globe,
     getCity:()=>city,

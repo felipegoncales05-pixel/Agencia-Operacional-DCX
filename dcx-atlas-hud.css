@@ -60,3 +60,14 @@
 .dcxAtlasPointDetail img{display:block;max-width:100%;max-height:115px;object-fit:contain;margin:9px auto;border-radius:6px}
 .dcxAtlasPointClose{padding:3px 7px!important}
 .dcxAtlasEdit{margin-top:9px;width:100%}
+
+/* DCXMAP3 // fail-safe cartography: illustrated SVG base remains available */
+.dcxMapOffline{position:absolute!important;inset:0!important;display:block!important;min-width:100%;min-height:100%;overflow:hidden;background:#03111d}
+.dcxFictionBoot{position:absolute;inset:0;display:block;z-index:0;pointer-events:none;background:#041523}
+.dcxFictionBoot svg{display:block;width:100%;height:100%}
+.dcxFictionCanvas{position:absolute!important;inset:0!important;display:block!important;width:100%!important;height:100%!important;z-index:1}
+.dcxFictionBoot.is-painted{opacity:0;transition:opacity .25s ease}
+.dcxTacticalMap[data-map-render=fallback] .dcxFictionCanvas{opacity:0}
+.dcxAtlasActive .dcxMapCanvas{position:relative!important;min-height:440px!important;overflow:hidden!important}
+.dcxAtlasActive .dcxMapOverlay{position:absolute!important;inset:0!important;z-index:1!important}
+.dcxAtlasHud .dcxAtlasSides,.dcxAtlasHud .dcxAtlasBottom{z-index:5}

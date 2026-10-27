@@ -157,7 +157,7 @@ function create({container,center=TOKYO,zoom=12,host=false,onClick=noop,onSelect
    if(host)map.dragPan.disable();
   }catch(e){reject(e);return}
   let ready=false,destroyed=false,lastCityId='',pointsById=new Map(),lastPoints={};
-  let labelMode='complete',disposeInset=noop,pointer=null,ignoreNextClick=false;
+  let labelMode='complete',disposeInset=noop,pointer=null;
   const timeout=setTimeout(()=>{if(!ready){map.remove();reject(Error('Não foi possível desenhar o mapa híbrido.'))}},18000);
   function camera(){const c=map.getCenter();return {lat:c.lat,lng:c.lng}}
   const atlas=()=>window.DCX?.FictionalAtlas||{};
@@ -197,28 +197,30 @@ function create({container,center=TOKYO,zoom=12,host=false,onClick=noop,onSelect
   }
   function refreshPoints(){setPoints(lastPoints)}
   function pick(e){
-   const id=e.features?.[0]?.properties?.id;
-   if(id&&pointsById.has(id)){ignoreNextClick=true;onSelect(pointsById.get(id))}
+   const hits=map.queryRenderedFeatures(e.point,{layers:['dcx-hybrid-pins','dcx-risk-fill']});
+   for(const hit of hits){
+    const id=hit.properties?.id;
+    if(id&&pointsById.has(id)){onSelect(pointsById.get(id));return true}
+   }
+   return false;
   }
   function setCenter(p,z){map.jumpTo({center:[p.lng,p.lat],zoom:z??map.getZoom()})}
   function start(){
    ready=true;clearTimeout(timeout);
    addLabels(map);addPoints(map);
-   map.on('click','dcx-hybrid-pins',pick);
-   map.on('click','dcx-risk-fill',pick);
    map.on('click',e=>{
-    if(ignoreNextClick){ignoreNextClick=false;return}
+    if(pick(e))return;
     if(host)onClick({lat:e.lngLat.lat,lng:e.lngLat.lng})
    });
    map.on('mousemove',e=>onMouseMove({lat:e.lngLat.lat,lng:e.lngLat.lng}));
-   map.on('moveend',()=>{
-    updateLabels();onCameraChange();
-   });
+   map.on('moveend',()=>{updateLabels();onCameraChange()});
+   map.on('mouseenter','dcx-hybrid-pins',()=>{map.getCanvas().style.cursor='pointer'});
+   map.on('mouseleave','dcx-hybrid-pins',()=>{map.getCanvas().style.cursor=''});
    if(host){
     const el=map.getCanvasContainer();
     el.addEventListener('contextmenu',e=>e.preventDefault());
     el.addEventListener('pointerdown',e=>{
-     if(e.button!==2)return;pointer={x:e.clientX,y:e.clientY};
+     if(e.button!==2||e.target.closest('.dcxHawaiiInset'))return;pointer={x:e.clientX,y:e.clientY};
      el.setPointerCapture?.(e.pointerId);e.preventDefault();
     });
     el.addEventListener('pointermove',e=>{

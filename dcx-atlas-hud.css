@@ -197,3 +197,9 @@
  #dcxTacticalMap.dcxAtlasActive{height:clamp(520px,calc(100dvh - 16px),940px)}
  #dcxTacticalMap.dcxAtlasActive .dcxAtlasHud .dcxAtlasBottom{bottom:40px!important}
 }
+
+/* Keymaster-only ping deletion in the tactical point card. */
+.dcxAtlasPointActions{display:flex;gap:7px;flex-wrap:wrap;align-items:stretch;margin-top:12px}
+.dcxAtlasPointActions .dcxAtlasEdit,.dcxAtlasPointActions .dcxAtlasDelete{margin:0;flex:1;min-width:105px}
+.dcxAtlasDelete{border:1px solid #be526e!important;background:#32111e!important;color:#ffc1d2!important}
+.dcxAtlasDelete:hover,.dcxAtlasDelete:focus-visible{background:#552138!important;border-color:#ff718e!important}

@@ -82,6 +82,7 @@ function normalize(raw){
 }
 let studio=normalize(null),opEditing='operacao-h',charEditing=null,opDirty=false,charDirty=false;
 let currentMission='operacao-h';
+let activeDossierId=null;
 function notify(msg){
  const live=$('kmStudioStatus');if(live)live.textContent=msg;
  const toast=$('toast');if(toast&&host){toast.textContent=msg;toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),2500)}
@@ -112,8 +113,83 @@ function playerOperations(){
 function playerCharacters(){
  const list=$('dcxCharacterGrid');if(!list)return;
  const chars=studio.characters.filter(ch=>ch.status==='published');
- list.innerHTML=chars.length?chars.map(ch=>'<article class="dcxCharacterCard"'+characterVisualAttrs(ch)+'><div class="dcxCharacterArt">'+imageMarkup(ch.imageUrl,ch.name,'dcxCharacterImage',ch.imageFrame)+'</div>'+
- '<div class="dcxCharacterMeta"><small>ARQUIVO // PERSONAGEM</small><h2>'+esc(ch.name)+'</h2><p>'+esc(ch.lore||'Nenhuma descrição publicada.')+'</p></div></article>').join(''):'<div class="dcxStoryEmpty">Os arquivos de personagens ainda não foram publicados pelo Keymaster.</div>';
+ list.innerHTML=chars.length?chars.map(ch=>{
+  const full=String(ch.lore||'').trim().replace(/\s+/g,' ');
+  const excerpt=full.length>126?full.slice(0,123).trimEnd()+'…':full;
+  return '<button type="button" class="dcxCharacterCard dcxCharacterPreview"'+characterVisualAttrs(ch)+
+   ' data-character-open="'+esc(ch.id)+'" aria-label="Abrir dossiê de '+esc(ch.name)+'">'+
+   '<div class="dcxCharacterArt">'+imageMarkup(ch.imageUrl,ch.name,'dcxCharacterImage',ch.imageFrame)+'</div>'+
+   '<div class="dcxCharacterMeta"><small>ARQUIVO // PERSONAGEM</small><h2>'+esc(ch.name)+'</h2>'+
+   '<p>'+esc(excerpt||'Registro disponível para consulta.')+'</p>'+
+   '<span class="dcxCharacterOpenHint">ABRIR DOSSIÊ <b aria-hidden="true">↗</b></span></div></button>';
+ }).join(''):'<div class="dcxStoryEmpty">Os arquivos de personagens ainda não foram publicados pelo Keymaster.</div>';
+}
+function ensureCharacterDossier(){
+ let dialog=$('dcxCharacterDossier');
+ if(dialog)return dialog;
+ dialog=document.createElement('section');
+ dialog.id='dcxCharacterDossier';
+ dialog.className='dcxCharacterDossier';
+ dialog.hidden=true;
+ dialog.setAttribute('role','dialog');
+ dialog.setAttribute('aria-modal','true');
+ dialog.setAttribute('aria-labelledby','dcxCharacterDossierName');
+ dialog.innerHTML='<div class="dcxCharacterDossierFrame">'+
+  '<button type="button" class="dcxCharacterDossierClose" data-dossier-close aria-label="Fechar dossiê">×</button>'+
+  '<div id="dcxCharacterDossierBody"></div></div>';
+ dialog.addEventListener('click',event=>{
+  if(event.target===dialog||event.target.closest('[data-dossier-close]'))closeCharacterDossier();
+ });
+ dialog.addEventListener('keydown',event=>{
+  if(event.key==='Escape'){
+   event.preventDefault();event.stopPropagation();closeCharacterDossier();
+  }else if(event.key==='Tab'){
+   // The close control is the only interactive element in the read-only file.
+   event.preventDefault();dialog.querySelector('[data-dossier-close]')?.focus();
+  }
+ });
+ document.body.append(dialog);
+ return dialog;
+}
+function refreshCharacterDossier(){
+ if(!activeDossierId)return;
+ const ch=studio.characters.find(v=>v.id===activeDossierId&&v.status==='published');
+ if(!ch){closeCharacterDossier();return}
+ const dialog=ensureCharacterDossier(),body=dialog.querySelector('#dcxCharacterDossierBody');
+ if(!body)return;
+ // The full file shows the entire artwork. The gallery continues using the
+ // crop and framing selected by the Keymaster.
+ const fullArt=imageMarkup(ch.imageUrl,ch.name,'dcxCharacterDossierImage',
+  {...(ch.imageFrame||{}),fit:'contain',zoom:100});
+ body.innerHTML='<article class="dcxCharacterCard dcxCharacterDossierPanel"'+characterVisualAttrs(ch)+'>'+
+  '<div class="dcxCharacterDossierMedia">'+fullArt+'</div>'+
+  '<div class="dcxCharacterMeta dcxCharacterDossierContent">'+
+  '<small>DCX // ARQUIVO DE PERSONAGEM</small>'+
+  '<h2 id="dcxCharacterDossierName">'+esc(ch.name)+'</h2>'+
+  '<div class="dcxCharacterDossierDivider"></div>'+
+  '<h3>HISTÓRICO // DOSSIÊ</h3>'+
+  '<div class="dcxCharacterDossierLore">'+esc(ch.lore||'Nenhuma descrição publicada.')+'</div>'+
+  '</div></article>';
+}
+function openCharacterDossier(id){
+ const ch=studio.characters.find(v=>v.id===id&&v.status==='published');
+ if(!ch)return;
+ activeDossierId=id;
+ const dialog=ensureCharacterDossier();
+ dialog.hidden=false;
+ document.body.classList.add('dcxDossierOpen');
+ refreshCharacterDossier();
+ dialog.querySelector('[data-dossier-close]')?.focus({preventScroll:true});
+}
+function closeCharacterDossier(){
+ if(!activeDossierId)return;
+ const id=activeDossierId;activeDossierId=null;
+ const dialog=$('dcxCharacterDossier');
+ if(dialog)dialog.hidden=true;
+ document.body.classList.remove('dcxDossierOpen');
+ const grid=$('dcxCharacterGrid');
+ const trigger=[...(grid?.querySelectorAll('[data-character-open]')||[])].find(v=>v.dataset.characterOpen===id);
+ trigger?.focus({preventScroll:true});
 }
 const stageModules=[
  {index:0,icon:'▤',title:'ABERTURA',desc:'Contexto e apresentação da operação'},
@@ -163,6 +239,7 @@ function renderMission(missionId){
 }
 function renderPlayer(){
  playerOperations();playerCharacters();
+ if(activeDossierId)refreshCharacterDossier();
  const openDetail=$('dcxMissionDetail');
  if(openDetail&&!openDetail.hidden){
   if(studio.operations.some(op=>op.id==='operacao-h'&&op.status==='published'))renderMission('operacao-h');
@@ -407,6 +484,10 @@ function polishHost(){
  }
 }
 function bindPlayer(){
+ $('dcxCharacterGrid')?.addEventListener('click',event=>{
+  const card=event.target.closest('[data-character-open]');
+  if(card)openCharacterDossier(card.dataset.characterOpen);
+ });
  document.querySelector('#workspaceGolpe')?.addEventListener('click',e=>{
   const stage=e.target.closest('[data-story-stage]');if(!stage)return;
   const i=Number(stage.dataset.storyStage);

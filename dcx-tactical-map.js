@@ -27,6 +27,7 @@ function normalizePoint(p,id){
 }
 const clampZoom=v=>cap(v,1,19,13);
 const roomData=()=>({points:{},hiddenPresets:{},center:{...DEFAULT_CENTER},zoom:13});
+const pendingDeletes=new Set();
 let data=roomData(),ref=null,sessionKey='',statusMessage='',root=null,board=null,overlay=null,sidebar=null,drawer=null,selectedId='',draftPos=null,map=null,mapLoaded=false,mapFailed=false,mapObjects=[],mapReady=false,pan=null,fallbackCenter={...DEFAULT_CENTER},fallbackZoom=13,initialized=false,watcher=null,leafletMap=null,leafletLayers=null,leafletTiles=null,fictionalMap=null,osmPending=false,mapVisible=false,resizeFrame=0,hybridMap=null,hybridHost=null,hybridPending=false,hybridEpoch=0,hybridError='';
 function context(){
  const api=window.OPH?.Realtime,db=api?.getFirebaseDatabase?.(),auth=api?.getFirebaseAuth?.();
@@ -501,9 +502,10 @@ function switchToLight(){
 }
 
 function selectPreset(p){
- const detail=$('dcxMapDetail');if(detail)detail.replaceChildren(makeDetail(p));
- // The example pins are read-only; a Keymaster can create a new pin next to one.
- if(HOST&&p.preset)status('PONTO DE EXEMPLO // PARA PUBLICAR UM NOVO LOCAL, USE + CRIAR PONTO');
+ // Route hard-coded markers through the visible HUD instead of the old hidden panel.
+ if(!p?.id||!allPoints()[p.id])return;
+ selectPoint(p.id,false);
+ if(HOST)status('EXEMPLO SELECIONADO // USE REMOVER EXEMPLO NO PAINEL PONTOS.');
 }
 
 async function setProvider(next){
@@ -700,7 +702,8 @@ function bindBoard(){
 function closeEditor(){drawer?.classList.add('hidden');draftPos=null}
 async function deletePoint(point){
  if(!HOST)return false;
- const id=String(point?.id||'');
+ const id=String(typeof point==='string'?point:point?.id||'');
+ if(!id||pendingDeletes.has(id))return false;
  const current=allPoints()[id];
  if(!current){status('ESTE PING JÁ NÃO EXISTE NO MAPA.',true);return false}
  const example=!!current.preset;
@@ -711,12 +714,13 @@ async function deletePoint(point){
  const feedback=$('dcxMapEditorFeedback');
  if(feedback){feedback.dataset.error='false';feedback.textContent='REMOVENDO PING...'}
  const buttons=drawer?.querySelectorAll('.dcxMapDelete')||[];
+ pendingDeletes.add(id);
  buttons.forEach(b=>b.disabled=true);
  try{
   await removePoint(id);
   if(selectedId===id)selectedId='';
   const detail=$('dcxAtlasPointDetail');
-  if(detail){detail.hidden=true;detail.replaceChildren();detail.removeAttribute('data-point-id')}
+  if(detail?.dataset.pointId===id){detail.hidden=true;detail.replaceChildren();detail.removeAttribute('data-point-id')}
   closeEditor();
   renderAll();
   document.dispatchEvent(new CustomEvent('dcx-map-points-changed'));
@@ -730,7 +734,10 @@ async function deletePoint(point){
   status(message,true);
   console.error('[DCX MAP] Exclusão de ping',error);
   return false;
- }finally{buttons.forEach(b=>b.disabled=false)}
+ }finally{
+  pendingDeletes.delete(id);
+  buttons.forEach(b=>b.disabled=false);
+ }
 }
 function openEditor(point,pos){
  if(!HOST||!drawer)return;

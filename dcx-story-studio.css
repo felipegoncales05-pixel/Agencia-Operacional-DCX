@@ -64,3 +64,26 @@
 .dcxMissionPrepAction>div{flex:1;min-width:150px}.dcxMissionPrepAction b{font:900 11px monospace}.dcxMissionPrepAction p{font:10px/1.6 monospace}.dcxMissionPrepAction small{font:8px monospace;color:var(--muted,#abc)}.dcxMissionPrepAction strong{color:#7fe4bc}.dcxMissionChoiceIntro{font:11px/1.6 monospace;color:var(--muted,#abc)}
 #dcxModuleModalStatus{color:var(--cyan,#7ae6ff);font:900 10px monospace}
 @media(max-width:810px){.kmMissionBuilderLayout{grid-template-columns:1fr}.kmStudioFieldPair{grid-template-columns:1fr}}
+
+/* DCX dossier appearance controls: room-scoped per-character styling. */
+.kmStudioCharVisual{display:grid;gap:12px;border:1px solid #335c70;border-radius:13px;padding:15px;background:#081a26}
+.kmStudioCharVisualHeading{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:9px}
+.kmStudioCharVisualHeading strong{color:#def7ff;font:950 12px ui-monospace,monospace;letter-spacing:.08em}
+.kmStudioCharVisualHeading small,.kmStudioCharVisual>p{color:#88aebe;font:10px/1.5 ui-monospace,monospace;margin:0}
+.kmStudioCharVisualGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:center}
+.kmStudioCharVisualGrid label{min-width:0}
+.kmStudioCharVisualGrid .kmStudioCheckbox{gap:10px;min-height:40px}
+.kmStudioCharVisualGrid input[type=color]{width:100%!important;height:40px!important;min-height:40px;padding:4px!important;cursor:pointer}
+.kmStudioCharVisualGrid select{width:100%;min-width:0;background:#071824;color:#eaf7ff;border:1px solid #355a6f;border-radius:8px;padding:9px;font:11px ui-monospace,monospace}
+html body .dcxCharacterCard[data-dcx-border-custom="1"]{border-color:var(--dcx-char-border,#2c5468)!important}
+html body .dcxCharacterCard[data-dcx-title-custom="1"] .dcxCharacterMeta h2{
+ font-family:var(--dcx-char-title-font,var(--dcx-type-characters,ui-monospace,monospace))!important;
+ color:var(--dcx-char-title-color,#e9faff)!important;
+ background-image:none!important;
+ -webkit-text-fill-color:var(--dcx-char-title-color,#e9faff)!important;
+}
+html body .dcxCharacterCard[data-dcx-title-custom="1"][data-dcx-title-gradient="1"] .dcxCharacterMeta h2{
+ background-image:var(--dcx-char-title-gradient)!important;
+ background-clip:text!important;-webkit-background-clip:text!important;-webkit-text-fill-color:transparent!important;
+}
+@media(max-width:620px){.kmStudioCharVisualGrid{grid-template-columns:1fr}}

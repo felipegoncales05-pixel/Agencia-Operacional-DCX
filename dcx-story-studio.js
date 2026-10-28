@@ -17,7 +17,10 @@ function normalizeTitleStyle(v){
 }
 function characterFontOptions(font){
  const options=window.DCX?.FontStudio?.optionsFor?.({font})||'<option value="default">DCX ORIGINAL</option>';
- return '<option value="inherit"'+(font==='inherit'?' selected':'')+'>HERDAR FONTE DA SALA</option>'+options;
+ // Only one option may be selected; avoid Font Studio selecting "default"
+ // when this dossier explicitly inherits the room's typography.
+ const safeOptions=font==='inherit'?options.replace(/\sselected(?=>)/g,''):options;
+ return '<option value="inherit"'+(font==='inherit'?' selected':'')+'>HERDAR FONTE DA SALA</option>'+safeOptions;
 }
 function characterVisualAttrs(ch){
  const border=validHex(ch.borderColor);

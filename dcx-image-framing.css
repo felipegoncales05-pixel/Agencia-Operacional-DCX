@@ -24,7 +24,7 @@
 .dcxStoryHeroArt>.dcxFramedImage{position:absolute;inset:0}
 .dcxStoryMissionHero{position:relative;isolation:isolate;overflow:hidden;background-image:none!important}
 .dcxStoryMissionHero>:not(.dcxStoryHeroArt){position:relative;z-index:2}
-.dcxStoryHeroArt:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(4,13,21,.82),rgba(4,13,21,.25));pointer-events:none}
+.dcxStoryHeroArt:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(4,13,21,.40) 0%,rgba(4,13,21,.55) 35%,rgba(4,13,21,.78) 72%,rgba(4,13,21,.93) 100%);pointer-events:none}
 #dcxDashHeroArt{position:relative;isolation:isolate;overflow:hidden}
 #dcxDashHeroArt>.dcxFramedImage{position:absolute;inset:0}
 #dcxDashHeroArt>.dcxImageDim{z-index:2}

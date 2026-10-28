@@ -203,3 +203,11 @@
 .dcxAtlasPointActions .dcxAtlasEdit,.dcxAtlasPointActions .dcxAtlasDelete{margin:0;flex:1;min-width:105px}
 .dcxAtlasDelete{border:1px solid #be526e!important;background:#32111e!important;color:#ffc1d2!important}
 .dcxAtlasDelete:hover,.dcxAtlasDelete:focus-visible{background:#552138!important;border-color:#ff718e!important}
+
+/* PINGDELETE3: accessible Keymaster delete controls in the PONTOS directory. */
+.dcxAtlasDirectoryItem{display:flex;align-items:stretch;width:100%;gap:3px;background:#0718268a;border-bottom:1px solid #164050}
+.dcxAtlasDirectoryItem .dcxAtlasDirectoryRow{flex:1;min-width:0;width:auto;border-bottom:0}
+.dcxAtlasRowDelete{display:grid;place-items:center;flex:0 0 34px;min-width:34px;align-self:stretch;margin:3px 3px 3px 0;cursor:pointer;background:#32131d;border:1px solid #a5455f;border-radius:6px;color:#ffc4d4;font:900 18px ui-monospace,monospace}
+.dcxAtlasRowDelete:hover,.dcxAtlasRowDelete:focus-visible{background:#602439;border-color:#ff8da4;color:white}
+.dcxAtlasRowDelete:disabled{cursor:wait;opacity:.5}
+@media(max-width:600px){.dcxAtlasRowDelete{flex-basis:32px;min-width:32px}}

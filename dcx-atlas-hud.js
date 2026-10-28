@@ -106,6 +106,7 @@ function showPoint(p){
  detail.replaceChildren();
  if(!p){detail.hidden=true;return}
  detail.hidden=false;
+ detail.dataset.pointId=p.id||'';
  const top=node('div','dcxAtlasPointTop');
  top.append(node('small','',p.type==='risk'?'ÁREA DE RISCO':p.type==='important'?'PONTO IMPORTANTE':'PONTO DE INTERESSE'));
  top.append(btn('×',()=>{detail.hidden=true},'dcxAtlasPointClose'));
@@ -116,7 +117,11 @@ function showPoint(p){
   img.onerror=()=>img.remove();detail.append(img);
  }
  if(/keymaster\.html$/i.test(location.pathname)){
-  detail.append(btn('✎ EDITAR LOCAL',()=>window.DCX?.Cartography?.openEditor(p),'dcxAtlasEdit'));
+  const actions=node('div','dcxAtlasPointActions');
+  actions.append(btn('✎ EDITAR LOCAL',()=>window.DCX?.Cartography?.openEditor(p),'dcxAtlasEdit'));
+  actions.append(btn(p.preset?'× REMOVER EXEMPLO':'× EXCLUIR PING',
+   ()=>window.DCX?.Cartography?.deletePoint?.(p),'dcxAtlasDelete'));
+  detail.append(actions);
  }
  if(current!=='points'){current='points';refresh()}
 }
@@ -174,6 +179,13 @@ function start(){
  window.addEventListener('dcx-map-point-selected',event=>{const p=event.detail?.point;if(p)showPoint(p)});
  window.addEventListener('dcx-map-ready',()=>{window.DCX?.Cartography?.setLabelMode?.(labelMode);update();refresh()});
  document.addEventListener('dcx-map-provider',()=>{update();refresh()});
+ document.addEventListener('dcx-map-points-changed',()=>{
+  refresh();
+  const detail=$('dcxAtlasPointDetail'),id=detail?.dataset.pointId;
+  if(id&&!pointList().some(p=>p.id===id)){
+   detail.hidden=true;detail.replaceChildren();detail.removeAttribute('data-point-id');
+  }
+ });
  if(engine())engine().setLabelMode(labelMode);
  document.querySelectorAll('[data-tab="tactical-map"],[data-workspace-target="map"]').forEach(b=>
   b.addEventListener('click',()=>setTimeout(()=>{engine()?.resize();update()},130))

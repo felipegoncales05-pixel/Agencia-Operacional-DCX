@@ -42,7 +42,7 @@ function stack(v){return FONTS[clean(v).font].css}
 const htmlEscape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function safeStyle(v,allowGradient=true){
  const x=clean(v);return 'font-family:'+stack(x)+'!important;font-size:'+x.size+'%!important;letter-spacing:'+x.spacing+'em!important;'+
-  (allowGradient&&x.gradient?'background-image:linear-gradient(100deg,'+x.from+','+x.to+');background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;':'');
+  (allowGradient&&x.gradient?'background-image:linear-gradient(180deg,'+x.from+','+x.to+');background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;':'');
 }
 let remote={},local={},selected='hero',ready=false,lastConnection='',remoteRef=null,editing=false;
 try{local=JSON.parse(localStorage.getItem(host?'dcx-font-studio-host-v1':'dcx-font-studio-player-v1')||'{}')||{}}catch{}
@@ -71,7 +71,7 @@ function apply(){
   style.setProperty('--dcx-type-'+key,stack(item));
   style.setProperty('--dcx-type-size-'+key,item.size+'%');
   style.setProperty('--dcx-type-spacing-'+key,item.spacing+'em');
-  style.setProperty('--dcx-gradient-'+key,item.gradient?'linear-gradient(100deg,'+item.from+','+item.to+')':'none');
+  style.setProperty('--dcx-gradient-'+key,item.gradient?'linear-gradient(180deg,'+item.from+','+item.to+')':'none');
   document.documentElement.dataset['dcxGradient'+key.charAt(0).toUpperCase()+key.slice(1)]=item.gradient?'on':'off';
  }
  const personal=clean(local.personal||{});
@@ -87,7 +87,7 @@ function controls(container,config,opts={}){
  container.innerHTML='<div class="dcxFontInputs"><label>FAMÍLIA<select data-font-field="font">'+options(value.font)+'</select></label>'+
  '<label>TAMANHO <output data-font-output="size">'+value.size+'%</output><input data-font-field="size" type="range" min="80" max="140" step="1" value="'+value.size+'"></label>'+
  '<label>ESPAÇAMENTO <output data-font-output="spacing">'+value.spacing+' em</output><input data-font-field="spacing" type="range" min="-.03" max=".22" step=".01" value="'+value.spacing+'"></label>'+
- (opts.gradient===false?'':'<label class="dcxFontSwitch"><input type="checkbox" data-font-field="gradient"'+(value.gradient?' checked':'')+'> ATIVAR GRADIENTE</label>'+
+ (opts.gradient===false?'':'<label class="dcxFontSwitch"><input type="checkbox" data-font-field="gradient"'+(value.gradient?' checked':'')+'> ATIVAR GRADIENTE VERTICAL (CIMA → BAIXO)</label>'+
  '<label>COR INICIAL<input type="color" data-font-field="from" value="'+value.from+'"></label><label>COR FINAL<input type="color" data-font-field="to" value="'+value.to+'"></label>')+
  '</div><div class="dcxFontLive"><small>PRÉVIA DA TIPOGRAFIA</small><strong data-font-preview>'+htmlEscape(opts.sample||'CRÔNICAS DO TEMPO')+'</strong><p>ABCDEFGHIJKLMNOPQRSTUVWXYZ · á é í ó ú ç · 0123456789</p></div>';
  const preview=container.querySelector('[data-font-preview]');

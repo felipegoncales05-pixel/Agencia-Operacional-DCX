@@ -6,6 +6,41 @@ const host=/\/keymaster\.html$/i.test(location.pathname);
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clean=(v,max=150)=>String(v??'').trim().slice(0,max);
 const id=prefix=>prefix+'-'+(crypto.randomUUID?.()||Date.now().toString(36)+'-'+Math.random().toString(36).slice(2)).replace(/[^a-z0-9-]/gi,'').slice(0,48);
+// Character-specific visuals are validated before being saved or used as CSS.
+const validHex=(v,fallback='')=>/^#[0-9a-fA-F]{6}$/.test(String(v||''))?String(v).toLowerCase():fallback;
+function normalizeTitleStyle(v){
+ const x=v&&typeof v==='object'?v:{};
+ const selected=clean(x.font||'inherit',32);
+ const font=selected==='inherit'?'inherit':window.DCX?.FontStudio?.clean?.({font:selected})?.font||'default';
+ return {enabled:x.enabled===true,font,color:validHex(x.color,'#e9faff'),
+  gradient:x.gradient===true,from:validHex(x.from,'#86dfff'),to:validHex(x.to,'#c69cff')};
+}
+function characterFontOptions(font){
+ const options=window.DCX?.FontStudio?.optionsFor?.({font})||'<option value="default">DCX ORIGINAL</option>';
+ return '<option value="inherit"'+(font==='inherit'?' selected':'')+'>HERDAR FONTE DA SALA</option>'+options;
+}
+function characterVisualAttrs(ch){
+ const border=validHex(ch.borderColor);
+ const title=normalizeTitleStyle(ch.titleStyle);
+ const flags=[];
+ const values=[];
+ if(border){
+  flags.push('data-dcx-border-custom="1"');
+  values.push('--dcx-char-border:'+border);
+ }
+ if(title.enabled){
+  flags.push('data-dcx-title-custom="1"');
+  const font=title.font==='inherit'?'var(--dcx-type-characters,ui-monospace,monospace)':
+   window.DCX?.FontStudio?.stack?.({font:title.font})||'ui-monospace,monospace';
+  values.push('--dcx-char-title-font:'+font,'--dcx-char-title-color:'+title.color);
+  if(title.gradient){
+   flags.push('data-dcx-title-gradient="1"');
+   values.push('--dcx-char-title-gradient:linear-gradient(180deg,'+title.from+','+title.to+')');
+  }
+ }
+ if(values.length)flags.push('style="'+esc(values.join(';'))+'"');
+ return flags.length?' '+flags.join(' '):'';
+}
 const safeUrl=value=>{
   const value0=clean(value,1900);
   if(!value0)return '';
@@ -37,7 +72,8 @@ function normalize(raw){
  if(!Array.isArray(d.operations)&&d.catalogInitialized!==true)operations.unshift(defaultOperation());
  const chars=Array.isArray(d.characters)?d.characters.filter(Boolean).map(ch=>({
    id:clean(ch.id,64),name:clean(ch.name,100),lore:clean(ch.lore,5000),
-   imageUrl:safeUrl(ch.imageUrl),imageFrame:window.DCX?.ImageTools?.normalize(ch.imageFrame),status:ch.status==='draft'?'draft':'published'
+   imageUrl:safeUrl(ch.imageUrl),imageFrame:window.DCX?.ImageTools?.normalize(ch.imageFrame),status:ch.status==='draft'?'draft':'published',
+   borderColor:validHex(ch.borderColor),titleStyle:normalizeTitleStyle(ch.titleStyle)
  })).filter(ch=>ch.id&&ch.name):[];
  return {version:2,catalogInitialized:true,operations,characters:chars};
 }
@@ -73,7 +109,7 @@ function playerOperations(){
 function playerCharacters(){
  const list=$('dcxCharacterGrid');if(!list)return;
  const chars=studio.characters.filter(ch=>ch.status==='published');
- list.innerHTML=chars.length?chars.map(ch=>'<article class="dcxCharacterCard"><div class="dcxCharacterArt">'+imageMarkup(ch.imageUrl,ch.name,'dcxCharacterImage',ch.imageFrame)+'</div>'+
+ list.innerHTML=chars.length?chars.map(ch=>'<article class="dcxCharacterCard"'+characterVisualAttrs(ch)+'><div class="dcxCharacterArt">'+imageMarkup(ch.imageUrl,ch.name,'dcxCharacterImage',ch.imageFrame)+'</div>'+
  '<div class="dcxCharacterMeta"><small>ARQUIVO // PERSONAGEM</small><h2>'+esc(ch.name)+'</h2><p>'+esc(ch.lore||'Nenhuma descrição publicada.')+'</p></div></article>').join(''):'<div class="dcxStoryEmpty">Os arquivos de personagens ainda não foram publicados pelo Keymaster.</div>';
 }
 const stageModules=[
@@ -193,11 +229,40 @@ function loadChar(){
  if($('kmStudioCharImage'))$('kmStudioCharImage').value=ch.imageUrl;
  window.DCX?.ImageTools?.attach('kmStudioCharImage',ch.imageFrame);
  if($('kmStudioCharPublic'))$('kmStudioCharPublic').checked=ch.status==='published';
+ const style=normalizeTitleStyle(ch.titleStyle);
+ if($('kmStudioCharBorderDefault'))$('kmStudioCharBorderDefault').checked=!validHex(ch.borderColor);
+ if($('kmStudioCharBorderColor'))$('kmStudioCharBorderColor').value=validHex(ch.borderColor,'#2c5468');
+ if($('kmStudioCharTitleCustom'))$('kmStudioCharTitleCustom').checked=style.enabled;
+ if($('kmStudioCharTitleFont'))$('kmStudioCharTitleFont').innerHTML=characterFontOptions(style.font);
+ if($('kmStudioCharTitleColor'))$('kmStudioCharTitleColor').value=style.color;
+ if($('kmStudioCharTitleGradient'))$('kmStudioCharTitleGradient').checked=style.gradient;
+ if($('kmStudioCharTitleFrom'))$('kmStudioCharTitleFrom').value=style.from;
+ if($('kmStudioCharTitleTo'))$('kmStudioCharTitleTo').value=style.to;
  if($('kmStudioCharDelete'))$('kmStudioCharDelete').hidden=!charEditing;
  charDirty=false;renderCharPreview();
 }
+function readCharacterVisual(){
+ return {
+  borderColor:$('kmStudioCharBorderDefault')?.checked?'':validHex($('kmStudioCharBorderColor')?.value,'#2c5468'),
+  titleStyle:normalizeTitleStyle({
+   enabled:$('kmStudioCharTitleCustom')?.checked||false,
+   font:$('kmStudioCharTitleFont')?.value||'inherit',
+   color:$('kmStudioCharTitleColor')?.value,
+   gradient:$('kmStudioCharTitleGradient')?.checked||false,
+   from:$('kmStudioCharTitleFrom')?.value,
+   to:$('kmStudioCharTitleTo')?.value
+  })
+ };
+}
 function renderCharPreview(){
  const p=$('kmStudioCharPreview');if(!p)return;
+ const attrs=characterVisualAttrs(readCharacterVisual());
+ const source=document.createElement('div');source.innerHTML='<div'+attrs+'></div>';
+ const generated=source.firstElementChild;
+ for(const attr of ['style','data-dcx-border-custom','data-dcx-title-custom','data-dcx-title-gradient']){
+  p.removeAttribute(attr);
+  if(generated?.hasAttribute(attr))p.setAttribute(attr,generated.getAttribute(attr));
+ }
  p.innerHTML='<div class="dcxCharacterArt">'+imageMarkup($('kmStudioCharImage')?.value||'',$('kmStudioCharName')?.value||'Personagem','dcxCharacterImage',window.DCX?.ImageTools?.read('kmStudioCharImage'))+'</div>'+
  '<div class="dcxCharacterMeta"><small>PRÉVIA // CARTÃO</small><h2>'+esc($('kmStudioCharName')?.value||'NOME DO PERSONAGEM')+'</h2><p>'+esc($('kmStudioCharLore')?.value||'Descrição e lore do personagem.')+'</p></div>';
 }
@@ -250,7 +315,8 @@ async function saveCharacter(){
  const imageRaw=clean($('kmStudioCharImage')?.value,1900),imageUrl=safeUrl(imageRaw);
  if(imageRaw&&!imageUrl)return notify('LINK DE IMAGEM INVÁLIDO — USE HTTPS OU UM ARQUIVO PNG/JPG');
  const item={id:charEditing||id('character'),name,lore:clean($('kmStudioCharLore')?.value,5000),
- imageUrl,imageFrame:window.DCX?.ImageTools?.read('kmStudioCharImage'),status:$('kmStudioCharPublic')?.checked?'published':'draft'};
+ imageUrl,imageFrame:window.DCX?.ImageTools?.read('kmStudioCharImage'),status:$('kmStudioCharPublic')?.checked?'published':'draft',
+ ...readCharacterVisual()};
  const characters=studio.characters.some(v=>v.id===item.id)
   ?studio.characters.map(v=>v.id===item.id?item:v)
   :[...studio.characters,item];

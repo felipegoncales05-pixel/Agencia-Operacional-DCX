@@ -104,7 +104,10 @@ function head(){
 function showPoint(p){
  const detail=$('dcxAtlasPointDetail');if(!detail)return;
  detail.replaceChildren();
- if(!p){detail.hidden=true;return}
+ if(!p){detail.hidden=true;detail.removeAttribute('data-point-id');return}
+ const live=pointList().find(entry=>entry.id===p.id);
+ if(!live){detail.hidden=true;detail.removeAttribute('data-point-id');return}
+ p=live;
  detail.hidden=false;
  detail.dataset.pointId=p.id||'';
  const top=node('div','dcxAtlasPointTop');
@@ -157,8 +160,19 @@ function refresh(){
  }else{
   const pts=pointList();
   if(!pts.length)list.append(node('p','dcxAtlasNone','Nenhum ponto cadastrado.'));
-  pts.forEach(p=>add(p.title,p.type==='risk'?'ZONA DE RISCO · '+p.stars+'★':p.type==='important'?'PONTO IMPORTANTE':'PONTO DE INTERESSE',
-   ()=>{window.DCX?.Cartography?.selectPoint(p.id);showPoint(p)},p.type==='risk'?'!':'◈'));
+  pts.forEach(p=>{
+   const row=makeRow(p.title,p.type==='risk'?'ZONA DE RISCO · '+p.stars+'★':p.type==='important'?'PONTO IMPORTANTE':'PONTO DE INTERESSE',
+    ()=>window.DCX?.Cartography?.selectPoint?.(p.id),p.type==='risk'?'!':'◈');
+   if(/keymaster\.html$/i.test(location.pathname)){
+    // Delete directly from the directory, even if a risk polygon covers the pin.
+    const item=node('div','dcxAtlasDirectoryItem');
+    const del=btn('×',()=>window.DCX?.Cartography?.deletePoint?.(p.id),'dcxAtlasRowDelete');
+    del.type='button';
+    del.title=p.preset?'Remover exemplo deste mapa':'Excluir ping do mapa';
+    del.setAttribute('aria-label',(p.preset?'Remover exemplo: ':'Excluir ping: ')+p.title);
+    item.append(row,del);list.append(item);
+   }else list.append(row);
+  });
  }
 }
 function update(){
@@ -176,7 +190,10 @@ function update(){
 }
 function start(){
  head();document.addEventListener('dcx-map-camera',update);
- window.addEventListener('dcx-map-point-selected',event=>{const p=event.detail?.point;if(p)showPoint(p)});
+ window.addEventListener('dcx-map-point-selected',event=>{
+  const id=event.detail?.point?.id;
+  if(id){const selected=pointList().find(p=>p.id===id);if(selected)showPoint(selected)}
+ });
  window.addEventListener('dcx-map-ready',()=>{window.DCX?.Cartography?.setLabelMode?.(labelMode);update();refresh()});
  document.addEventListener('dcx-map-provider',()=>{update();refresh()});
  document.addEventListener('dcx-map-points-changed',()=>{
@@ -184,6 +201,9 @@ function start(){
   const detail=$('dcxAtlasPointDetail'),id=detail?.dataset.pointId;
   if(id&&!pointList().some(p=>p.id===id)){
    detail.hidden=true;detail.replaceChildren();detail.removeAttribute('data-point-id');
+  }else if(id){
+   const next=pointList().find(p=>p.id===id);
+   if(next&&detail?.querySelector('.dcxAtlasPointTitle')?.textContent!==next.title)showPoint(next);
   }
  });
  if(engine())engine().setLabelMode(labelMode);

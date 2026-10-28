@@ -26,7 +26,7 @@ function normalizePoint(p,id){
  return {id:clean(id,72),lat:loc.lat,lng:loc.lng,type,title:clean(p.title,90)||'SEM IDENTIFICAÇÃO',description:clean(p.description,1800),icon:ICONS.some(x=>x[0]===p.icon)?p.icon:(type==='risk'?'warning':'pin'),image:safeUrl(p.image),stars:cap(p.stars,1,5,1),threatCount:cap(p.threatCount,0,9999,0),threatType:THREATS[p.threatType]?p.threatType:'unregistered',radius:RADIUS[p.radius]?p.radius:'medium',updatedAt:cap(p.updatedAt,0,1e15,0)};
 }
 const clampZoom=v=>cap(v,1,19,13);
-const roomData=()=>({points:{},center:{...DEFAULT_CENTER},zoom:13});
+const roomData=()=>({points:{},hiddenPresets:{},center:{...DEFAULT_CENTER},zoom:13});
 let data=roomData(),ref=null,sessionKey='',statusMessage='',root=null,board=null,overlay=null,sidebar=null,drawer=null,selectedId='',draftPos=null,map=null,mapLoaded=false,mapFailed=false,mapObjects=[],mapReady=false,pan=null,fallbackCenter={...DEFAULT_CENTER},fallbackZoom=13,initialized=false,watcher=null,leafletMap=null,leafletLayers=null,leafletTiles=null,fictionalMap=null,osmPending=false,mapVisible=false,resizeFrame=0,hybridMap=null,hybridHost=null,hybridPending=false,hybridEpoch=0,hybridError='';
 function context(){
  const api=window.OPH?.Realtime,db=api?.getFirebaseDatabase?.(),auth=api?.getFirebaseAuth?.();
@@ -58,8 +58,10 @@ function updateFromDb(value){
  const pts=raw.points&&typeof raw.points==='object'?raw.points:{};
  const values=Object.entries(pts).slice(0,400),points={};
  for(const [id,p] of values){const q=normalizePoint(p,id);if(q)points[id]=q}
- data={points,center:vec(raw.center||config().center),zoom:clampZoom(raw.zoom)};
+ const hiddenPresets=raw.hiddenPresets&&typeof raw.hiddenPresets==='object'?raw.hiddenPresets:{};
+ data={points,hiddenPresets,center:vec(raw.center||config().center),zoom:clampZoom(raw.zoom)};
  renderAll();
+ document.dispatchEvent(new CustomEvent('dcx-map-points-changed'));
  window.DCX?.WorldGlobe?.refresh?.();
 }
 function attach(){
@@ -84,7 +86,22 @@ function writePoint(raw,id){
  const target=id?roomRef.child('points').child(id):roomRef.child('points').push();
  return target.set(safe);
 }
-function removePoint(id){if(!HOST||!ref)return Promise.reject(new Error('Sem permissão para excluir.'));return ref.child('points').child(id).remove()}
+async function removePoint(id){
+ if(!HOST)throw new Error('Somente o Keymaster pode remover pings.');
+ const session=context();
+ if(!session)throw new Error('Firebase desconectado. Entre na sala como Keymaster.');
+ const point=allPoints()[id];
+ if(!point)throw new Error('O ping não existe mais no mapa.');
+ const base=session.db.ref('rooms/'+session.room+'/dcx/tacticalMap');
+ if(point.preset){
+  // Built-in examples exist in source code, not /points; hide by room.
+  await base.child('hiddenPresets').child(id).set(true);
+  data.hiddenPresets={...(data.hiddenPresets||{}),[id]:true};
+ }else{
+  await base.child('points').child(id).remove();
+  delete data.points[id];
+ }
+}
 function updateMapCenter(){if(!HOST||!ref)return Promise.reject(new Error('Keymaster não conectado.'));return ref.update({center:getMapCenter(),zoom:getMapZoom()})}
 function tab(label,icon,fn,cls=''){
  const b=document.createElement('button');b.type='button';b.className='dcxMapButton '+cls;b.textContent=icon+' '+label;b.addEventListener('click',fn);return b;
@@ -157,7 +174,12 @@ function makeDetail(p){
  if(p.image){
   const img=document.createElement('img');img.src=p.image;img.alt='Imagem do local: '+p.title;img.loading='lazy';img.referrerPolicy='no-referrer';img.addEventListener('error',()=>{img.remove();wrap.append(text('small','dcxMapImageError','Imagem indisponível.'))});wrap.append(img);
  }
- if(HOST)wrap.append(tab('EDITAR MARCADOR','✎',()=>openEditor(p)));
+ if(HOST){
+  const actions=text('div','dcxMapInlineActions');
+  actions.append(tab('EDITAR MARCADOR','✎',()=>openEditor(p)));
+  actions.append(tab(p.preset?'REMOVER EXEMPLO':'EXCLUIR PING','×',()=>deletePoint(p),'dcxMapDelete'));
+  wrap.append(actions);
+ }
  return wrap;
 }
 function selectPoint(id,fly=true){
@@ -416,7 +438,11 @@ function clearObjects(){
  for(const o of mapObjects){try{o.setMap(null)}catch{}}
  mapObjects=[];
 }
-function allPoints(){return {...(window.DCX?.FictionalAtlas?.seedPoints||{}),...data.points}}
+function allPoints(){
+ const presets={...(window.DCX?.FictionalAtlas?.seedPoints||{})};
+ for(const [id,hidden] of Object.entries(data.hiddenPresets||{}))if(hidden)delete presets[id];
+ return {...presets,...data.points};
+}
 function renderMapObjects(){
  if(!board)return;
  if(hybridMap)hybridMap.setPoints(allPoints());
@@ -672,6 +698,40 @@ function bindBoard(){
  );
 }
 function closeEditor(){drawer?.classList.add('hidden');draftPos=null}
+async function deletePoint(point){
+ if(!HOST)return false;
+ const id=String(point?.id||'');
+ const current=allPoints()[id];
+ if(!current){status('ESTE PING JÁ NÃO EXISTE NO MAPA.',true);return false}
+ const example=!!current.preset;
+ const question=example
+  ? 'Remover o exemplo “'+current.title+'” do mapa desta sala para Keymaster e jogadores?'
+  : 'Excluir permanentemente o ping “'+current.title+'” para todos os jogadores da sala? Esta ação não pode ser desfeita.';
+ if(!window.confirm(question))return false;
+ const feedback=$('dcxMapEditorFeedback');
+ if(feedback){feedback.dataset.error='false';feedback.textContent='REMOVENDO PING...'}
+ const buttons=drawer?.querySelectorAll('.dcxMapDelete')||[];
+ buttons.forEach(b=>b.disabled=true);
+ try{
+  await removePoint(id);
+  if(selectedId===id)selectedId='';
+  const detail=$('dcxAtlasPointDetail');
+  if(detail){detail.hidden=true;detail.replaceChildren();detail.removeAttribute('data-point-id')}
+  closeEditor();
+  renderAll();
+  document.dispatchEvent(new CustomEvent('dcx-map-points-changed'));
+  status(example?'EXEMPLO REMOVIDO DO MAPA DESTA SALA.':'PING EXCLUÍDO DO FIREBASE PARA TODOS.');
+  return true;
+ }catch(error){
+  const denied=/permission.?denied/i.test(String(error?.code||'')+' '+String(error?.message||''));
+  const message=denied?'FIREBASE NEGOU A EXCLUSÃO. VERIFIQUE A AUTORIZAÇÃO DO KEYMASTER.':
+   'ERRO AO EXCLUIR PING: '+(error?.message||String(error));
+  if(feedback){feedback.dataset.error='true';feedback.textContent=message}
+  status(message,true);
+  console.error('[DCX MAP] Exclusão de ping',error);
+  return false;
+ }finally{buttons.forEach(b=>b.disabled=false)}
+}
 function openEditor(point,pos){
  if(!HOST||!drawer)return;
  selectedId=point?.id||'';
@@ -684,7 +744,12 @@ function openEditor(point,pos){
  const form=document.createElement('form');form.className='dcxMapForm';
  const head=text('div','dcxMapEditHead');
  const h=text('div','');h.append(text('small','',point&&!point.preset?'DCX // EDITAR LOCAL':'DCX // NOVO PING'),text('h2','',point?.title||'PUBLICAR PONTO NO MAPA'));
- head.append(h,tab('FECHAR','×',closeEditor));form.append(head);
+ const headActions=text('div','dcxMapEditHeadActions');
+ if(point&&allPoints()[point.id]){
+  headActions.append(tab(point.preset?'REMOVER EXEMPLO':'EXCLUIR PING','×',()=>deletePoint(point),'dcxMapDelete'));
+ }
+ headActions.append(tab('FECHAR','×',closeEditor));
+ head.append(h,headActions);form.append(head);
  function field(title,el){const label=text('label','dcxMapFormField');label.append(text('span','',title),el);form.append(label);return el}
  function input(value,max=90){const e=document.createElement('input');e.value=value||'';e.maxLength=max;return e}
  function select(opts,selected){const el=document.createElement('select');for(const [v,name] of opts){const o=document.createElement('option');o.value=v;o.textContent=name;el.append(o)}el.value=selected;return el}
@@ -706,10 +771,7 @@ function openEditor(point,pos){
  const actions=text('div','dcxMapEditActions');
  const submit=tab(point&&!point.preset?'SALVAR ALTERAÇÕES':'PUBLICAR NO MAPA','✓',()=>{},'dcxMapSubmit');
  submit.type='submit';submit.onclick=null;actions.append(submit);
- if(point&&!point.preset)actions.append(tab('EXCLUIR','×',async()=>{
-  if(!window.confirm('Excluir este marcador do mapa compartilhado?'))return;
-  try{await removePoint(point.id);selectedId='';closeEditor();status('MARCADOR EXCLUÍDO.')}catch(e){status('ERRO AO EXCLUIR: '+e.message,true)}
- },'dcxMapDelete'));
+ // Exclusão fica no topo do editor; sem duplicar controles no rodapé.
  form.append(actions);
  form.addEventListener('submit',async e=>{
   e.preventDefault();submit.disabled=true;
@@ -803,7 +865,7 @@ function start(){
  }
 }
 window.DCX=window.DCX||{};
-window.DCX.Cartography={get points(){return Object.values(allPoints())},selectPoint,zoom,openEditor,
+window.DCX.Cartography={get points(){return Object.values(allPoints())},selectPoint,zoom,openEditor,deletePoint,
  setProvider,getProvider:()=>hybridMap?'hybrid':'fictional',getProviderStatus:()=>({loading:hybridPending,error:hybridError}),
  setLabelMode:mode=>{fictionalMap?.setLabelMode(mode);hybridMap?.setLabelMode(mode)},
  getLabelMode:()=>hybridMap?.getLabelMode?.()||fictionalMap?.getLabelMode?.()||'complete',

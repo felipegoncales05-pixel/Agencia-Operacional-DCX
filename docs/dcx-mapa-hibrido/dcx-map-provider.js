@@ -245,10 +245,14 @@ function create({container,center=TOKYO,zoom=12,host=false,onClick=noop,onSelect
    if(!layers.length)return false;
    const x=e.point.x,y=e.point.y;
    // A forgiving but bounded hit area makes Keymaster points usable on touchpads.
-   const features=map.queryRenderedFeatures([[x-14,y-14],[x+14,y+14]],{layers});
-   const pin=features.find(hit=>hit.layer?.id==='dcx-hybrid-pin-hits'||hit.layer?.id==='dcx-hybrid-pins');
-   const danger=features.find(hit=>hit.layer?.id==='dcx-risk-fill');
-   const hit=pin||danger;
+   const isPin=hit=>hit.layer?.id==='dcx-hybrid-pin-hits'||hit.layer?.id==='dcx-hybrid-pins';
+   // Prefer the exact clicked risk zone to a different marker 14px away.
+   const exact=map.queryRenderedFeatures(e.point,{layers});
+   const exactPin=exact.find(isPin);
+   const exactRisk=exact.find(hit=>hit.layer?.id==='dcx-risk-fill');
+   const nearLayers=['dcx-hybrid-pin-hits','dcx-hybrid-pins'].filter(id=>map.getLayer(id));
+   const nearby=map.queryRenderedFeatures([[x-14,y-14],[x+14,y+14]],{layers:nearLayers});
+   const hit=exactPin||exactRisk||nearby.find(isPin);
    const id=hit?.properties?.id;
    if(!id||!pointsById.has(id))return false;
    const selected=pointsById.get(id);

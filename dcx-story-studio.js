@@ -110,9 +110,14 @@ function playerOperations(){
    '<span class="dcxMissionTileInfo"><small>'+esc(o.code||'MISSÃO DCX')+' // '+esc(statusLabel(o))+'</small><strong>'+esc(o.title)+'</strong><span>'+esc(o.summary||'Acesse os arquivos desta operação.')+'</span></span>'+
    '<span class="dcxMissionTileAction">ABRIR <b aria-hidden="true">›</b></span></button>').join(''):'<div class="dcxStoryEmpty">Nenhuma missão publicada.</div>';
 }
+// Sort only for display: the original room catalog and character IDs stay untouched.
+const characterNameCollator=new Intl.Collator('pt-BR',{sensitivity:'base',numeric:true});
+const sortedCharacters=items=>[...items].sort((a,b)=>
+ characterNameCollator.compare(String(a.name||''),String(b.name||''))||
+ characterNameCollator.compare(String(a.id||''),String(b.id||'')));
 function playerCharacters(){
  const list=$('dcxCharacterGrid');if(!list)return;
- const chars=studio.characters.filter(ch=>ch.status==='published');
+ const chars=sortedCharacters(studio.characters.filter(ch=>ch.status==='published'));
  list.innerHTML=chars.length?chars.map(ch=>{
   const full=String(ch.lore||'').trim().replace(/\s+/g,' ');
   const excerpt=full.length>126?full.slice(0,123).trimEnd()+'…':full;
@@ -258,7 +263,7 @@ function hostOperations(){
 }
 function hostCharacters(){
  const list=$('kmStudioCharacters');if(!list)return;
- list.innerHTML=studio.characters.length?studio.characters.map(ch=>
+ list.innerHTML=studio.characters.length?sortedCharacters(studio.characters).map(ch=>
   '<div class="kmStudioEntry '+(charEditing===ch.id?'selected':'')+'">'+
     '<div class="kmStudioEntryText"><span>PERSONAGEM</span><b>'+esc(ch.name)+'</b><small>'+esc(statusLabel(ch))+'</small></div>'+
     '<div class="kmStudioEntryActions"><button class="kmStudioActionEdit" type="button" data-edit-character="'+esc(ch.id)+'" aria-label="Editar personagem '+esc(ch.name)+'">EDITAR</button>'+

@@ -1,0 +1,33 @@
+/* DCX // Central Universal de Missoes (fase 1) */
+.dcxMissionControl{margin:0 0 24px;padding:clamp(14px,2.4vw,28px);border:1px solid rgba(76,204,234,.3);border-radius:18px;background:linear-gradient(145deg,rgba(11,29,42,.97),rgba(7,14,25,.96));color:#d9eef8;box-shadow:0 16px 50px rgba(0,0,0,.23)}
+.dcxMCHead{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px}
+.dcxMCHead small{font:700 10px/1.4 monospace;letter-spacing:.17em;color:#8dc9e4}
+.dcxMCHead h2{font-size:clamp(19px,2vw,29px);line-height:1.2;margin:5px 0 7px;color:#f2fcff}
+.dcxMCHead p,.dcxMCSection>p{max-width:880px;font-size:13px;line-height:1.65;color:#adcad9;margin:4px 0 12px}
+.dcxMCTabs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 16px}
+.dcxMCTabs button{background:rgba(24,53,69,.7);border:1px solid rgba(98,183,215,.28);color:#b3d8e6;border-radius:10px;padding:10px 15px;font-weight:800;letter-spacing:.06em;cursor:pointer}
+.dcxMCTabs button.active{background:rgba(63,160,197,.23);border-color:#54caed;color:#fff}
+.dcxMCList{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,265px),1fr));gap:12px}
+.dcxMCCard,.dcxMCSection{border:1px solid rgba(102,183,213,.22);border-radius:13px;background:rgba(9,29,43,.68);padding:17px;margin:0 0 13px}
+.dcxMCCard small,.dcxMCMeta,.dcxMCPrep small{display:block;color:#91becf;font:700 11px/1.5 monospace}
+.dcxMCCard h3{margin:7px 0;color:#f0fcff;font-size:17px}
+.dcxMCCard p{color:#b5d0de;font-size:13px;line-height:1.6}
+.dcxMCCard .btn{margin-top:10px;max-width:100%}
+.dcxMCSection h3{margin:0 0 7px;color:#9ddff2;font-size:15px}
+.dcxMCTeamCheck{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:8px;margin:12px 0}
+.dcxMCTeamCheck label{display:flex;align-items:center;gap:9px;padding:11px;border:1px solid rgba(101,180,215,.22);border-radius:10px;color:#e1f2f9;background:rgba(4,17,28,.5);font-size:13px;cursor:pointer}
+.dcxMCTeamCheck input{width:17px;height:17px;accent-color:#54c9ef}
+.dcxMCTeamBlock{border-top:1px solid rgba(102,183,213,.22);padding:14px 0}
+.dcxMCTeamBlock h4{color:#e6f7ff;margin:0 0 12px}
+.dcxMCPrep{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:11px 0;border-top:1px solid rgba(102,183,213,.13)}
+.dcxMCPrep b{font-size:13px;color:#f0f9fb}
+.dcxMCPrep .btn{flex-shrink:0}
+.dcxMCPill{border:1px solid rgba(93,198,169,.38);color:#9fe7ca;background:rgba(38,120,94,.12);border-radius:999px;padding:5px 10px;font:700 10px/1.5 monospace;display:inline-block}
+.dcxMCPill.warn{border-color:rgba(238,167,76,.4);color:#ffdb9e;background:rgba(238,167,76,.12)}
+.dcxMCWarning{color:#ffce92!important}
+.dcxMCStatus{min-height:18px;margin:12px 0 0;color:#9de1ef;font:700 12px/1.5 monospace}
+.dcxMCEmpty{padding:15px;color:#b8d1dc;font-size:13px;line-height:1.6}
+.dcxMissionLegacyEditor{margin:0 0 22px;border:1px solid rgba(104,169,193,.25);border-radius:13px;padding:12px 16px;background:rgba(8,24,35,.65)}
+.dcxMissionLegacyEditor>summary{cursor:pointer;color:#b4e6f3;letter-spacing:.08em;font:800 12px/1.6 monospace;padding:8px 0}
+.dcxMissionLegacyEditor[open]>summary{margin-bottom:20px}
+@media(max-width:580px){.dcxMissionControl{padding:12px}.dcxMCTabs button{flex:1;font-size:11px;padding:10px 6px}.dcxMCPrep{align-items:flex-start;flex-direction:column}.dcxMCPrep .btn{width:100%}}

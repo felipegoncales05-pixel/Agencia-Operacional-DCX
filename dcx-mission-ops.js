@@ -213,6 +213,8 @@ async function bindUser(user,player){
  if(!/^[a-zA-Z0-9_-]{1,128}$/.test(user)||!operators[player])throw Error('Selecione um operador válido.');
  const next={...data,bindings:{...(data.bindings||{}),[user]:{playerId:player,at:Date.now(),by:uid()}}};
  await db().ref(path('missionOps/bindings/'+user)).set(next.bindings[user]);
+ const summary=makeView(player);const reports=Object.values(summary.missions||{});
+ await db().ref(path('missionNotices/'+user+'/'+id())).set({missionTitle:'DCX // INTEGRAÇÃO',teamName:'CENTRAL',text:'Briefing de integração: '+reports.length+' participação(ões) autorizada(s). Consulte as missões para acompanhar a situação atual.',createdAt:Date.now()});
  schedulePublish();
 }
 async function grantAgent(player,t,missionId,full,revoke){
@@ -265,7 +267,10 @@ function form(){
     await generalOutcome(mission,val('overallResult'),text('overallInternal'),text('overallPublic'),selected,overrides);
    }
    if(action==='bind')await bindUser(val('bindUid'),val('bindPlayer'));
-   if(action==='revokeBinding')await db().ref(path('missionOps/bindings/'+b.dataset.moUid)).remove();
+   if(action==='revokeBinding'){
+    await db().ref(path('missionOps/bindings/'+b.dataset.moUid)).remove();
+    await db().ref(path('missionViews/'+b.dataset.moUid)).remove();
+   }
    if(action==='grant')await grantAgent(val('grantPlayer'),val('grantTeam'),mission,checked('grantFull'),false);
    if(action==='revokeGrant')await grantAgent(b.dataset.moPlayer,t,mission,false,true);
    if(action==='evaluate'){
@@ -392,10 +397,19 @@ function bind(){
   listeners.push(ref);
  };
  if(host){
+  watch('missionNotices/'+user,v=>updatePlayerNotice(v));
+  watch('missionNoticeReads/'+user,v=>{reads=v;updateNotices()});
   watch('missionOps',v=>{data={...empty(),...v};renderHost();schedulePublish()});
   watch('operators',v=>{operators=v;renderHost();schedulePublish()});
   watch('teams',v=>{teams=v;renderHost();schedulePublish()});
-  const req=database.ref('rooms/'+r+'/requests');req.on('value',s=>{requests=s.val()||{};renderHost();schedulePublish()});listeners.push(req);
+  let requestBaseline=false,knownRequests=new Set();
+  const req=database.ref('rooms/'+r+'/requests');req.on('value',snap=>{
+   requests=snap.val()||{};
+   const updated=new Set(Object.entries(requests).flatMap(([owner,v])=>Object.entries(v?.missionActions||{}).filter(([,a])=>a?.type==='prepAdvanced').map(([key])=>owner+'_'+key)));
+   if(requestBaseline){for(const key of updated){if(knownRequests.has(key))continue;
+    database.ref('rooms/'+r+'/dcx/missionNotices/'+user+'/req_'+key).set({missionTitle:'CENTRAL DE MISSÕES',teamName:'AVALIAÇÃO',text:'Nova solicitação de preparação aguardando decisão.',createdAt:Date.now()}).catch(e=>console.warn(e))}}
+   knownRequests=updated;requestBaseline=true;renderHost();schedulePublish();
+  });listeners.push(req);
  }else{
   watch('missionViews/'+user,v=>{playerView=v;playerPanels();updateViewer()});
   watch('missionNotices/'+user,v=>updatePlayerNotice(v));

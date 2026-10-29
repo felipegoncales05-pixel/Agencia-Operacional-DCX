@@ -171,7 +171,10 @@
   .dcxFieldTool.dcxModuleCard{grid-template-columns:32px minmax(0,1fr)!important}
   .dcxFieldTool .dcxModuleState{display:none!important}
   .dcxAtlasSides{grid-template-columns:minmax(0,1fr)!important}
-  .dcxAtlasLocation{display:none!important}
+  .dcxAtlasLocation{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+    align-items:center;gap:5px!important;padding:8px!important}
+  .dcxAtlasLocation .dcxAtlasScope{grid-column:1/-1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+  .dcxAtlasLocation .dcxAtlasPlace{font-size:13px!important}
   .dcxAtlasDirectory{max-height:178px!important}
   .dcxAtlasDirectoryList{max-height:105px!important}
   .dcxAtlasActive .dcxMapField{height:clamp(320px,57dvh,520px)}

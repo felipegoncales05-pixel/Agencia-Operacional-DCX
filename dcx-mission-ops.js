@@ -186,10 +186,11 @@ async function mutate(missionId,event,fn){
  if(!result.committed||!changed)throw Error('Alteração não concluída.');
  data=result.snapshot?.val?.()||data;renderHost();schedulePublish();
 }
-function patchTeam(mission,t,change){
- return mutate(mission,'team.'+change,s=>{s.teams=s.teams||{};const old=s.teams[t]||{state:'active',preps:{}};const preps=old.preps||{};
+async function patchTeam(mission,t,change){
+ await mutate(mission,'team.'+change,s=>{s.teams=s.teams||{};const old=s.teams[t]||{state:'active',preps:{}};const preps=old.preps||{};
    if(change==='reactivate')Object.values(preps).forEach(p=>{if(p.state==='suspended')p.state='returned'});
    s.teams[t]={...old,state:change==='reactivate'?'active':change==='observe'?'observing':'completed',changedAt:Date.now(),preps};return s});
+ await pushNotice(mission,t,change==='observe'?'Sua equipe passou ao modo observador. Acompanhamento em somente leitura.':change==='reactivate'?'Sua equipe foi reintegrada à operação.':'Sua equipe foi concluída pelo Keymaster.');
 }
 async function syncAssignments(mission,previous,current){
  const removed=previous.filter(t=>!current.includes(t));
@@ -428,7 +429,7 @@ function bind(){
  if(host){
   watch('missionNotices/'+user,v=>updatePlayerNotice(v));
   watch('missionNoticeReads/'+user,v=>{reads=v;updateNotices()});
-  watch('missionOps',v=>{data={...empty(),...v};renderHost();schedulePublish()});
+  watch('missionOps',v=>{data={...empty(),...v};renderHost();schedulePublish();syncPending().catch(e=>console.warn('[DCX Mission Ops] pendências',e))});
   watch('operators',v=>{operators=v;renderHost();schedulePublish()});
   watch('teams',v=>{teams=v;renderHost();schedulePublish()});
   let requestBaseline=false,knownRequests=new Set();
@@ -449,7 +450,7 @@ function bind(){
 }
 function init(){
  playerPanels();
- window.OPH?.Realtime?.onState?.(()=>{bind();if(host)renderHost()});
+ window.OPH?.Realtime?.onState?.(()=>{bind();if(host){renderHost();schedulePublish()}});
  window.addEventListener('dcx:mission-control-render',()=>{if(host)renderHost()});
  bind();
 }

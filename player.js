@@ -503,7 +503,8 @@ console.info("[DCX OS] A2.2 AUTH ISOLATION // PLAYER // YUMIYA CORE FINAL-11");
     await OPH.Realtime.sendRequest({type:"clue",clueId,nickname:localStorage.getItem("oph-name")||"Jogador"});
   }
   function switchTab(tab){document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active",b.dataset.tab===tab));document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));$(tab).classList.add("active")}
-  async function connect(){
+  async function connect(options={}){
+    if(window.DCX?.Lobby&&options.fromLobby!==true){window.DCX.Lobby.open();return false;}
     playerConnectedAt=Date.now();queuedEvent=null;
     $("eventOverlay")?.classList.remove("show");
     room=$("room").value.trim().toUpperCase()||"FRIA-01";localStorage.setItem("oph-room",room);history.replaceState(null,"",`?room=${encodeURIComponent(room)}`);
@@ -518,11 +519,12 @@ console.info("[DCX OS] A2.2 AUTH ISOLATION // PLAYER // YUMIYA CORE FINAL-11");
     try{
       const r=await OPH.Realtime.connect({roomId:room,asHost:false});connected=true;playerUid=r.uid||OPH.Realtime.getUid();
       $("conn").classList.add("on");$("mode").textContent=r.mode.toUpperCase();await publishYumiyaIdentity();await window.DCX?.Player?.init?.(true);
+      if(window.DCX?.Lobby?.hasAccessError?.())return false;
       const identity=getYumiyaIdentity();
       window.DCXWelcome?.show?.({name:identity?.name||typedName||"AGENTE",playerId:identity?.playerId||"",room});
-      toast("CONECTADO À SALA "+room);renderYumiya()
+      toast("CONECTADO À SALA "+room);renderYumiya();return true;
     }
-    catch(e){toast("FALHA AO CONECTAR");console.error(e)}
+    catch(e){toast("FALHA AO CONECTAR");console.error(e);return false;}
   }
   OPH.Realtime.onState(s=>{
     state=mergeDefaults(s);

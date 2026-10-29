@@ -2,6 +2,7 @@
   "name": "agencia-operacional-dcx",
   "private": true,
   "scripts": {
+    "test:lobby": "node tests/player-lobby.cjs",
     "icons:export": "node scripts/export-signal-icons.cjs",
     "test:visual-preferences": "node tests/visual-preferences.cjs",
     "test:visual": "node tests/visual-system.cjs"

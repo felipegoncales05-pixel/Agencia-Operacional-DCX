@@ -1,0 +1,41 @@
+/* DCX // Mission Ops - expansao responsiva da Central */
+.dcxMissionOpsHost,.dcxMissionPlayerOps{margin:18px 0;border-top:1px solid rgba(98,186,219,.26);padding:16px 0;color:#d5effb}
+.dcxMissionOpsHost{display:grid;gap:14px;min-width:0}
+.dcxMissionOpsHost h3,.dcxMissionPlayerOps h2{font-size:16px;color:#e3faff;margin:0 0 10px}
+.dcxMOPHeader{padding:12px 16px;border:1px solid rgba(101,202,234,.3);border-radius:12px;background:rgba(7,34,51,.75)}
+.dcxMOPHeader h2,.dcxMOPHeader h3{font-size:19px;color:#e9faff;margin:0 0 6px}
+.dcxMOPHeader small{color:#9bd4ec;font:700 10px/1.5 monospace;letter-spacing:.12em}
+.dcxMOPHeader p,.dcxMOPCard p{font-size:13px;color:#adc9d8;line-height:1.6;margin:7px 0}
+.dcxMOPSection,.dcxMOPCard,.dcxMOEditor{padding:15px;border:1px solid rgba(100,175,210,.26);border-radius:12px;background:rgba(7,24,39,.74);margin:10px 0}
+.dcxMOPSection>h3{font-size:14px;letter-spacing:.04em}
+.dcxMOPCard small,.dcxMOPPrep>span{color:#8cbed4;font:700 11px/1.6 monospace}
+.dcxMOPCard b{color:#edf9fc}
+.dcxMOPSection label,.dcxMOEditor label{display:grid;gap:6px;margin:10px 0;font:700 12px/1.5 monospace;color:#b6dbec}
+.dcxMOPSection label:has(input[type=checkbox]),.dcxMOEditor label:has(input[type=checkbox]){display:flex;align-items:center;gap:8px}
+.dcxMOPSection input:not([type=checkbox]),.dcxMOPSection select,.dcxMOPSection textarea,.dcxMOEditor input,.dcxMOEditor select,.dcxMOEditor textarea,.dcxMOPRow input,.dcxMOPRow select{box-sizing:border-box;max-width:100%;min-width:0;background:#081825;color:#ebfaff;border:1px solid #315b70;border-radius:8px;padding:9px;font:inherit}
+.dcxMOPSection textarea,.dcxMOEditor textarea{resize:vertical;min-height:74px;width:100%}
+.dcxMOPRow{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin:8px 0;padding:8px 0;border-top:1px solid rgba(86,153,181,.2)}
+.dcxMOPRow>b{min-width:110px;font-size:12px}
+.dcxMOPRow>input{flex:1}
+.dcxMOPSection .btn,.dcxMOEditor .btn{min-height:34px;margin:4px 5px 4px 0}
+.dcxMOPPrep{margin:8px 0;padding:12px;border:1px solid rgba(104,181,218,.22);border-radius:8px}
+.dcxMOPPrep b{display:inline-block;margin-right:10px}
+.dcxMOPPrep p{margin:8px 0}
+.dcxMOPPrep button{font:700 11px/1.3 monospace;border:1px solid #62adce;background:#103248;color:#e7f7ff;border-radius:8px;padding:9px 12px;cursor:pointer}
+.dcxMOPPrep button:hover{background:#17465f}
+.dcxMOPWarn{color:#ffd59d!important;font-size:12px!important;line-height:1.5}
+.dcxMOPReport{padding:13px;margin:12px 0;border:1px solid rgba(83,173,141,.43);border-radius:10px;background:rgba(17,55,49,.35)}
+.dcxMOPReport b{color:#9ce7c4}
+.dcxMOPReportTeam{border:1px solid rgba(82,160,197,.25);border-radius:9px;padding:10px}
+.dcxMOPReportTeam textarea{width:100%;margin:6px 0 0}
+.dcxMOPNotifications{position:relative;display:inline-flex;align-items:center;margin-left:10px}
+.dcxMOPBell{cursor:pointer;color:#e4f8ff;background:#102b3a;border:1px solid #37728c;border-radius:12px;padding:9px 13px;white-space:nowrap}
+.dcxMOPBell span{color:#9adcf7;font-weight:800}
+.dcxMOPInbox{position:absolute;z-index:900;right:0;top:calc(100% + 10px);width:min(360px,88vw);max-height:380px;overflow:auto;background:#091b2b;color:#eafaff;border:1px solid #3a718b;border-radius:12px;box-shadow:0 15px 40px rgba(0,0,0,.65);padding:14px}
+.dcxMOPInbox h3{font:800 12px/1.4 monospace;letter-spacing:.1em}
+.dcxMOPInbox article{border-top:1px solid rgba(110,181,205,.22);padding:10px 0}
+.dcxMOPInbox article small,.dcxMOPInbox article span{font:700 10px monospace;color:#9ac4d6}
+.dcxMOPInbox article p{font-size:12px;line-height:1.5;margin:7px 0}
+.dcxMOPInbox button{background:#173a50;border:1px solid #417c94;border-radius:7px;padding:6px;color:#ecf9ff;cursor:pointer}
+.dcxMOPToast{position:fixed;bottom:80px;right:20px;z-index:99999;width:min(310px,88vw);padding:14px;border-radius:12px;background:#113a4c;border:1px solid #60c7dd;color:#e9fdff;box-shadow:0 15px 40px rgba(0,0,0,.5);font:700 12px/1.5 monospace}
+@media(max-width:700px){.dcxMOPRow{align-items:stretch;flex-direction:column}.dcxMOPRow>*{width:100%}.dcxMOPNotifications{margin:8px 0}.dcxMOPInbox{right:auto;left:0}}

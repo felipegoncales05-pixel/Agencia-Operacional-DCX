@@ -69,7 +69,7 @@ function makeView(playerId){
    const grant=operators?.[playerId]?.narrative?.teamId===t?null:data.grants?.[playerId]?.[t];
    if(grant?.mode==='historical'){
     packet=grant.snapshots?.[o.id];if(!packet)continue;
-    packet=JSON.parse(JSON.stringify(packet));packet.readOnly=true;packet.state='historical';
+    packet=JSON.parse(JSON.stringify(packet));packet.readOnly=true;packet.state='historical';Object.values(packet.preps||{}).forEach(p=>p.interaction='read');
    }else if(grant?.mode==='following'){
     packet.readOnly=true;packet.state='observing';
     Object.values(packet.preps||{}).forEach(p=>p.interaction='read');
@@ -95,7 +95,7 @@ function updateViewer(){
    '<p>'+E(m.summary)+'</p>'+(m.readOnly?'<p class="dcxMOPWarn">SOMENTE LEITURA · ATUALIZAÇÕES AUTORIZADAS</p>':'')+
    Object.values(m.preps||{}).map(p=>'<div class="dcxMOPPrep"><b>'+E(p.title)+'</b><span>'+E(p.state==='hidden'?'OBJETIVO REVELADO':p.state.toUpperCase())+'</span><p>'+E(p.description)+'</p>'+
     (p.observation?'<small>DEVOLUÇÃO: '+E(p.observation)+'</small>':'')+
-    (p.interaction==='request'&&!['confirmed','pending','suspended'].includes(p.state)?'<button data-mop-ask="'+E(p.id)+'" data-mop-mission="'+E(m.id)+'" data-mop-team="'+E(teamKey)+'">SOLICITAR APROVAÇÃO</button>':'')+
+    (p.interaction==='request'&&!m.readOnly&&!['confirmed','pending','suspended'].includes(p.state)?'<button data-mop-ask="'+E(p.id)+'" data-mop-mission="'+E(m.id)+'" data-mop-team="'+E(teamKey)+'">SOLICITAR APROVAÇÃO</button>':'')+
     '</div>').join('')+
    (m.report?'<div class="dcxMOPReport"><b>DESFECHO DA EQUIPE: '+E(m.report.outcome)+'</b><p>'+E(m.report.text)+'</p></div>':'')+
    (m.generalReport?'<div class="dcxMOPReport"><b>RESULTADO GERAL: '+E(m.generalReport.outcome)+'</b><p>'+E(m.generalReport.text)+'</p></div>':'')+'</article>';

@@ -67,7 +67,9 @@
  }
  function requestIsAuthorized(a){
   const t=requestTeam(a),op=catalog().find(v=>v.id===a.missionId),p=findPrep(op,a.value);
-  return !!(a.type==='prep'&&t&&p?.interaction==='request'&&isAssigned(a.missionId,t)&&a.teamId===t);
+  const observer=window.DCX?.MissionOps?.getTeamState?.(a.missionId,t)==='observing';
+  const beforeObserver=observer&&Number(a.createdAt||0)>0&&Number(a.createdAt)<=Number(window.DCX?.MissionOps?.getTeamChangedAt?.(a.missionId,t)||0);
+  return !!(a.type==='prep'&&t&&p?.interaction==='request'&&(isAssigned(a.missionId,t)||beforeObserver)&&a.teamId===t);
  }
  function statusText(s){return s.confirmed?(s.legacy?'CONFIRMADA · LEGADO':'CONFIRMADA'):s.state==='analysis'?'EM ANÁLISE':'DISPONÍVEL'}
  function message(s){const node=$('dcxMissionControlStatus');if(node)node.textContent=s}
@@ -97,17 +99,19 @@
  }
  async function saveAssignments(missionId,teamIds){
   const op=catalog().find(v=>v.id===missionId);if(!op)return;
+  const oldTeamIds=Object.keys(assignment(missionId)?.teams||{});
   await commit(next=>{
    next.assignments=next.assignments||{};
    next.assignments[missionId]={configured:true,teams:Object.fromEntries(teamIds.map(t=>[t,true])),updatedAt:Date.now()};
    return next;
   });
+  if(window.DCX?.MissionOps?.syncAssignments)await window.DCX.MissionOps.syncAssignments(missionId,oldTeamIds,teamIds);
   message('EQUIPES DA OPERAÇÃO ATUALIZADAS.');
   render();
  }
  async function confirm(missionId,t,prepId,requestOwner){
   const op=catalog().find(v=>v.id===missionId),team=teams?.[t],p=findPrep(op,prepId);
-  if(!op||!team||!p||!isAssigned(missionId,t))throw Error('Missão, equipe ou preparação não autorizada.');
+  if(!op||!team||!p||!(isAssigned(missionId,t)||['observing','completed'].includes(window.DCX?.MissionOps?.getTeamState?.(missionId,t))))throw Error('Missão, equipe ou preparação não autorizada.');
   if(!confirmDialog('Confirmar "'+p.title+'" para '+(team.name||t)+'?'))return false;
   await commit(next=>{
    next.progress=next.progress||{};

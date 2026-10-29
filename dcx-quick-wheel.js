@@ -59,6 +59,11 @@ function build(){
    const key=svgEl('tspan',{x:pos.x,dy:'-7',class:'qwKey'});key.textContent=item.key.toUpperCase();
    const lab=svgEl('tspan',{x:pos.x,dy:'22',class:'qwLabel'});lab.textContent=item.label;
    text.append(key,lab);g.append(path,text);
+   const signalNames={'GOLPE':'mission','DCX':'core','YUMIYA':'yumiya','CREDENCIAL':'credential','VOTAÇÕES':'polls','NOTAS':'notes','EQUIPE':'team','HANDOUTS':'handouts','CONFIG':'settings','FOCUS':'visual','MASTER':'keymaster','OPERAÇÃO':'mission','PLAYERS':'character','EQUIPES':'team','CREDENCIAIS':'credential','YUYU // IA':'yumiya'};
+   if(window.DCX?.Icons){
+     const signal=svgEl('g',{class:'qwSignalIcon',transform:`translate(${pos.x-10},${pos.y-45})`});
+     signal.innerHTML=window.DCX.Icons.icon(signalNames[item.label]||'core');g.append(signal);
+   }
    g.addEventListener('pointerenter',()=>{if(open)setSelected(item)});
    g.addEventListener('pointerleave',()=>{if(open&&selected===item)setSelected(null)});
    g.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();execute(item)});
@@ -99,3 +104,4 @@ function init(){build();annotateGuide();document.addEventListener('keydown',keyd
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 window.DCX=window.DCX||{};window.DCX.QuickWheel={open:show,close:()=>close(false)};
 })();
+

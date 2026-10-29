@@ -254,6 +254,6 @@
   render();
  }
  window.DCX=window.DCX||{};
- window.DCX.MissionControl={canSeeMission,getStatus,canRequest,getTeamId:teamId,isAssigned,confirmFromRequest};
+ window.DCX.MissionControl={canSeeMission,getStatus,canRequest,getTeamId:teamId,isAssigned,confirmFromRequest,refreshPlayer(){if(!host){window.DCX?.StoryStudio?.refreshPlayer?.();window.OPHPlayer?.refreshPreps?.()}}};
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();

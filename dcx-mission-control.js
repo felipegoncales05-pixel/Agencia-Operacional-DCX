@@ -6,8 +6,15 @@
  const host=/\/keymaster\.html$/i.test(location.pathname);
  const $=id=>document.getElementById(id);
  const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- let control={},requests={},teams={},operators={},tab='evaluations',selected='',boundRoom='',liveRefs=[],ownPending={};
+ let legacyState={},control={},requests={},teams={},operators={},tab='evaluations',selected='',boundRoom='',liveRefs=[],ownPending={};
  const catalog=()=>window.DCX?.StoryStudio?.operations||[];
+ function catalogPreps(op){
+  const original=op?.preparations||[];
+  if(op?.id!=='operacao-h')return original;
+  const approach=legacyState?.approaches?.selected||'con';
+  const legacy=(window.OPH?.PREP_DEFS?.[approach]||[]).map(([key,title,description])=>({id:'legacy:'+approach+':'+key,title,description,interaction:'request',legacyApproach:approach,legacyKey:key}));
+  return [...original,...legacy];
+ }
  const room=()=>window.OPH?.Realtime?.getRoom?.()||'';
  const db=()=>window.OPH?.Realtime?.getFirebaseDatabase?.();
  const firebaseMode=()=>window.OPH?.Realtime?.getMode?.()==='firebase';
@@ -26,19 +33,19 @@
   return !!t&&(!a?.configured||!!a.teams?.[t]);
  }
  function getStatus(missionId,team,prepId){
-  const op=catalog().find(o=>o.id===missionId),p=op?.preparations?.find(p=>p.id===prepId);
+  const op=catalog().find(o=>o.id===missionId),p=catalogPreps(op).find(p=>p.id===prepId);
   if(!p)return {state:'unknown',confirmed:false};
   const record=control?.progress?.[missionId]?.[team]?.[prepId];
   if(record?.state==='confirmed')return {state:'confirmed',confirmed:true,legacy:false,updatedAt:record.updatedAt};
   if(record?.state==='reopened')return {state:'available',confirmed:false,legacy:false};
-  if(p.done)return {state:'confirmed',confirmed:true,legacy:true};
+  if(p.done||p.legacyApproach&&legacyState?.preps?.[p.legacyApproach]?.[p.legacyKey])return {state:'confirmed',confirmed:true,legacy:true};
   const pending=host?pendingTasks().some(a=>a.type==='prep'&&a.missionId===missionId&&a.value===prepId&&requestTeam(a)===team):
    Object.values(ownPending||{}).some(a=>a.type==='prep'&&a.missionId===missionId&&a.value===prepId&&a.teamId===team);
   return {state:pending?'analysis':'available',confirmed:false,legacy:false};
  }
  function canRequest(missionId,prepId){
   const t=teamId(),op=catalog().find(o=>o.id===missionId&&o.status==='published');
-  const p=op?.preparations?.find(p=>p.id===prepId);
+  const p=catalogPreps(op).find(p=>p.id===prepId);
   return !!(t&&op&&canSeeMission(missionId)&&isAssigned(missionId,t)&&p?.interaction==='request'&&!getStatus(missionId,t,prepId).confirmed&&!getStatus(missionId,t,prepId).state.includes('analysis'));
  }
  function pendingTasks(){
@@ -49,7 +56,7 @@
   return String(operators?.[player]?.narrative?.teamId||'');
  }
  function requestIsAuthorized(a){
-  const t=requestTeam(a),op=catalog().find(v=>v.id===a.missionId),p=op?.preparations?.find(v=>v.id===a.value);
+  const t=requestTeam(a),op=catalog().find(v=>v.id===a.missionId),p=catalogPreps(op).find(v=>v.id===a.value);
   return !!(a.type==='prep'&&t&&p?.interaction==='request'&&isAssigned(a.missionId,t)&&(!a.teamId||a.teamId===t));
  }
  function statusText(s){return s.confirmed?(s.legacy?'CONFIRMADA · LEGADO':'CONFIRMADA'):s.state==='analysis'?'EM ANÁLISE':'DISPONÍVEL'}
@@ -80,7 +87,7 @@
   render();
  }
  async function confirm(missionId,t,prepId,requestOwner){
-  const op=catalog().find(v=>v.id===missionId),team=teams?.[t],p=op?.preparations?.find(v=>v.id===prepId);
+  const op=catalog().find(v=>v.id===missionId),team=teams?.[t],p=catalogPreps(op).find(v=>v.id===prepId);
   if(!op||!team||!p||!isAssigned(missionId,t))throw Error('Missão, equipe ou preparação não autorizada.');
   if(!confirmDialog('Confirmar "'+p.title+'" para '+(team.name||t)+'?'))return false;
   await commit(next=>{
@@ -162,7 +169,7 @@
   const list=pendingTasks().filter(a=>a.type==='prep');
   if(!list.length)return '<p class="dcxMCEmpty">Nenhuma preparação aguardando avaliação. Escolhas narrativas continuam no editor original, abaixo.</p>';
   return '<div class="dcxMCList">'+list.map(a=>{
-   const op=catalog().find(o=>o.id===a.missionId),p=op?.preparations?.find(p=>p.id===a.value);
+   const op=catalog().find(o=>o.id===a.missionId),p=catalogPreps(op).find(p=>p.id===a.value);
    const t=requestTeam(a),name=teams?.[t]?.name,valid=requestIsAuthorized(a);
    const status=valid?getStatus(a.missionId,t,a.value):null;
    return '<article class="dcxMCCard"><small>'+esc(op?.title||a.missionTitle||'MISSÃO')+' · '+esc(name||'EQUIPE NÃO IDENTIFICADA')+'</small><h3>'+esc(p?.title||'PREPARAÇÃO NÃO ENCONTRADA')+'</h3><p>Solicitação de um integrante da equipe.</p>'+
@@ -181,7 +188,7 @@
    '</section><section class="dcxMCSection"><h3>PREPARAÇÕES POR EQUIPE</h3>'+
    (all.filter(([id])=>isAssigned(op.id,id)).map(([id,t])=>
      '<div class="dcxMCTeamBlock"><h4>'+esc(t.name||id)+'</h4>'+
-     (op.preparations.length?op.preparations.map(p=>{
+     (catalogPreps(op).length?catalogPreps(op).map(p=>{
        const s=getStatus(op.id,id,p.id);
        return '<div class="dcxMCPrep"><div><b>'+esc(p.title)+'</b><small>'+esc(statusText(s))+'</small></div>'+
        (!s.confirmed?'<button class="btn" type="button" data-mc-confirm="'+esc(p.id)+'" data-mc-mission="'+esc(op.id)+'" data-mc-team-id="'+esc(id)+'">CONFIRMAR</button>':'<span class="dcxMCPill">✓</span>')+'</div>';
@@ -197,7 +204,7 @@
    const a=assignment(op.id),count=Object.keys(a?.teams||{}).length;
    return '<article class="dcxMCCard"><small>'+esc(op.code||'DCX')+' · '+(op.status==='draft'?'RASCUNHO':'PUBLICADA')+'</small>'+
     '<h3>'+esc(op.title)+'</h3><p>'+esc(op.summary||'Sem descrição.')+'</p>'+
-    '<div class="dcxMCMeta">'+(a?.configured?count+' equipe(s) designada(s)':'DESIGNAÇÃO LEGADA')+' · '+op.preparations.length+' preparações</div>'+
+    '<div class="dcxMCMeta">'+(a?.configured?count+' equipe(s) designada(s)':'DESIGNAÇÃO LEGADA')+' · '+catalogPreps(op).length+' preparações</div>'+
     '<button class="btn" type="button" data-mc-open="'+esc(op.id)+'">ABRIR CONTROLE</button></article>';
   }).join('')+'</div>';
  }
@@ -214,23 +221,24 @@
   liveRefs.forEach(ref=>{try{ref.off()}catch(e){}});
   liveRefs=[];boundRoom=r;teams={};operators={};ownPending={};
   const root='rooms/'+r+'/dcx/';
-  [['teams',v=>{teams=v||{};render();}],['operators',v=>{operators=v||{};render();window.DCX?.StoryStudio?.refreshPlayer?.();}]].forEach(([p,cb])=>{
+  [['teams',v=>{teams=v||{};render();}],['operators',v=>{operators=v||{};render();window.DCX?.StoryStudio?.refreshPlayer?.();window.OPHPlayer?.refreshPreps?.();}]].forEach(([p,cb])=>{
    const ref=database.ref(root+p);
    ref.on('value',snap=>cb(snap.val()||{}),err=>console.warn('[DCX Mission Control] '+p,err));
    liveRefs.push(ref);
   });
   if(!host&&uid()){
    const ref=database.ref('rooms/'+r+'/requests/'+uid()+'/missionActions');
-   ref.on('value',snap=>{ownPending=snap.val()||{};window.DCX?.StoryStudio?.refreshPlayer?.();},err=>console.warn('[DCX Mission Control] solicitações',err));
+   ref.on('value',snap=>{ownPending=snap.val()||{};window.DCX?.StoryStudio?.refreshPlayer?.();window.OPHPlayer?.refreshPreps?.();},err=>console.warn('[DCX Mission Control] solicitações',err));
    liveRefs.push(ref);
   }
  }
  function init(){
   if(host)inject();
   window.OPH?.Realtime?.onState?.(state=>{
+   legacyState=state||{};
    control=state?.missionControl&&typeof state.missionControl==='object'?state.missionControl:{};
    setupListeners();render();
-   if(!host)window.DCX?.StoryStudio?.refreshPlayer?.();
+   if(!host){window.DCX?.StoryStudio?.refreshPlayer?.();window.OPHPlayer?.refreshPreps?.();window.DCX?.MissionBuilder?.refreshOpenModule?.()}
   });
   if(host)window.OPH?.Realtime?.onRequests?.(r=>{requests=r||{};render()});
   render();

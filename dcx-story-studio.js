@@ -381,9 +381,13 @@ async function saveOperation(){
   objectives:String($('kmStudioOpObjectives')?.value||'').split('\n').map(x=>clean(x,240)).filter(Boolean),
   preparations:readPrepInputs().filter(p=>p.title),
   modules:window.DCX?.MissionBuilder?.readModules?.()||[]};
- const operations=studio.operations.some(v=>v.id===item.id)
-  ?studio.operations.map(v=>v.id===item.id?item:v)
-  :[...studio.operations,item];
+ const creating=!studio.operations.some(v=>v.id===item.id);
+ const operations=creating?[...studio.operations,item]:studio.operations.map(v=>v.id===item.id?item:v);
+ // Restringir antes de publicar, evitando mostrar uma nova missão a toda a sala.
+ if(creating&&window.DCX?.MissionControl?.restrictNewMission){
+  try{await window.DCX.MissionControl.restrictNewMission(item.id)}
+  catch(err){console.error('[DCX Mission Control] nova missão',err);notify('FALHA NA DESIGNAÇÃO INICIAL — MISSÃO NÃO PUBLICADA');return}
+ }
  if(await publish({...studio,operations},'MISSÃO SALVA E SINCRONIZADA')){
   opEditing=item.id;opDirty=false;renderHost();
  }

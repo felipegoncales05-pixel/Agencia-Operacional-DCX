@@ -131,7 +131,7 @@ console.info("[DCX OS] YUMIYA REACTION SYNC V2 // CLEAR EPOCH FIX");
     let changed=false;items.forEach(item=>{if(appendIncomingCanonical(item))changed=true});
     if(!changed)return;
     timelineSyncing=true;
-    try{await OPH.Realtime.patchState(legacyStatePatch())}catch(e){console.error("Falha ao sincronizar timeline canônica",e)}finally{timelineSyncing=false}
+    try{await (OPH.Realtime.getMode()==='firebase'?OPH.Realtime.patchState(legacyStatePatch()):OPH.Realtime.setState(state))}catch(e){console.error("Falha ao sincronizar timeline canônica",e)}finally{timelineSyncing=false}
   }
   function yumiyaControlBusy(){
     const a=document.activeElement;
@@ -146,7 +146,7 @@ console.info("[DCX OS] YUMIYA REACTION SYNC V2 // CLEAR EPOCH FIX");
     renderDeferred=false;renderRequests();renderChat();renderOperatorProfiles();
   }
   function legacyStatePatch(){const next={...state};delete next.missionControl;return next}
-  async function save(){await OPH.Realtime.patchState(legacyStatePatch());safeRender()}
+  async function save(){await (OPH.Realtime.getMode()==='firebase'?OPH.Realtime.patchState(legacyStatePatch()):OPH.Realtime.setState(state));safeRender()}
   function renderVisibility(){
     const defs=[["government","Contexto político"],["h01","H-01"],["approaches","Abordagens"],["preps","Preparações"],["n02","N-02"],["protocol","Protocolo"],["emergencySim","Simulador H-01"],["comms","Yumiya // Remote"]];
     $("visibility").innerHTML=defs.map(d=>`<label class="toggle"><span>${d[1]}</span><input type="checkbox" ${state.visible[d[0]]?'checked':''} onchange="KM.toggleVisible('${d[0]}',this.checked)"></label>`).join("");

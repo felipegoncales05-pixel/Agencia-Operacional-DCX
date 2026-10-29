@@ -1,56 +1,86 @@
-# Central Universal de Missões — implementação por etapas
+# Central Universal de Missões DCX — Entrega integrada das três etapas
 
-## Objetivo
+## Estado da implementação
 
-Transformar o gerenciamento específico das preparações de **Caindo em uma Fria** numa Central Universal de Missões, sem eliminar o catálogo, o construtor, os módulos, as preparações clássicas e os registros existentes. Progresso e confirmações pertencem à **equipe**, e qualquer integrante autorizado pode solicitar avaliação. O Keymaster pode confirmar diretamente.
+As funcionalidades das Etapas 1, 2 e 3 foram **reunidas na mesma ramificação de desenvolvimento**, com interface do Keymaster e visualizações de jogador. Trata-se de uma proposta técnica para revisão, **não de um recurso já publicado em produção**: a publicação segura depende de reconciliar as regras reais do Firebase, fazer backup e executar testes ponta a ponta. As proteções de conteúdo privado estão no caminho `dcx/missionOps` com projeções individuais em `dcx/missionViews/$uid`; as regras ainda não foram aplicadas ao Firebase real.
 
-## Etapa 1 — Fundação (implementação inicial nesta ramificação)
+### Etapa 1 — Central e preparações coletivas
 
-A nova interface em **Keymaster → MISSÕES** tem três áreas: Avaliações, Missões e Arquivo (esta última aparece como espaço reservado para a Etapa 2). O Criador de Missões e a caixa antiga de decisões continuam acessíveis num painel recolhível abaixo da Central.
+- Central Universal no Keymaster, em `MISSÕES`, com Avaliações, Missões, seleção de equipes e controle de preparações. O Criador antigo continua recolhível.
+- Solicitações de jogadores por `rooms/{sala}/requests/{uid}/missionActions`, validação da equipe no Keymaster e confirmação direta ou solicitada.
+- Progresso das preparações por equipe, inicialmente no estado compartilhado `rooms/{sala}/state/missionControl`, sem sobrescrever o histórico de `Caindo em uma Fria`.
+- Integração das preparações tradicionais D-1 e das preparações criadas pelo Story Studio. Status `done` e `preps` legados continuam reconhecidos.
+- Missões novas começam sem equipe atribuída. Missões antigas não configuradas preservam a visibilidade histórica para evitar desaparecimento imediato.
 
-Cada operação tem designações de equipes administradas pelo Keymaster e preparações com progresso independente por equipe. O Keymaster pode confirmar diretamente uma preparação ou aprovar a solicitação enviada por um jogador. Os pedidos continuam passando pelo caminho existente `rooms/{sala}/requests/{uid}/missionActions`; o Keymaster resolve a equipe real a partir da identidade registrada, **não** do campo `teamId` fornecido pelo navegador do jogador.
+### Etapa 2 — Equipes, sigilo e preparações dinâmicas
 
-Os registros novos ficam em `rooms/{sala}/state/missionControl`, sob `assignments` e `progress`. Essa escolha reutiliza as permissões do estado da sala na Etapa 1 e não executa migração destrutiva. Preparações que estavam marcadas `done` no catálogo e preparações D‑1 marcadas no estado antigo continuam confirmadas na leitura por compatibilidade. Confirmações novas ficam associadas à equipe e não reescrevem os sinalizadores globais legados.
+- Gestão de equipes como **ativas**, **observadoras** ou **concluídas**, com atualizações das informações autorizadas ao vivo. Uma equipe retirada da lista de participantes é mantida como observadora, sem poder realizar novas solicitações.
+- Solicitações pendentes antes da retirada permanecem avaliáveis. Preparações devolvidas a observadoras ficam **suspensas** e suas observações permanecem legíveis. A reintegração volta a situação para **devolvida**, sem apagar o histórico.
+- Preparações adicionais criadas e editadas durante a operação, com versões anteriores e confirmações por equipe separadas do conteúdo atual.
+- Preparações **gerais** e **exclusivas**; para outras equipes, visibilidade em três níveis: nenhum, somente objetivo, objetivo e progresso. Observações internas não são projetadas.
+- Arquivamento da missão inteira, ou conclusão de equipes separadamente. Dados antigos não são excluídos ao arquivar.
+- Os registros privados ficam em `rooms/{sala}/dcx/missionOps`. A publicação dos campos autorizados é feita pela conta do Keymaster em `missionViews/$uid`, após verificação manual do vínculo entre UID e operador.
 
-O painel D‑1 original aceita pedidos de confirmação por equipe, e a Central exibe essas preparações junto às personalizadas. A antiga caixa de seleção global do Keymaster continua disponível, mas agora está identificada como **legada e global**. Não usá-la para novas confirmações coletivas.
+### Etapa 3 — Relatórios, comunicações e agentes multiequipe
 
-**Compatibilidade durante a transição:** operações **preexistentes** sem designação explícita mantêm a visibilidade anterior da sala, para não desaparecerem de repente para jogadores atuais. **Novas missões começam sem equipes designadas e permanecem ocultas dos jogadores até o Keymaster selecionar os participantes na Central**. Ao salvar a lista, a interface passa a mostrar a operação apenas às equipes escolhidas. Equipes devem existir e o operador deve estar associado a uma delas pelo painel administrativo.
+- Desfecho individual por equipe (**Sucesso**, **Sucesso parcial**, **Fracasso**) e resultado geral opcional.
+- Relatórios com texto interno e texto de divulgação, escolhidos pelo Keymaster. Resultado geral com divulgação por equipe e sobreposição personalizada.
+- Alertas discretos e caixa de notificações operacionais com histórico, gravados em `missionNotices/$uid`; leitura individual em `missionNoticeReads/$uid`.
+- Briefing de integração quando o Keymaster autoriza um vínculo entre sessão e operador.
+- Participações adicionais em outras equipes, com acesso restrito à missão por padrão ou à equipe inteira, em modos **ativo**, **acompanhamento ao vivo somente leitura** ou **histórico congelado**.
+- Transferências de equipe principal continuam na ferramenta de administração; os acessos adicionais e as exceções são configurados no painel de missões do Keymaster.
 
-### Limites conhecidos desta primeira entrega
+## Fluxo de utilização
 
-- **Controle de visibilidade ainda não é sigilo de segurança.** O catálogo de `storyStudio` e o estado `missionControl` permanecem no estado público da sala, legível por qualquer usuário autenticado segundo as regras do projeto. A filtragem de missões no navegador organiza a interface, mas **não protege conteúdo secreto**. Não cadastrar informações confidenciais por equipe até a implementação das regras segregadas da Etapa 2.
-- O Firebase em produção **não foi atualizado** por esta entrega; é necessário verificar as regras reais no Console. O arquivo de regras versionado pode estar desatualizado. Confirmar também o UID real da conta administradora antes de qualquer publicação de regras.
-- Pedidos legados anteriores ao novo campo `teamId`, ou pedidos feitos antes de uma transferência de equipe, não são aprovados automaticamente: o Keymaster deve conferir a equipe original, confirmar diretamente na Central e então dispensar a solicitação antiga.
-- Pedidos dos jogadores são individuais no caminho antigo, e uma equipe pode enviar solicitações redundantes por integrantes diferentes. A Central reconhece e limpa as solicitações conhecidas ao confirmar, mas o bloqueio **atômico** de um pedido ativo por equipe só estará completo quando existir um caminho protegido específico no banco.
-- Não há novas notificações individuais, relatórios, missões arquivadas, retirada/reintegração, sigilo, nem histórico completo de auditoria nesta etapa.
-- Estados legados `preps` de Caindo em uma Fria e `storyStudio.operations[].preparations[].done` são mantidos por compatibilidade. Uma migração definitiva exige backup e validação por sala e por equipe antes de remover os campos antigos.
-- Validação atual: verificações sintáticas do JavaScript e testes simulados de isolamento por equipe e pedido autorizado. **Não houve teste ponta a ponta com contas reais, Firebase ou diferentes navegadores.**
+1. Conectar o **Keymaster** à sala Firebase e abrir **MISSÕES**.
+2. Em **Missões → Abrir controle**, designar as equipes da operação. O painel avançado aparece em seguida, com status das equipes, preparações personalizadas, sigilo, resultados e acessos.
+3. Em **EQUIPES // STATUS**, verificar os operadores e sua equipe principal.
+4. Na área de **Verificação de identidade do agente**, escolher um UID autenticado conhecido e associá-lo manualmente ao operador correto. Não confiar apenas no nome declarado pelo jogador.
+5. Os jogadores vinculados recebem suas transmissões e preparações autorizadas no painel **Missões**, com solicitações e progresso coletivo.
+6. O Keymaster avalia pedidos, confirma ou devolve, decide a visibilidade de preparações exclusivas e publica relatórios quando desejar.
+7. Em caso de transferência, ajustar a equipe principal no cadastro do operador e, se necessário, criar uma participação adicional da equipe antiga em modo histórico ou acompanhamento. É possível revogar o vínculo UID→operador e as exceções separadamente.
 
-## Etapa 2 — Gestão operacional e permissões
+## Modelo de dados
 
-1. Migrar o controle operacional para uma estrutura no Firebase com leitura por equipe e área privada do Keymaster, além de regras validadas por autenticação/associação.
-2. Designação e retirada de equipes a qualquer momento; participação ativa, observadora ou concluída; reintegração sem perda de progresso. Equipes observadoras consultam atualizações autorizadas ao vivo, mas não podem interagir.
-3. Encerrar operações globalmente ou por equipe; preservar solicitações pendentes; suspender correções devolvidas a equipes observadoras.
-4. Criar e editar preparações durante missões com histórico de versões, manutenção das confirmações e reabertura explícita.
-5. Preparações gerais ou exclusivas; sigilo por equipe com níveis nenhum, somente objetivo e objetivo + progresso; sem exposição de comentários internos.
-6. Solicitação ativa única por missão/equipe/preparação, transações de banco, trilha de auditoria e validação no servidor. Migrar o legado com exportação prévia e rollback testado.
+```text
+rooms/{sala}/
+  state/storyStudio               # Catálogo e módulos legados — já existentes
+  state/missionControl            # Designações e progresso da Etapa 1
+  requests/{uid}/missionActions   # Pedidos de avaliação — já existente
+  dcx/missionOps                  # Edição, sigilo, versões, relatórios, grants, bindings, auditoria
+  dcx/missionViews/{uid}          # Projeção autorizada para aquele UID
+  dcx/missionNotices/{uid}        # Avisos individuais
+  dcx/missionNoticeReads/{uid}    # Marcação de leitura pelo próprio UID
+```
 
-## Etapa 3 — Relatórios, comunicações e vínculos avançados
+O fluxo protegido é Keymaster → dados privados → visão individual segura. O navegador do jogador **não tem autorização para escrever progresso nem relatórios**. A confirmação depende do Keymaster e das Firebase Rules.
 
-1. Desfechos independentes por equipe (Sucesso, Sucesso parcial ou Fracasso), mais desfecho geral opcional.
-2. Relatório interno confidencial, versão pública padrão, versão personalizada por equipe, destinatários selecionados e publicação explícita.
-3. Alertas discretos ao vivo e caixa de notificações com leitura individual, respeitando as permissões.
-4. Briefing de integração de novos membros; equipe principal, participações adicionais restritas por padrão, transferências e preservação histórica de permissões.
-5. Revisão de UX no celular e no computador; testes de autorização, sincronização e performance.
+## Segurança e limitações importantes
 
-## Uso e verificação sugeridos
+- **Não publicar diretamente o JSON versionado sem revisão!** O arquivo de regras do repositório pode estar desatualizado em relação ao Console Firebase. Mesclar somente as novas regras sob `dcx` com as regras **reais** vigentes, verificando o UID do Keymaster (há histórico de confusão entre o caractere `1` e a letra `l`).
+- A visualização privada por UID protege os novos dados **apenas quando as regras de acesso estiverem corretamente publicadas e validadas**. A verificação manual de UID contra o operador é obrigatória para evitar associação incorreta.
+- As missões, descrições e preparações armazenadas no **Story Studio legado** continuam dentro do estado geral legível por usuários autenticados da sala. Portanto, **nunca colocar segredos entre equipes ou relatórios internos no editor legado**; usar as preparações classificadas do painel avançado.
+- Notificações e novas projeções são publicadas pelo navegador do Keymaster. Enquanto ele estiver desconectado, pedidos ainda são armazenados, porém a publicação de novas projeções/avisos pode aguardar a reconexão dele.
+- A central usa o operador principal do cadastro e grants extras, mas a autenticação e o fluxo de acesso legado não foram completamente substituídos. Essa migração futura requer validação cuidadosa por usuário e equipe.
+- Os testes escritos são de **lógica isolada e projeção de dados**, não testes E2E em Firebase real. Ainda não há evidência de execução em dispositivos físicos, nem validação da migração para uma sala existente.
+- A publicação de relatórios, a confirmação e os grants precisam ser testados em sala de homologação antes de confiar neles numa sessão real.
+- O histórico de marcações legadas é preservado; não houve importação automática destrutiva nem exportação do banco real.
 
-1. Fazer backup do Firebase da sala antes de habilitar a Central.
-2. No terminal do Keymaster, entrar em **MISSÕES → Missões → Abrir controle** e salvar as equipes designadas para uma operação.
-3. Cadastrar o operador em **EQUIPES // STATUS**, escolhendo sua equipe principal.
-4. Em dois terminais de jogador de equipes distintas, consultar a mesma missão. Validar o isolamento das marcações e a navegação.
-5. Solicitar a conclusão de uma preparação no módulo da missão (ou no D‑1 de Caindo em uma Fria), aprová-la em **Avaliações** e confirmar que somente a equipe responsável muda de estado.
-6. Confirmar outra preparação diretamente na lista da missão e validar que o campo `done` legado não foi sobrescrito.
-7. No repositório, executar `npm run test:missions`. Essa suíte cobre comportamento básico, mas não substitui testes reais de acesso e banco.
+## Checklist de homologação
 
-A Etapa 1 foi construída de forma incremental e reversível no GitHub, sem alterar a base de dados existente automaticamente.
+- [ ] Exportar backup de dados e regras do Firebase real.
+- [ ] Confirmar UID correto do Keymaster e comparar regras implantadas com o JSON versionado.
+- [ ] Aplicar apenas a atualização de regras reconciliada e testar negações para conta de jogador.
+- [ ] Conferir que um jogador não consegue ler `dcx/missionOps` nem `missionViews/{outroUid}`.
+- [ ] Associar dois UIDs diferentes a dois operadores de equipes distintas; verificar ausência de vazamento.
+- [ ] Confirmar solicitações da Alpha e validar que a Bravo não recebe conclusão indevida.
+- [ ] Retirar a Alpha para observação, continuar transmitindo progresso autorizado, suspender uma devolução e reintegrá-la.
+- [ ] Editar uma preparação já confirmada, verificar versão e histórico.
+- [ ] Criar uma preparação exclusiva, revelar objetivo e depois progresso sem disponibilizar notas internas.
+- [ ] Publicar resultado interno/público por equipe e relatório geral com personalização.
+- [ ] Conferir alertas, caixa de notificações, leituras individuais e briefing ao entrar.
+- [ ] Testar participante adicional com vínculo completo/restrito, histórico congelado, acompanhamento e revogação.
+- [ ] Testar PC, telefone e reconexão com Keymaster offline.
+- [ ] Executar `npm run test:missions:all` localmente no repositório antes do merge.
+
+**Resultado:** todas as três etapas foram desenvolvidas em uma única proposta de alteração para avaliação. A entrega **não está automaticamente habilitada no site principal nem no Firebase real**.

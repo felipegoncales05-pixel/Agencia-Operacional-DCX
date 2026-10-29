@@ -12,7 +12,8 @@
     'bloodmoon-dark':'BLOODMOON // ESCURO',
     'royal-sapphire':'ROYAL // SAFIRA',
     'aurora-mint':'AURORA // MENTA',
-    'sandstorm-desert':'SANDSTORM // AREIA'
+    'sandstorm-desert':'SANDSTORM // AREIA',
+    'edgerunners2-burn':'EDGERUNNERS 2 // BURN'
   };
   const ALL=new Set([
     'arc-cyan','dcx-green','ember-amber','void-violet','frost-blue','crimson-ruby',
@@ -72,7 +73,7 @@
   function init(){
     bind();
     setTimeout(applySaved,0);
-    console.info('[DCX OS] THEME PACK V3 // 22 THEMES // MIDNIGHT READY');
+    console.info('[DCX OS] THEME PACK V3 // 31 THEMES // MIDNIGHT READY');
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});
   else init();

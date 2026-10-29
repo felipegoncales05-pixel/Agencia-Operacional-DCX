@@ -191,6 +191,12 @@ function patchTeam(mission,t,change){
    if(change==='reactivate')Object.values(preps).forEach(p=>{if(p.state==='suspended')p.state='returned'});
    s.teams[t]={...old,state:change==='reactivate'?'active':change==='observe'?'observing':'completed',changedAt:Date.now(),preps};return s});
 }
+async function syncAssignments(mission,previous,current){
+ const removed=previous.filter(t=>!current.includes(t));
+ const added=current.filter(t=>!previous.includes(t));
+ for(const t of removed)await patchTeam(mission,t,'observe');
+ for(const t of added)if(record(mission).teams?.[t]?.state==='observing')await patchTeam(mission,t,'reactivate');
+}
 async function changePrep(mission,pid,params){
  return mutate(mission,pid?'prep.edit':'prep.create',s=>{
   s.preps=s.preps||{};
@@ -448,6 +454,6 @@ function init(){
  bind();
 }
 window.DCX=window.DCX||{};
-window.DCX.MissionOps={getView:()=>playerView,getPrivate:()=>host?data:null,makeView,feedFor,refresh:renderHost,getTeamState:(mission,t)=>record(mission).teams?.[t]?.state||'',isArchived:mission=>!!record(mission).archive};
+window.DCX.MissionOps={getView:()=>playerView,getPrivate:()=>host?data:null,makeView,feedFor,refresh:renderHost,getTeamState:(mission,t)=>record(mission).teams?.[t]?.state||'',getTeamChangedAt:(mission,t)=>record(mission).teams?.[t]?.changedAt||0,isArchived:mission=>!!record(mission).archive,syncAssignments};
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();

@@ -10,7 +10,7 @@ const rt=()=>window.OPH?.Realtime,db=()=>rt()?.getFirebaseDatabase?.(),room=()=>
 const path=x=>'rooms/'+room()+'/dcx/'+x;
 const catalog=()=>window.DCX?.StoryStudio?.operations||[];
 const empty=()=>({missions:{},bindings:{},grants:{},audit:{}});
-let data=empty(),operators={},teams={},requests={},currentRoom='',listeners=[],playerView={},notices={},reads={},started=false,toastBaseline=false,publishTimer=null,viewerTeam='',lastAuth='',error='';
+let opsReady=false,data=empty(),operators={},teams={},requests={},currentRoom='',listeners=[],playerView={},notices={},reads={},started=false,toastBaseline=false,publishTimer=null,viewerTeam='',lastAuth='',error='';
 const teamName=t=>teams?.[t]?.name||t;
 const currentMission=()=>window.DCX?.MissionControl?.getSelected?.()||'';
 const teamIds=()=>Object.keys(teams).filter(t=>t!=='_init'&&teams[t]?.name);
@@ -180,7 +180,7 @@ function updatePlayerNotice(next){
 }
 function nextMissionState(missionId){return JSON.parse(JSON.stringify(data.missions?.[missionId]||{teams:{},preps:{},outcomes:{},general:{},archive:false}))}
 async function mutate(missionId,event,fn){
- if(!host||!db()||!room())throw Error('Keymaster não conectado ao Firebase.');
+ if(!host||!db()||!room()||!opsReady)throw Error('Regras da Central de Missões ainda não habilitadas no Firebase.');
  let changed=false;
  const result=await db().ref(path('missionOps')).transaction(old=>{
   const next=old&&typeof old==='object'?old:empty();
@@ -291,6 +291,7 @@ function form(){
   if(action==='cancel'){section.querySelector('#dcxMOEditor')?.remove();return}
   try{
    b.disabled=true;
+   if(!opsReady)throw Error('Central avançada aguardando as novas regras do Firebase. Nenhuma alteração foi realizada.');
    if(action==='setTeam')await patchTeam(mission,t,val('teamState_'+t)==='observing'?'observe':val('teamState_'+t)==='completed'?'complete':'reactivate');
    if(action==='archive'){
     await mutate(mission,'mission.archive',s=>{s.archive=!s.archive;return s});
@@ -436,9 +437,10 @@ function renderHost(){
  else if(activeTab==='archive')root.innerHTML='<h3>ARQUIVO DE OPERAÇÕES</h3>'+
   catalog().filter(o=>record(o.id).archive).map(o=>'<div class="dcxMOPCard"><h3>'+E(o.title)+'</h3><p>Operação encerrada; histórico preservado na área administrativa.</p></div>').join('')+bindingsPanel();
  else root.innerHTML=bindingsPanel();
+ if(!opsReady){const p=document.createElement('p');p.className='dcxMOPWarn';p.textContent='Modo de pré-visualização: a Central avançada será habilitada após validar e publicar as regras do Firebase. Os comandos desta seção estão bloqueados.';root.prepend(p)}
  if(error){const p=document.createElement('p');p.className='dcxMOPWarn';p.textContent=error;root.prepend(p);error=''}
 }
-function cleanup(){listeners.forEach(r=>{try{r.off()}catch(e){}});listeners=[];currentRoom='';toastBaseline=false}
+function cleanup(){listeners.forEach(r=>{try{r.off()}catch(e){}});listeners=[];currentRoom='';toastBaseline=false;opsReady=false}
 function bind(){
  const r=room(),database=db(),user=uid();
  if(!database||!r||!user||rt()?.getMode?.()!=='firebase'||currentRoom===r&&lastAuth===user)return;
@@ -451,7 +453,7 @@ function bind(){
  if(host){
   watch('missionNotices/'+user,v=>updatePlayerNotice(v));
   watch('missionNoticeReads/'+user,v=>{reads=v;updateNotices()});
-  watch('missionOps',v=>{data={...empty(),...v};renderHost();schedulePublish();syncPending().catch(e=>console.warn('[DCX Mission Ops] pendências',e))});
+  watch('missionOps',v=>{opsReady=true;data={...empty(),...v};renderHost();schedulePublish();syncPending().catch(e=>console.warn('[DCX Mission Ops] pendências',e))});
   watch('operators',v=>{operators=v;renderHost();schedulePublish()});
   watch('teams',v=>{teams=v;renderHost();schedulePublish()});
   let requestBaseline=false,knownRequests=new Set();

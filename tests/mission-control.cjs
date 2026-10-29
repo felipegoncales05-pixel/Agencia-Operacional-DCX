@@ -31,7 +31,7 @@ function environment(host){
  }}};
  const operations=[
   {id:"eclipse",status:"published",preparations:[{id:"recon",title:"Reconhecimento",interaction:"request",done:false}]},
-  {id:"operacao-h",status:"published",preparations:[]}
+  {id:"operacao-h",status:"draft",preparations:[]}
  ];
  const realtime={
   getRoom:()=>"FRIA-01",getMode:()=>"firebase",getUid:()=>host?"KM":"p1",
@@ -39,7 +39,7 @@ function environment(host){
   onState:fn=>callbacks.state=fn,onRequests:fn=>callbacks.requests=fn
  };
  const window={
-  OPH:{Realtime:realtime,PREP_DEFS:{con:[["consult","Consulta","Consulta ao N-02"]],stealth:[["routes","Rota","Rotas silenciosas"]]}},
+  OPH:{Realtime:realtime,PREP_DEFS:{con:[["consult","Consulta","Consulta ao N-02"],["open","Preparar equipamentos","Checklist operacional"]],stealth:[["routes","Rota","Rotas silenciosas"]]}},
   DCX:{StoryStudio:{operations,refreshPlayer(){}},Player:{getLocalIdentity:()=>({playerId:"p1"})}},
   OPHPlayer:{refreshPreps(){}},confirm:()=>true
  };
@@ -59,6 +59,7 @@ async function run(){
  assert.equal(p.canSeeMission("operacao-h"),true,"Operação legada continua visível sem designação");
  assert.equal(p.getStatus("operacao-h","alpha","legacy:con:consult").confirmed,true,"Marcações legadas preservadas");
  assert.equal(p.canRequest("eclipse","recon"),true,"Integrante da equipe pode solicitar");
+ assert.equal(p.canRequest("operacao-h","legacy:con:open"),true,"D-1 segue disponível mesmo com operação em rascunho");
  assert.equal(p.getStatus("eclipse","bravo","recon").confirmed,false,"Sem progresso cruzado entre equipes");
  player.operators.p1.narrative.teamId="bravo";
  assert.equal(p.canSeeMission("eclipse"),false,"Equipe não designada não vê missão na interface");
@@ -77,6 +78,11 @@ async function run(){
  await h.restrictNewMission("nova-missao");
  assert.equal(host.current.missionControl.assignments["nova-missao"].configured,true,"Nova missão inicia com designação explícita");
  assert.equal(Object.keys(host.current.missionControl.assignments["nova-missao"].teams).length,0,"Nova missão inicia sem equipes");
- console.log("DCX Mission Control: 12 verificações concluídas.");
+ await h.saveAssignments("operacao-h",["alpha"]);host.callbacks.state(host.current);
+ assert.equal(h.getStatus("operacao-h","alpha","legacy:con:consult").confirmed,true,"Equipe inicial mantém marcações legadas");
+ await h.saveAssignments("operacao-h",["alpha","bravo"]);host.callbacks.state(host.current);
+ assert.equal(h.getStatus("operacao-h","bravo","legacy:con:consult").confirmed,false,"Equipe adicionada não herda confirmação global");
+ assert.equal(h.getStatus("operacao-h","alpha","legacy:con:consult").confirmed,true,"Equipe original mantém confirmação após ingresso da Bravo");
+ console.log("DCX Mission Control: verificações legadas e de equipe aprovadas.");
 }
 run().catch(e=>{console.error(e);process.exitCode=1});

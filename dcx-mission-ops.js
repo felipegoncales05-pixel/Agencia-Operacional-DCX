@@ -371,7 +371,10 @@ function hostDetail(mission){
    '<button class="btn" data-mo-action="prepConfirm" data-mo-mission="'+E(mission)+'" data-mo-prep="'+E(p.id)+'" data-mo-team="'+E(t)+'">✓</button>'+
    '<button class="btn" data-mo-action="prepReturn" data-mo-mission="'+E(mission)+'" data-mo-prep="'+E(p.id)+'" data-mo-team="'+E(t)+'">DEVOLVER</button>'+
    '<button class="btn" data-mo-action="prepReopen" data-mo-mission="'+E(mission)+'" data-mo-prep="'+E(p.id)+'" data-mo-team="'+E(t)+'">REABRIR</button></div>';
- }).join('')+'</div>').join('')+'</div>'+
+ }).join('')+
+ '<details class="dcxMOPHistory"><summary>HISTÓRICO DE VERSÕES E AVALIAÇÕES</summary>'+
+ (p.revisions||[]).map(h=>'<p>VERSÃO '+E(h.version)+' · '+E(h.title)+' — '+E(h.description)+'</p>').join('')+
+ ts.map(t=>{const st=r.teams?.[t]?.preps?.[p.id];return st?.history?.length?'<p><b>'+E(teamName(t))+'</b>: '+st.history.map(h=>E(h.state)+' (v'+E(h.version)+')').join(' → ')+'</p>':''}).join('')+'</details></div>').join('')+'</div>'+
  '<div class="dcxMOPSection"><h3>DESFECHOS POR EQUIPE</h3>'+ts.map(t=>{
   const x=r.outcomes?.[t]||{};
   return '<div class="dcxMOPCard"><b>'+E(teamName(t))+'</b>'+

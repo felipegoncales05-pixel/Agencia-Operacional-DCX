@@ -272,9 +272,28 @@ console.info("[DCX OS] A2.2 AUTH ISOLATION // PLAYER // YUMIYA CORE FINAL-11");
   }
   function renderPreps(){
     const k=state.approaches.selected||"con", defs=OPH.PREP_DEFS[k], vals=state.preps[k]||{};
+    const mc=window.DCX?.MissionControl, team=mc?.getTeamId?.()||"";
     $("prepTitle").textContent=OPH.APPROACHES[k].name;
-    $("prepGrid").innerHTML=defs.map(d=>`<div class="prep ${vals[d[0]]?'done':''}"><b>${d[1]}</b><p>${d[2]}</p><div class="state">${vals[d[0]]?'CONCLUÍDO':'PENDENTE'}</div></div>`).join("");
-    const n=defs.filter(d=>vals[d[0]]).length;$("prepPct").textContent=Math.round(n/defs.length*100)+"%";
+    const done=d=>mc?mc.getStatus('operacao-h',team,'legacy:'+k+':'+d[0]).confirmed:!!vals[d[0]];
+    $("prepGrid").innerHTML=defs.map(d=>{
+      const key='legacy:'+k+':'+d[0],complete=done(d),status=mc?.getStatus('operacao-h',team,key);
+      const pending=status?.state==='analysis',allow=mc?.canRequest('operacao-h',key);
+      return '<div class="prep '+(complete?'done':'')+'"><b>'+d[1]+'</b><p>'+d[2]+'</p><div class="state">'+(complete?'CONCLUÍDO':pending?'AGUARDANDO KEYMASTER':'PENDENTE')+'</div>'+
+       (allow?'<button class="btn" type="button" data-legacy-prep-request="'+key+'">SOLICITAR CONFIRMAÇÃO</button>':'')+'</div>';
+    }).join("");
+    const n=defs.filter(done).length;$("prepPct").textContent=Math.round(n/defs.length*100)+"%";
+  }
+  async function sendLegacyPreparation(prepId){
+    const mc=window.DCX?.MissionControl;
+    if(!mc?.canRequest('operacao-h',prepId)){toast("PREPARAÇÃO INDISPONÍVEL PARA SUA EQUIPE");return}
+    const auth=OPH.Realtime.getFirebaseAuth?.(),db=OPH.Realtime.getFirebaseDatabase?.(),room=OPH.Realtime.getRoom?.(),u=auth?.currentUser?.uid;
+    if(!db||!room||!u||OPH.Realtime.getMode?.()!=='firebase'){toast("SOLICITAÇÃO REQUER SALA FIREBASE");return}
+    const item={missionId:'operacao-h',moduleId:'legacy-preparations',type:'prep',value:prepId,teamId:mc.getTeamId(),
+      missionTitle:'Caindo em uma Fria',moduleTitle:'Preparações D-1',createdAt:Date.now()};
+    try{
+      await db.ref('rooms/'+room+'/requests/'+u+'/missionActions').push().set(item);
+      toast("SOLICITAÇÃO ENVIADA AO KEYMASTER");
+    }catch(e){console.error('[DCX Mission Control] solicitação',e);toast("FALHA AO SOLICITAR CONFIRMAÇÃO")}
   }
   function clueCount(){return OPH.N02_PUBLIC.filter(c=>state.n02.clues[c.id]).length}
   function renderN02(){
@@ -537,9 +556,10 @@ console.info("[DCX OS] A2.2 AUTH ISOLATION // PLAYER // YUMIYA CORE FINAL-11");
     }
     render();
   });
-  window.OPHPlayer={go,submitKey,switchTab,connect,toggleYumiyaChat,toggleYumiyaFocus,sendYumiyaMessage,confirmYumiyaIdentity,changeYumiyaIdentity,openYumiyaRename,cancelYumiyaRename,confirmYumiyaRename};
+  window.OPHPlayer={go,submitKey,switchTab,connect,refreshPreps:renderPreps,toggleYumiyaChat,toggleYumiyaFocus,sendYumiyaMessage,confirmYumiyaIdentity,changeYumiyaIdentity,openYumiyaRename,cancelYumiyaRename,confirmYumiyaRename};
   window.addEventListener("DOMContentLoaded",()=>{
     $("room").value=room;$("name").value=localStorage.getItem("oph-name")||"";
+    $("prepGrid")?.addEventListener("click",e=>{const btn=e.target.closest("[data-legacy-prep-request]");if(btn)sendLegacyPreparation(btn.dataset.legacyPrepRequest)});
     $("name").oninput=()=>localStorage.setItem("oph-name",$("name").value);
     $("name").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();connect()}});
     $("yumiyaInput").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendYumiyaMessage()}});

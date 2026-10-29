@@ -4,158 +4,306 @@
       "$room": {
         "state": {
           ".read": "auth != null",
-          ".write": "auth != null && auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1'"
+          ".write": "auth != null && auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1'"
         },
         "requests": {
-          ".read": "auth != null && auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1'",
+          ".read": "auth != null && auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1'",
           "$uid": {
-            ".write": "auth != null && ($uid === auth.uid || auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1')"
+            ".write": "auth != null && ($uid === auth.uid || auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1')",
+            "missionActions": {
+              ".read": "auth != null && (auth.uid === $uid || auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1')"
+            }
           }
         },
         "dcx": {
           "meta": {
             ".read": "auth != null",
-            ".write": "auth != null && auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1'"
+            ".write": "auth != null && auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1'"
           },
           "access": {
             "public": {
               ".read": "auth != null",
-              ".write": "auth != null && auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1'"
+              ".write": "auth != null && auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1'"
             },
             "invitations": {
-              ".read": "auth != null && auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1'",
+              ".read": "auth != null && auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1'",
               "$code": {
                 ".read": "auth != null",
-                ".write": "auth != null && auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1'"
+                ".write": "auth != null && auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1'"
               }
             },
             "claims": {
-              ".read": "auth != null && auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1'",
+              ".read": "auth != null && auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1'",
               "$uid": {
-                ".read": "auth != null && ($uid === auth.uid || auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1')",
-                ".write": "auth != null && ($uid === auth.uid || auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1')"
+                ".read": "auth != null && ($uid === auth.uid || auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1')",
+                ".write": "auth != null && ($uid === auth.uid || auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1')"
               }
             },
             "blockedPlayers": {
-              ".read": "auth != null && auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1'",
+              ".read": "auth != null && auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1'",
               "$playerId": {
                 ".read": "auth != null",
-                ".write": "auth != null && auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1'"
+                ".write": "auth != null && auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1'"
+              }
+            }
+          },
+          "agentLinks": {
+            ".read": "auth != null && auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1'",
+            "$uid": {
+              ".read": "auth != null && ($uid === auth.uid || auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1')",
+              ".write": "auth != null && auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1'",
+              "playerId": {
+                ".validate": "newData.isString() && newData.val().length >= 3 && newData.val().length <= 64"
+              },
+              "$other": {
+                ".validate": true
               }
             }
           },
           "operators": {
             ".read": "auth != null",
-            ".write": "auth != null && auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1'"
+            ".write": "auth != null && auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1'"
           },
           "teams": {
             ".read": "auth != null",
-            ".write": "auth != null && auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1'"
+            ".write": "auth != null && auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1'"
           },
           "presence": {
-            ".read": "auth != null && auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1'",
+            ".read": "auth != null && auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1'",
             "$uid": {
-              ".write": "auth != null && ($uid === auth.uid || auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1')"
+              ".write": "auth != null && ($uid === auth.uid || auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1')"
+            }
+          },
+          "sessions": {
+            ".read": "auth != null && auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1'",
+            "$uid": {
+              ".read": "auth != null && ($uid === auth.uid || auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1')",
+              "$sessionId": {
+                ".write": "auth != null && ($uid === auth.uid || auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1')"
+              }
             }
           },
           "notes": {
-            ".read": "auth != null && auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1'",
+            ".read": "auth != null && auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1'",
             "$playerId": {
-              ".read": "auth != null && (auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1' || $playerId === root.child('rooms').child($room).child('requests').child(auth.uid).child('identity').child('playerId').val())",
-              ".write": "auth != null && (auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1' || $playerId === root.child('rooms').child($room).child('requests').child(auth.uid).child('identity').child('playerId').val())"
+              ".read": "auth != null && (auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1' || $playerId === root.child('rooms').child($room).child('dcx').child('agentLinks').child(auth.uid).child('playerId').val() || (!root.child('rooms').child($room).child('dcx').child('agentLinks').child(auth.uid).exists() && $playerId === root.child('rooms').child($room).child('requests').child(auth.uid).child('identity').child('playerId').val()))",
+              ".write": "auth != null && (auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1' || $playerId === root.child('rooms').child($room).child('dcx').child('agentLinks').child(auth.uid).child('playerId').val() || (!root.child('rooms').child($room).child('dcx').child('agentLinks').child(auth.uid).exists() && $playerId === root.child('rooms').child($room).child('requests').child(auth.uid).child('identity').child('playerId').val()))"
             }
           },
           "commsJam": {
             ".read": "auth != null",
-            ".write": "auth != null && auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1'"
+            ".write": "auth != null && auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1'"
           },
           "notifications": {
-            ".read": "auth != null && auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1'",
-            ".write": "auth != null && auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1'"
+            ".read": "auth != null && auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1'",
+            ".write": "auth != null && auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1'",
+            "feed": {
+              "$playerId": {
+                ".read": "auth != null && (auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1' || $playerId === root.child('rooms').child($room).child('dcx').child('agentLinks').child(auth.uid).child('playerId').val() || (!root.child('rooms').child($room).child('dcx').child('agentLinks').child(auth.uid).exists() && $playerId === root.child('rooms').child($room).child('requests').child(auth.uid).child('identity').child('playerId').val()))",
+                ".write": "auth != null && auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1'"
+              }
+            },
+            "acks": {
+              "$playerId": {
+                ".read": "auth != null && (auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1' || $playerId === root.child('rooms').child($room).child('dcx').child('agentLinks').child(auth.uid).child('playerId').val() || (!root.child('rooms').child($room).child('dcx').child('agentLinks').child(auth.uid).exists() && $playerId === root.child('rooms').child($room).child('requests').child(auth.uid).child('identity').child('playerId').val()))",
+                "$notificationId": {
+                  ".write": "auth != null && (auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1' || $playerId === root.child('rooms').child($room).child('dcx').child('agentLinks').child(auth.uid).child('playerId').val() || (!root.child('rooms').child($room).child('dcx').child('agentLinks').child(auth.uid).exists() && $playerId === root.child('rooms').child($room).child('requests').child(auth.uid).child('identity').child('playerId').val()))"
+                }
+              }
+            }
           },
           "handouts": {
-            ".read": "auth != null && auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1'",
-            ".write": "auth != null && auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1'",
+            ".read": "auth != null && auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1'",
+            ".write": "auth != null && auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1'",
             "public": {
-              ".read": "auth != null"
+              ".read": "auth != null",
+              ".write": "auth != null && auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1'",
+              "$handoutId": {
+                "dataUrl": {
+                  ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 750000)"
+                },
+                "externalUrl": {
+                  ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 2000)"
+                },
+                "$other": {
+                  ".validate": true
+                }
+              }
             },
             "players": {
               "$playerId": {
-                ".read": "auth != null && (auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1' || $playerId === root.child('rooms').child($room).child('requests').child(auth.uid).child('identity').child('playerId').val())"
+                ".read": "auth != null && (auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1' || $playerId === root.child('rooms').child($room).child('dcx').child('agentLinks').child(auth.uid).child('playerId').val() || $playerId === root.child('rooms').child($room).child('requests').child(auth.uid).child('identity').child('playerId').val())",
+                ".write": "auth != null && auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1'",
+                "$handoutId": {
+                  "dataUrl": {
+                    ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 750000)"
+                  },
+                  "externalUrl": {
+                    ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 2000)"
+                  },
+                  "$other": {
+                    ".validate": true
+                  }
+                }
               }
             },
             "teams": {
               "$teamId": {
-                ".read": "auth != null && (auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1' || $teamId === root.child('rooms').child($room).child('dcx').child('operators').child(root.child('rooms').child($room).child('requests').child(auth.uid).child('identity').child('playerId').val()).child('narrative').child('teamId').val())"
+                ".read": "auth != null && (auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1' || ((root.child('rooms').child($room).child('dcx').child('agentLinks').child(auth.uid).child('playerId').exists() && root.child('rooms').child($room).child('dcx').child('operators').child(root.child('rooms').child($room).child('dcx').child('agentLinks').child(auth.uid).child('playerId').val()).child('narrative').child('teamId').val() === $teamId) || (root.child('rooms').child($room).child('requests').child(auth.uid).child('identity').child('playerId').exists() && root.child('rooms').child($room).child('dcx').child('operators').child(root.child('rooms').child($room).child('requests').child(auth.uid).child('identity').child('playerId').val()).child('narrative').child('teamId').val() === $teamId)))",
+                ".write": "auth != null && auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1'",
+                "$handoutId": {
+                  "dataUrl": {
+                    ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 750000)"
+                  },
+                  "externalUrl": {
+                    ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 2000)"
+                  },
+                  "$other": {
+                    ".validate": true
+                  }
+                }
+              }
+            }
+          },
+          "handoutAcks": {
+            ".read": "auth != null && auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1'",
+            "$handoutId": {
+              "$playerId": {
+                ".read": "auth != null && (auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1' || ($playerId === root.child('rooms').child($room).child('dcx').child('agentLinks').child(auth.uid).child('playerId').val() || (root.child('rooms').child($room).child('requests').child(auth.uid).child('identity').child('playerId').exists() && $playerId === root.child('rooms').child($room).child('requests').child(auth.uid).child('identity').child('playerId').val())))",
+                ".write": "auth != null && (auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1' || ($playerId === root.child('rooms').child($room).child('dcx').child('agentLinks').child(auth.uid).child('playerId').val() || (root.child('rooms').child($room).child('requests').child(auth.uid).child('identity').child('playerId').exists() && $playerId === root.child('rooms').child($room).child('requests').child(auth.uid).child('identity').child('playerId').val())))",
+                ".validate": "!newData.exists() || (newData.child('playerId').val() === $playerId && (!newData.child('viewedAt').exists() || newData.child('viewedAt').isNumber()) && (!newData.child('confirmedAt').exists() || newData.child('confirmedAt').isNumber()) && (!newData.child('updatedAt').exists() || newData.child('updatedAt').isNumber()))"
               }
             }
           },
           "polls": {
-            ".read": "auth != null && auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1'",
-            ".write": "auth != null && auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1'"
+            ".read": "auth != null && auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1'",
+            ".write": "auth != null && auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1'"
+          },
+          "pollVotes": {
+            ".read": "auth != null && auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1'",
+            "$pollId": {
+              "$playerId": {
+                ".read": "auth != null && (auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1' || $playerId === root.child('rooms').child($room).child('dcx').child('agentLinks').child(auth.uid).child('playerId').val() || (!root.child('rooms').child($room).child('dcx').child('agentLinks').child(auth.uid).exists() && $playerId === root.child('rooms').child($room).child('requests').child(auth.uid).child('identity').child('playerId').val()))",
+                ".write": "auth != null && (auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1' || (($playerId === root.child('rooms').child($room).child('dcx').child('agentLinks').child(auth.uid).child('playerId').val() || (!root.child('rooms').child($room).child('dcx').child('agentLinks').child(auth.uid).exists() && $playerId === root.child('rooms').child($room).child('requests').child(auth.uid).child('identity').child('playerId').val())) && newData.exists() && root.child('rooms').child($room).child('dcx').child('meta').child('publicPolls').child($pollId).child('status').val() === 'active' && (root.child('rooms').child($room).child('dcx').child('meta').child('publicPolls').child($pollId).child('closeMode').val() === 'manual' || !root.child('rooms').child($room).child('dcx').child('meta').child('publicPolls').child($pollId).child('endsAt').exists() || root.child('rooms').child($room).child('dcx').child('meta').child('publicPolls').child($pollId).child('endsAt').val() === 0 || now <= root.child('rooms').child($room).child('dcx').child('meta').child('publicPolls').child($pollId).child('endsAt').val()) && root.child('rooms').child($room).child('dcx').child('meta').child('publicPolls').child($pollId).child('options').child(newData.child('choiceId').val()).exists() && (!data.exists() || root.child('rooms').child($room).child('dcx').child('polls').child($pollId).child('allowVoteChange').val() === true)))",
+                ".validate": "newData.hasChildren(['choiceId','votedAt']) && newData.child('choiceId').isString() && newData.child('votedAt').isNumber() && newData.child('votedAt').val() <= now && newData.child('votedAt').val() >= now - 60000",
+                "choiceId": {
+                  ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 80"
+                },
+                "votedAt": {
+                  ".validate": "newData.isNumber()"
+                },
+                "$other": {
+                  ".validate": false
+                }
+              }
+            }
           },
           "teamChat": {
-            ".read": "auth != null && auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1'",
-            ".write": "auth != null && auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1'"
+            ".read": "auth != null && auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1'",
+            ".write": "auth != null && auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1'",
+            "$teamId": {
+              "messages": {
+                ".read": "auth != null && (auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1' || ((root.child('rooms').child($room).child('dcx').child('agentLinks').child(auth.uid).child('playerId').exists() && root.child('rooms').child($room).child('dcx').child('operators').child(root.child('rooms').child($room).child('dcx').child('agentLinks').child(auth.uid).child('playerId').val()).child('narrative').child('teamId').val() === $teamId) || (root.child('rooms').child($room).child('requests').child(auth.uid).child('identity').child('playerId').exists() && root.child('rooms').child($room).child('dcx').child('operators').child(root.child('rooms').child($room).child('requests').child(auth.uid).child('identity').child('playerId').val()).child('narrative').child('teamId').val() === $teamId)))",
+                "$messageId": {
+                  ".write": "auth != null && (auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1' || (!data.exists() && ((root.child('rooms').child($room).child('dcx').child('agentLinks').child(auth.uid).child('playerId').exists() && root.child('rooms').child($room).child('dcx').child('operators').child(root.child('rooms').child($room).child('dcx').child('agentLinks').child(auth.uid).child('playerId').val()).child('narrative').child('teamId').val() === $teamId) || (root.child('rooms').child($room).child('requests').child(auth.uid).child('identity').child('playerId').exists() && root.child('rooms').child($room).child('dcx').child('operators').child(root.child('rooms').child($room).child('requests').child(auth.uid).child('identity').child('playerId').val()).child('narrative').child('teamId').val() === $teamId)) && ((root.child('rooms').child($room).child('dcx').child('agentLinks').child(auth.uid).child('playerId').exists() && newData.child('senderPlayerId').val() === root.child('rooms').child($room).child('dcx').child('agentLinks').child(auth.uid).child('playerId').val()) || (root.child('rooms').child($room).child('requests').child(auth.uid).child('identity').child('playerId').exists() && newData.child('senderPlayerId').val() === root.child('rooms').child($room).child('requests').child(auth.uid).child('identity').child('playerId').val()))))",
+                  ".validate": "newData.hasChildren(['senderPlayerId','text','createdAt']) && newData.child('senderPlayerId').isString() && newData.child('text').isString() && newData.child('text').val().length >= 1 && newData.child('text').val().length <= 1200 && newData.child('createdAt').isNumber() && newData.child('createdAt').val() <= now && newData.child('createdAt').val() >= now - 60000",
+                  "senderPlayerId": {
+                    ".validate": "newData.isString()"
+                  },
+                  "text": {
+                    ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 1200"
+                  },
+                  "createdAt": {
+                    ".validate": "newData.isNumber()"
+                  },
+                  "$other": {
+                    ".validate": false
+                  }
+                }
+              }
+            }
           },
           "scheduled": {
-            ".read": "auth != null && auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1'",
-            ".write": "auth != null && auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1'"
+            ".read": "auth != null && auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1'",
+            ".write": "auth != null && auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1'"
           },
           "checkpoints": {
-            ".read": "auth != null && auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1'",
-            ".write": "auth != null && auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1'"
+            ".read": "auth != null && auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1'",
+            ".write": "auth != null && auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1'"
           },
           "eventLog": {
-            ".read": "auth != null && auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1'",
-            ".write": "auth != null && auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1'"
+            ".read": "auth != null && auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1'",
+            ".write": "auth != null && auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1'"
           },
-          "handoutAcks": {
-            ".read": "auth != null && auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1'",
-            "$handoutId": {
+          "yuyu": {
+            ".read": "auth != null && auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1'",
+            ".write": "auth != null && auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1'"
+          },
+          "credentials": {
+            "public": {
               "$playerId": {
-                ".read": "auth != null && (auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1' || $playerId === root.child('rooms').child($room).child('requests').child(auth.uid).child('identity').child('playerId').val())",
-                ".write": "auth != null && (auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1' || $playerId === root.child('rooms').child($room).child('requests').child(auth.uid).child('identity').child('playerId').val())"
+                ".read": "auth != null",
+                ".write": "auth != null && (auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1' || $playerId === root.child('rooms').child($room).child('dcx').child('agentLinks').child(auth.uid).child('playerId').val() || $playerId === root.child('rooms').child($room).child('requests').child(auth.uid).child('identity').child('playerId').val())",
+                "avatarDataUrl": {
+                  ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 220000)"
+                },
+                "updatedAt": {
+                  ".validate": "!newData.exists() || newData.isNumber()"
+                },
+                "$other": {
+                  ".validate": true
+                }
+              }
+            },
+            "npcPublic": {
+              "$npcId": {
+                ".read": "auth != null",
+                ".write": "auth != null && auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1'",
+                "avatarDataUrl": {
+                  ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 220000)"
+                },
+                "updatedAt": {
+                  ".validate": "!newData.exists() || newData.isNumber()"
+                },
+                "$other": {
+                  ".validate": true
+                }
               }
             }
           },
           "soundtrack": {
             ".read": "auth != null",
-            ".write": "auth != null && auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1'"
+            ".write": "auth != null && auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1'"
           },
           "tacticalMap": {
             ".read": "auth != null",
-            ".write": "auth != null && auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1'"
-          },
-          "factionSecrets": {
-            ".read": "auth != null && auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1'",
-            ".write": "auth != null && auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1'"
+            ".write": "auth != null && auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1'"
           },
           "missionOps": {
-            ".read": "auth != null && auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1'",
-            ".write": "auth != null && auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1'"
+            ".read": "auth != null && auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1'",
+            ".write": "auth != null && auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1'"
           },
           "missionViews": {
-            ".read": "auth != null && auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1'",
-            ".write": "auth != null && auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1'",
+            ".read": "auth != null && auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1'",
+            ".write": "auth != null && auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1'",
             "$uid": {
-              ".read": "auth != null && (auth.uid === $uid || auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1')"
+              ".read": "auth != null && (auth.uid === $uid || auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1')"
             }
           },
           "missionNotices": {
-            ".read": "auth != null && auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1'",
-            ".write": "auth != null && auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1'",
+            ".read": "auth != null && auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1'",
+            ".write": "auth != null && auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1'",
             "$uid": {
-              ".read": "auth != null && (auth.uid === $uid || auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1')"
+              ".read": "auth != null && (auth.uid === $uid || auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1')"
             }
           },
           "missionNoticeReads": {
-            ".read": "auth != null && auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1'",
+            ".read": "auth != null && auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1'",
             "$uid": {
-              ".read": "auth != null && (auth.uid === $uid || auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1')",
-              ".write": "auth != null && auth.uid === $uid",
+              ".read": "auth != null && (auth.uid === $uid || auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1')",
               "$noticeId": {
-                ".validate": "newData.val() === true || newData.val() === null"
+                ".write": "auth != null && (auth.uid === $uid || auth.uid === 'luVVp67PW7c53fs6dstTDNE46Nz1')",
+                ".validate": "newData.isBoolean() && newData.val() === true"
               }
             }
           }

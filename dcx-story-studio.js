@@ -286,7 +286,7 @@ function renderPrepInputs(items){
  '<option value="local" '+(p.interaction==='local'?'selected':'')+'>CHECKLIST PESSOAL</option>'+
  '<option value="request" '+(p.interaction==='request'?'selected':'')+'>SOLICITAR AO KEYMASTER</option>'+
  '</select></label></div>'+
- '<label class="kmStudioCheckbox"><input type="checkbox" data-prep-done '+(p.done?'checked':'')+'> CONCLUÍDA (KEYMASTER)</label></div>').join('');
+ '<label class="kmStudioCheckbox"><input type="checkbox" data-prep-done disabled '+(p.done?'checked':'')+'> CONCLUÍDA NO LEGADO GLOBAL (CONFIRME POR EQUIPE NA CENTRAL)</label></div>').join('');
 }
 function readPrepInputs(keepEmpty=false){
  return [...document.querySelectorAll('#kmStudioPrepRows .kmStudioPrepRow')].map(row=>({

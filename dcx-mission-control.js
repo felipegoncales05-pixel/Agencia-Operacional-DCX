@@ -67,7 +67,7 @@
  }
  function requestIsAuthorized(a){
   const t=requestTeam(a),op=catalog().find(v=>v.id===a.missionId),p=findPrep(op,a.value);
-  return !!(a.type==='prep'&&t&&p?.interaction==='request'&&isAssigned(a.missionId,t)&&(!a.teamId||a.teamId===t));
+  return !!(a.type==='prep'&&t&&p?.interaction==='request'&&isAssigned(a.missionId,t)&&a.teamId===t);
  }
  function statusText(s){return s.confirmed?(s.legacy?'CONFIRMADA · LEGADO':'CONFIRMADA'):s.state==='analysis'?'EM ANÁLISE':'DISPONÍVEL'}
  function message(s){const node=$('dcxMissionControlStatus');if(node)node.textContent=s}

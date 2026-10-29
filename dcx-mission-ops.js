@@ -23,7 +23,7 @@ function activeTeam(mission,t){
 }
 function feedFor(mission,t,kind='active'){
  const o=op(mission),r=record(mission);if(!o)return null;
- const responsible=r.teams?.[t],state=responsible?.state||kind;
+ const responsible=r.teams?.[t],state=r.archive?'completed':(responsible?.state||kind);
  const preps={};
  for(const [pid,p] of Object.entries(r.preps||{})){
   const mine=p.scope!=='exclusive'||p.ownerTeam===t;
@@ -164,7 +164,9 @@ async function mutate(missionId,event,fn){
  data=result.snapshot?.val?.()||data;renderHost();schedulePublish();
 }
 function patchTeam(mission,t,change){
- return mutate(mission,'team.'+change,s=>{s.teams=s.teams||{};const old=s.teams[t]||{state:'active',preps:{}};s.teams[t]={...old,state:change==='reactivate'?'active':change==='observe'?'observing':'completed',preps:old.preps||{}};return s});
+ return mutate(mission,'team.'+change,s=>{s.teams=s.teams||{};const old=s.teams[t]||{state:'active',preps:{}};const preps=old.preps||{};
+   if(change==='reactivate')Object.values(preps).forEach(p=>{if(p.state==='suspended')p.state='returned'});
+   s.teams[t]={...old,state:change==='reactivate'?'active':change==='observe'?'observing':'completed',preps};return s});
 }
 async function changePrep(mission,pid,params){
  return mutate(mission,pid?'prep.edit':'prep.create',s=>{
@@ -308,7 +310,7 @@ function hostEvaluations(){
 }
 function hostDetail(mission){
  const o=op(mission),r=record(mission);if(!o)return '';
- const ts=teamIds().filter(t=>window.DCX?.MissionControl?.isAssigned?.(mission,t));
+ const ts=teamIds().filter(t=>window.DCX?.MissionControl?.isAssigned?.(mission,t)||r.teams?.[t]);
  return '<div class="dcxMOPHeader"><h3>GESTÃO AVANÇADA // '+E(o.title)+'</h3><p>Atualizações de equipes, preparações classificadas, encerramentos e relatórios.</p></div>'+
  '<div class="dcxMOPSection"><h3>ESTADO DA OPERAÇÃO</h3><button class="btn" data-mo-action="archive" data-mo-mission="'+E(mission)+'">'+(r.archive?'REABRIR OPERAÇÃO':'ARQUIVAR / ENCERRAR MISSÃO')+'</button></div>'+
  '<div class="dcxMOPSection"><h3>EQUIPES OPERACIONAIS</h3>'+ts.map(t=>{
@@ -405,6 +407,6 @@ function init(){
  bind();
 }
 window.DCX=window.DCX||{};
-window.DCX.MissionOps={getView:()=>playerView,getPrivate:()=>host?data:null,makeView,feedFor,refresh:renderHost};
+window.DCX.MissionOps={getView:()=>playerView,getPrivate:()=>host?data:null,makeView,feedFor,refresh:renderHost,getTeamState:(mission,t)=>record(mission).teams?.[t]?.state||'',isArchived:mission=>!!record(mission).archive};
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();

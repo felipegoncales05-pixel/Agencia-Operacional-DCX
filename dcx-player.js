@@ -128,7 +128,7 @@ window.DCX = window.DCX || {};
           name=newName;localStorage.setItem("oph-name",newName);
           if($("name"))$("name").value=newName;
         }
-        renderTeams();
+        renderTeams();window.DCX?.MissionControl?.refreshPlayer?.();
       },e=>showSyncFailure("operators",e));
       refs.push(tr,or);
       teamLoadTimer=setTimeout(()=>{
@@ -137,6 +137,7 @@ window.DCX = window.DCX || {};
         renderTeams();
       },12000);
       initialized=true;
+      window.DCX?.MissionControl?.refreshPlayer?.();
       if(!i){
         // Teams remain visible, but private notes and presence require a player identity.
         console.info("[DCX PLAYER] Equipes ativas; aguardando identificação para recursos pessoais.");

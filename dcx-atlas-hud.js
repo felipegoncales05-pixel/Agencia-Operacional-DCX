@@ -264,7 +264,7 @@ function refresh(){
    if(!matches(q,p.title,p.description,p.type))continue;
    const row=makeRow(p.title,p.type==='risk'?'ZONA DE RISCO · '+p.stars+'★':p.type==='important'?'PONTO IMPORTANTE':'PONTO DE INTERESSE',
     ()=>window.DCX?.Cartography?.selectPoint?.(p.id),p.type==='risk'?'!':'◈');
-   if(/keymaster\\.html$/i.test(location.pathname)){
+   if(/keymaster\.html$/i.test(location.pathname)){
     const item=node('div','dcxAtlasDirectoryItem');
     const del=btn('×',()=>window.DCX?.Cartography?.deletePoint?.(p.id),'dcxAtlasRowDelete');
     del.type='button';del.title=p.preset?'Remover exemplo deste mapa':'Excluir ping do mapa';

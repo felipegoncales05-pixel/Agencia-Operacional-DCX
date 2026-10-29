@@ -14,7 +14,7 @@ Os registros novos ficam em `rooms/{sala}/state/missionControl`, sob `assignment
 
 O painel D‑1 original aceita pedidos de confirmação por equipe, e a Central exibe essas preparações junto às personalizadas. A antiga caixa de seleção global do Keymaster continua disponível, mas agora está identificada como **legada e global**. Não usá-la para novas confirmações coletivas.
 
-**Compatibilidade durante a transição:** operações ainda sem designação explícita mantêm a visibilidade anterior da sala, para não desaparecerem de repente para jogadores atuais. Ao salvar a lista de equipes, a interface passa a mostrar a operação apenas às equipes escolhidas. Equipes devem existir e o operador deve estar associado a uma delas pelo painel administrativo.
+**Compatibilidade durante a transição:** operações **preexistentes** sem designação explícita mantêm a visibilidade anterior da sala, para não desaparecerem de repente para jogadores atuais. **Novas missões começam sem equipes designadas e permanecem ocultas dos jogadores até o Keymaster selecionar os participantes na Central**. Ao salvar a lista, a interface passa a mostrar a operação apenas às equipes escolhidas. Equipes devem existir e o operador deve estar associado a uma delas pelo painel administrativo.
 
 ### Limites conhecidos desta primeira entrega
 

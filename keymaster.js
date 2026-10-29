@@ -131,7 +131,7 @@ console.info("[DCX OS] YUMIYA REACTION SYNC V2 // CLEAR EPOCH FIX");
     let changed=false;items.forEach(item=>{if(appendIncomingCanonical(item))changed=true});
     if(!changed)return;
     timelineSyncing=true;
-    try{await OPH.Realtime.setState(state)}catch(e){console.error("Falha ao sincronizar timeline canônica",e)}finally{timelineSyncing=false}
+    try{await OPH.Realtime.patchState(legacyStatePatch())}catch(e){console.error("Falha ao sincronizar timeline canônica",e)}finally{timelineSyncing=false}
   }
   function yumiyaControlBusy(){
     const a=document.activeElement;
@@ -145,7 +145,8 @@ console.info("[DCX OS] YUMIYA REACTION SYNC V2 // CLEAR EPOCH FIX");
     if(yumiyaControlBusy()){renderDeferred=true;return}
     renderDeferred=false;renderRequests();renderChat();renderOperatorProfiles();
   }
-  async function save(){await OPH.Realtime.setState(state);safeRender()}
+  function legacyStatePatch(){const next={...state};delete next.missionControl;return next}
+  async function save(){await OPH.Realtime.patchState(legacyStatePatch());safeRender()}
   function renderVisibility(){
     const defs=[["government","Contexto político"],["h01","H-01"],["approaches","Abordagens"],["preps","Preparações"],["n02","N-02"],["protocol","Protocolo"],["emergencySim","Simulador H-01"],["comms","Yumiya // Remote"]];
     $("visibility").innerHTML=defs.map(d=>`<label class="toggle"><span>${d[1]}</span><input type="checkbox" ${state.visible[d[0]]?'checked':''} onchange="KM.toggleVisible('${d[0]}',this.checked)"></label>`).join("");
@@ -154,7 +155,7 @@ console.info("[DCX OS] YUMIYA REACTION SYNC V2 // CLEAR EPOCH FIX");
     $("approachCtl").innerHTML=Object.entries(OPH.APPROACHES).map(([k,a])=>`<div class="adminRow"><div class="topline"><b>${a.name}</b><label><input type="checkbox" ${state.approaches[k]?'checked':''} onchange="KM.toggleApproach('${k}',this.checked)"> mostrar</label></div><button class="btn ${state.approaches.selected===k?'gold':''}" onclick="KM.selectApproach('${k}')">Selecionar</button></div>`).join("");
   }
   function renderPreps(){
-    const k=state.approaches.selected||"con";$("prepCtlTitle").textContent="Preparações — "+OPH.APPROACHES[k].name;$("prepCtl").innerHTML=OPH.PREP_DEFS[k].map(d=>`<label class="toggle"><span><b>${d[1]}</b><br><small style="color:#8095a8">${d[2]}</small></span><input type="checkbox" ${state.preps[k][d[0]]?'checked':''} onchange="KM.togglePrep('${k}','${d[0]}',this.checked)"></label>`).join("");
+    const k=state.approaches.selected||"con";$("prepCtlTitle").textContent="Preparações legadas (globais) — "+OPH.APPROACHES[k].name;$("prepCtl").innerHTML='<div class="dcxMCWarning" style="padding:10px 0;font-size:12px">Este controle é da versão original e altera o progresso GLOBAL. Para confirmar por equipe, abra a <button class="btn" type="button" onclick="DCX.Admin.switchTab(&quot;missions&quot;)">CENTRAL DE MISSÕES</button>.</div>'+OPH.PREP_DEFS[k].map(d=>`<label class="toggle"><span><b>${d[1]}</b><br><small style="color:#8095a8">${d[2]}</small></span><input type="checkbox" ${state.preps[k][d[0]]?'checked':''} onchange="KM.togglePrep('${k}','${d[0]}',this.checked)"></label>`).join("");
   }
   function renderClues(){
     $("clueCtl").innerHTML=OPH_GM.clues.map(c=>`<div class="adminRow"><div class="topline"><b>${c.title}</b><code>${c.key}</code></div><p>${c.gm}<br><b>Onde:</b> ${c.where}</p><button class="btn ${state.n02.clues[c.id]?'gold':''}" onclick="KM.toggleClue('${c.id}')">${state.n02.clues[c.id]?'BLOQUEAR':'LIBERAR PARA TODOS'}</button></div>`).join("");

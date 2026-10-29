@@ -146,12 +146,12 @@ async function syncPending(){
   const predatesWithdrawal=team?.state==='observing'&&Number(a.createdAt)<=Number(team.changedAt||0);
   if(!recognized||!prep||!wasActive&&!predatesWithdrawal||prep.scope==='exclusive'&&prep.ownerTeam!==a.teamId)continue;
   const old=team?.preps?.[a.value]?.state||'available';
-  if(!['available','returned'].includes(old))continue;
+  if(!['available','returned'].includes(old)||old==='returned'&&Number(a.createdAt||0)<=Number(team?.preps?.[a.value]?.at||0))continue;
   const token=a.missionId+'__'+a.teamId+'__'+a.value;if(keys.has(token))continue;keys.add(token);
   await mutate(a.missionId,'prep.request',next=>{
    next.teams=next.teams||{};const t=next.teams[a.teamId]||{state:'active',preps:{}};
    t.preps=t.preps||{};
-   if(!t.preps[a.value]||['available','returned'].includes(t.preps[a.value].state))
+   if(!t.preps[a.value]||t.preps[a.value].state==='available'||t.preps[a.value].state==='returned'&&Number(a.createdAt||0)>Number(t.preps[a.value].at||0))
     t.preps[a.value]={state:'pending',at:Date.now(),version:next.preps?.[a.value]?.version||1};
    next.teams[a.teamId]=t;return next;
   });

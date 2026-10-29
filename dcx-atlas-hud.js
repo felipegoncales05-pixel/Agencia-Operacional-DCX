@@ -7,6 +7,27 @@ const btn=(label,cb,cls='')=>{const b=node('button','dcxAtlasBtn '+cls,label);b.
 const data=()=>window.DCX?.FictionalAtlas||{};
 const engine=()=>window.DCX?.Cartography?.engine;
 let current='districts',selectedCity='tokyo',shell=null;
+const searchTerms=Object.create(null);
+const ptCollator=new Intl.Collator('pt-BR',{sensitivity:'base',numeric:true});
+const sortByName=items=>[...items].sort((a,b)=>ptCollator.compare(String(a.name||''),String(b.name||'')));
+const cleanQuery=value=>String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('pt-BR').trim();
+const matches=(query,...values)=>!query||values.some(v=>cleanQuery(v).includes(query));
+const placeholders={countries:'Buscar país...',cities:'Buscar cidade...',districts:'Buscar distrito...',neighborhoods:'Buscar bairro...',roads:'Buscar rua...',points:'Buscar ponto...'};
+// ISO country flags for the existing atlas. USSR is historical and has no Unicode flag emoji.
+const countryFlags={
+ 'CANADÁ':'🇨🇦','ESTADOS UNIDOS':'🇺🇸','MÉXICO':'🇲🇽','BRASIL':'🇧🇷','ARGENTINA':'🇦🇷',
+ 'CHILE':'🇨🇱','PERU':'🇵🇪','COLÔMBIA':'🇨🇴','VENEZUELA':'🇻🇪','BOLÍVIA':'🇧🇴',
+ 'EQUADOR':'🇪🇨','REINO UNIDO':'🇬🇧','IRLANDA':'🇮🇪','PORTUGAL':'🇵🇹','ESPANHA':'🇪🇸',
+ 'FRANÇA':'🇫🇷','ALEMANHA':'🇩🇪','ITÁLIA':'🇮🇹','PAÍSES BAIXOS':'🇳🇱','SUÉCIA':'🇸🇪',
+ 'NORUEGA':'🇳🇴','POLÔNIA':'🇵🇱','TURQUIA':'🇹🇷','GRÉCIA':'🇬🇷','UNIÃO SOVIÉTICA':'☭',
+ 'MARROCOS':'🇲🇦','EGITO':'🇪🇬','NIGÉRIA':'🇳🇬','ETIÓPIA':'🇪🇹','QUÊNIA':'🇰🇪',
+ 'ÁFRICA DO SUL':'🇿🇦','ANGOLA':'🇦🇴','CONGO':'🇨🇩','SUDÃO':'🇸🇩','ARGÉLIA':'🇩🇿',
+ 'ARÁBIA SAUDITA':'🇸🇦','EMIRADOS ÁRABES':'🇦🇪','IRÃ':'🇮🇷','PAQUISTÃO':'🇵🇰',
+ 'ÍNDIA':'🇮🇳','CHINA':'🇨🇳','JAPÃO':'🇯🇵','COREIA DO SUL':'🇰🇷',
+ 'NEPAL':'🇳🇵','BANGLADESH':'🇧🇩','TAILÂNDIA':'🇹🇭','VIETNÃ':'🇻🇳',
+ 'MALÁSIA':'🇲🇾','INDONÉSIA':'🇮🇩','FILIPINAS':'🇵🇭','MONGÓLIA':'🇲🇳',
+ 'SINGAPURA':'🇸🇬','AUSTRÁLIA':'🇦🇺','NOVA ZELÂNDIA':'🇳🇿'
+};
 const lex=()=>window.DCX?.AtlasLexicon;
 let labelMode=(()=>{try{return localStorage.getItem('dcx-atlas-label-mode')==='simple'?'simple':'complete'}catch{return 'complete'}})();
 function setLabelMode(value){labelMode=value==='simple'?'simple':'complete';try{localStorage.setItem('dcx-atlas-label-mode',labelMode)}catch{}window.DCX?.Cartography?.setLabelMode?.(labelMode);refresh();update()}
@@ -74,13 +95,39 @@ function head(){
  const tabs=node('div','dcxAtlasDirectoryTabs');
  const options=[['countries','PAÍSES'],['cities','CIDADES'],['districts','DISTRITOS'],['neighborhoods','BAIRROS'],['roads','RUAS'],['points','PONTOS']];
  for(const [id,label] of options){
-  const b=btn(label,()=>{current=id;refresh()});b.dataset.atlasCategory=id;tabs.append(b);
+  const b=btn(label,()=>{current=id;syncSearch();refresh()});b.dataset.atlasCategory=id;tabs.append(b);
  }
+ const searchBox=node('div','dcxAtlasSearch');
+ const searchLabel=node('label','dcxAtlasSearchLabel','LOCALIZAR POR NOME');searchLabel.htmlFor='dcxAtlasSearchInput';
+ const searchLine=node('div','dcxAtlasSearchLine');
+ const searchInput=document.createElement('input');
+ searchInput.type='search';searchInput.id='dcxAtlasSearchInput';
+ searchInput.autocomplete='off';searchInput.spellcheck=false;searchInput.maxLength=80;
+ searchInput.setAttribute('aria-controls','dcxAtlasDirectoryList');
+ const clear=btn('×',()=>{
+  searchTerms[current]='';searchInput.value='';refresh();searchInput.focus();
+ },'dcxAtlasSearchClear');clear.id='dcxAtlasSearchClear';clear.title='Limpar pesquisa';
+ clear.setAttribute('aria-label','Limpar pesquisa');
+ searchInput.addEventListener('input',()=>{
+  searchTerms[current]=searchInput.value;refresh();
+ });
+ searchInput.addEventListener('keydown',event=>{
+  if(event.key==='Enter'){
+   const first=$('dcxAtlasDirectoryList')?.querySelector('.dcxAtlasDirectoryRow');
+   if(first){event.preventDefault();first.click()}
+  }else if(event.key==='Escape'&&searchInput.value){
+   event.preventDefault();searchTerms[current]='';searchInput.value='';refresh();
+  }
+ });
+ searchLine.append(searchInput,clear);
+ const searchCount=node('small','dcxAtlasSearchCount');searchCount.id='dcxAtlasSearchCount';
+ searchCount.setAttribute('aria-live','polite');
+ searchBox.append(searchLabel,searchLine,searchCount);
  const list=node('div','dcxAtlasDirectoryList');list.id='dcxAtlasDirectoryList';
  const detail=node('section','dcxAtlasPointDetail');detail.id='dcxAtlasPointDetail';detail.hidden=true;
  const legend=node('div','dcxAtlasLegend');
  legend.append(node('strong','','LEGENDA DCX'),node('p','','◇ IMPORTANTE   ◎ INTERESSE   ! PERIGO'));
- right.append(tabs,list,detail,legend);
+ right.append(tabs,searchBox,list,detail,legend);
  sides.append(left,right);shell.append(sides);
  const footer=node('div','dcxAtlasBottom');
  footer.append(node('span','','DCX // GEOINT · CARTOGRAFIA FICCIONAL'));
@@ -99,7 +146,7 @@ function head(){
  root.classList.add('dcxAtlasActive');
  root.querySelector('.dcxMapHero')?.classList.add('dcxAtlasOldHero');
  root.querySelector('.dcxMapSourceNotice')?.classList.add('dcxAtlasOldNote');
- refresh();update();
+ syncSearch();refresh();update();
 }
 function showPoint(p){
  const detail=$('dcxAtlasPointDetail');if(!detail)return;
@@ -135,44 +182,107 @@ function makeRow(label,detail,click,icon='⌖'){
  b.append(node('span','dcxAtlasRowArrow','›'));
  return b;
 }
+function syncSearch(){
+ const input=$('dcxAtlasSearchInput'),clear=$('dcxAtlasSearchClear');
+ if(!input)return;
+ input.placeholder=placeholders[current]||'Buscar por nome...';
+ input.setAttribute('aria-label',input.placeholder);
+ input.value=searchTerms[current]||'';
+ if(clear)clear.disabled=!input.value;
+}
 function refresh(){
  const list=$('dcxAtlasDirectoryList');if(!list)return;
  document.querySelectorAll('[data-atlas-category]').forEach(b=>b.classList.toggle('active',b.dataset.atlasCategory===current));
  list.replaceChildren();
+ const q=cleanQuery(searchTerms[current]);
  const city=cities().find(c=>c.id===selectedCity)||cities()[0];
- const add=(name,desc,fn,ico)=>list.append(makeRow(name,desc,fn,ico));
+ const countNode=$('dcxAtlasSearchCount');
+ const searchInput=$('dcxAtlasSearchInput');
+ const clear=$('dcxAtlasSearchClear');
+ if(searchInput&&document.activeElement!==searchInput)syncSearch();
+ if(clear)clear.disabled=!q;
+ let total=0;
+ const add=(name,desc,fn,ico)=>{
+  list.append(makeRow(name,desc,fn,ico));
+  total++;
+  return list.lastElementChild;
+ };
  if(current==='countries'){
-  for(const item of (data().COUNTRIES||[]).map(([name,lat,lng])=>({name,real:name,lat,lng}))){
-   add(item.name,'PAÍS',()=>{
-    const nearest=cities().filter(c=>lex()?.countryOf(c)===item.real).sort((a,b)=>Math.hypot(a.lat-item.lat,a.lng-item.lng)-Math.hypot(b.lat-item.lat,b.lng-item.lng))[0];
-    if(nearest)chooseCity(nearest.id);
-    else window.DCX?.Cartography?.centerMap({lat:item.lat,lng:item.lng},2)
-   },'◇');
+  const entries=sortByName((data().COUNTRIES||[]).map(([name,lat,lng])=>({name,lat,lng})));
+  for(const item of entries){
+   if(!matches(q,item.name,lex()?.aliasCountry?.(item.name)))continue;
+   const flag=countryFlags[item.name]||'🏳️';
+   const row=add(item.name,'PAÍS · '+(lex()?.aliasCountry?.(item.name)||'DCX'),
+    ()=>{
+     // Country coordinates are catalog landmarks, not nearest city targets.
+     // Keep the view regional instead of jumping to city-level zoom 12.
+     const target=cities().find(c=>lex()?.countryOf(c)===item.name);
+     if(target)selectedCity=target.id;
+     window.DCX?.Cartography?.centerMap?.({lat:item.lat,lng:item.lng},item.name==='UNIÃO SOVIÉTICA'?3:5);
+     update();
+    },flag);
+   const badge=row?.querySelector('.dcxAtlasRowIcon');
+   if(badge){
+    badge.classList.add('dcxAtlasCountryFlag');
+    if(item.name==='UNIÃO SOVIÉTICA'){
+     badge.classList.add('dcxAtlasFlagSoviet');
+     badge.title='Símbolo histórico da União Soviética (representação estilizada)';
+    }else badge.title='Bandeira: '+item.name;
+   }
   }
  }else if(current==='cities'){
-  cities().forEach(c=>add(c.name,(lex()?.countryOf(c)||c.local),()=>chooseCity(c.id),'◈'));
+  for(const c of sortByName(cities())){
+   const country=lex()?.countryOf(c)||c.local;
+   if(!matches(q,c.name,c.local,lex()?.aliasCity?.(c),country,lex()?.aliasCountry?.(country)))continue;
+   add(c.name,country,()=>chooseCity(c.id),'◈');
+  }
  }else if(current==='districts'||current==='neighborhoods'||current==='roads'){
-  const rows=lex()?.locality(city,current)||[];
-  const className={districts:'DISTRITO',neighborhoods:'BAIRRO',roads:'VIA'}[current];
-  for(const p of rows)add(p.name,className+' · REFERÊNCIA: '+p.real,
-   ()=>window.DCX?.Cartography?.centerMap({lat:p.lat,lng:p.lng},current==='roads'?15:current==='neighborhoods'?13:12),
-   current==='roads'?'〰':'▦');
+  const kind=current;
+  const className={districts:'DISTRITO',neighborhoods:'BAIRRO',roads:'VIA'}[kind];
+  // Without a query the list stays scoped to the chosen city.
+  // With a query, search localities across the full atlas.
+  const sourceCities=q?cities():city?[city]:[];
+  const found=[];
+  for(const place of sourceCities){
+   for(const p of lex()?.locality?.(place,kind)||[]){
+    if(!matches(q,p.name,p.real,place.name,lex()?.aliasCity?.(place)))continue;
+    found.push({...p,city:place});
+   }
+  }
+  found.sort((a,b)=>ptCollator.compare(a.name,b.name)||ptCollator.compare(a.city.name,b.city.name));
+  for(const p of found){
+   const cityLabel=q?' · '+p.city.name:'';
+   add(p.name,className+cityLabel+' · REF: '+p.real,
+    ()=>{
+     selectedCity=p.city.id;
+     window.DCX?.Cartography?.centerMap?.({lat:p.lat,lng:p.lng},kind==='roads'?15:kind==='neighborhoods'?13:12);
+     update();
+    },kind==='roads'?'〰':'▦');
+  }
  }else{
-  const pts=pointList();
-  if(!pts.length)list.append(node('p','dcxAtlasNone','Nenhum ponto cadastrado.'));
-  pts.forEach(p=>{
+  for(const p of pointList()){
+   if(!matches(q,p.title,p.description,p.type))continue;
    const row=makeRow(p.title,p.type==='risk'?'ZONA DE RISCO · '+p.stars+'★':p.type==='important'?'PONTO IMPORTANTE':'PONTO DE INTERESSE',
     ()=>window.DCX?.Cartography?.selectPoint?.(p.id),p.type==='risk'?'!':'◈');
-   if(/keymaster\.html$/i.test(location.pathname)){
-    // Delete directly from the directory, even if a risk polygon covers the pin.
+   if(/keymaster\\.html$/i.test(location.pathname)){
     const item=node('div','dcxAtlasDirectoryItem');
     const del=btn('×',()=>window.DCX?.Cartography?.deletePoint?.(p.id),'dcxAtlasRowDelete');
-    del.type='button';
-    del.title=p.preset?'Remover exemplo deste mapa':'Excluir ping do mapa';
+    del.type='button';del.title=p.preset?'Remover exemplo deste mapa':'Excluir ping do mapa';
     del.setAttribute('aria-label',(p.preset?'Remover exemplo: ':'Excluir ping: ')+p.title);
     item.append(row,del);list.append(item);
    }else list.append(row);
-  });
+   total++;
+  }
+ }
+ if(countNode){
+  const label={countries:'países',cities:'cidades',districts:'distritos',
+   neighborhoods:'bairros',roads:'vias',points:'pontos'}[current]||'locais';
+  countNode.textContent=total+' '+label+(q?' encontrados':' disponíveis')+
+   ((current==='neighborhoods'||current==='districts'||current==='roads')&&!q&&city?' · '+city.name:'');
+ }
+ if(!total){
+  const empty=node('p','dcxAtlasNone',q?'NENHUM RESULTADO. TENTE OUTRO NOME.':'NENHUM LOCAL DISPONÍVEL.');
+  empty.setAttribute('role','status');list.append(empty);
  }
 }
 function update(){

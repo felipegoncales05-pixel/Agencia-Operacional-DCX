@@ -250,7 +250,7 @@ function renderPlayer(){
  if(activeDossierId)refreshCharacterDossier();
  const openDetail=$('dcxMissionDetail');
  if(openDetail&&!openDetail.hidden){
-  if(studio.operations.some(op=>op.id==='operacao-h'&&op.status==='published'))renderMission('operacao-h');
+  if(studio.operations.some(op=>op.id==='operacao-h'&&op.status==='published'&&(!window.DCX?.MissionControl||window.DCX.MissionControl.canSeeMission(op.id))))renderMission('operacao-h');
   else window.DCX?.PlayerHub?.showMissionList?.();
  }
  if($('dcxMissionDynamic')&&!$('dcxMissionDynamic').hidden)renderMission(currentMission);

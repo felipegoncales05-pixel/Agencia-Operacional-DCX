@@ -3,6 +3,7 @@
 const variants=[
 ['night-city-gold','NIGHT CITY // OURO','Amarelo e ciano no grafite','#11171c','#e6eb58','#65d8f3'],
 ['edgerunner-pulse','EDGERUNNER // PULSE','Rosa neon e ciano','#161523','#ff73c6','#62e0f4'],
+['edgerunners2-burn','EDGERUNNERS 2 // BURN','Vermelho brutal, azul elétrico e âmbar','#131725','#ff3d67','#42d5ff'],
 ['chrome-ghost','CHROME // GHOST','Azul cromado e magenta','#101e28','#7dd7ef','#e18be8'],
 ['glitch-red','GLITCH // VERMELHO','Vermelho e verde holográfico','#1c111a','#ff627c','#68e5cc'],
 ['synthwave-dusk','SYNTHWAVE // DUSK','Roxo e rosa noturnos','#1a1930','#b69aff','#ff93c0'],

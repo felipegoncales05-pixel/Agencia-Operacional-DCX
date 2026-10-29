@@ -211,3 +211,18 @@
 .dcxAtlasRowDelete:hover,.dcxAtlasRowDelete:focus-visible{background:#602439;border-color:#ff8da4;color:white}
 .dcxAtlasRowDelete:disabled{cursor:wait;opacity:.5}
 @media(max-width:600px){.dcxAtlasRowDelete{flex-basis:32px;min-width:32px}}
+
+/* ATLAS SEARCH // instant filtering and country flags. */
+.dcxAtlasSearch{display:grid;gap:6px;padding:10px 9px 9px;border-bottom:1px solid #29566c;background:#051926;flex:0 0 auto;min-width:0}
+.dcxAtlasSearchLabel{display:block;color:#83cfe0;font:900 8px ui-monospace,monospace;letter-spacing:.1em}
+.dcxAtlasSearchLine{display:grid;grid-template-columns:minmax(0,1fr) 34px;gap:5px;align-items:center}
+#dcxAtlasSearchInput{width:100%;min-width:0;min-height:39px;box-sizing:border-box;padding:9px 10px;border:1px solid #3a7086;border-radius:7px;background:#020d15;color:#edfcff;font:11px ui-monospace,monospace;outline:none}
+#dcxAtlasSearchInput::placeholder{color:#739cae;opacity:1}
+#dcxAtlasSearchInput:focus{border-color:#6ce4ef;box-shadow:0 0 0 2px #48bfd22b}
+.dcxAtlasSearchClear{width:34px;min-width:34px;min-height:39px;padding:0;font:900 19px ui-monospace,monospace}
+.dcxAtlasSearchClear:disabled{opacity:.35;cursor:default}
+.dcxAtlasSearchCount{font:8px/1.4 ui-monospace,monospace;color:#85afc4;min-height:12px}
+.dcxAtlasDirectoryList{flex:1 1 auto;min-height:50px;overflow-y:auto;overscroll-behavior:contain}
+.dcxAtlasCountryFlag{font:20px/1 system-ui,'Apple Color Emoji','Segoe UI Emoji',sans-serif;letter-spacing:0;flex:0 0 28px;min-width:28px;text-align:center}
+.dcxAtlasFlagSoviet{display:grid;place-items:center;width:27px;height:19px;min-width:27px;border:1px solid #b32d2d;background:#ad1523;border-radius:2px;color:#ffe16a;font:900 16px/1 Georgia,serif;text-shadow:none}
+@media(max-width:800px){.dcxAtlasSearch{padding:8px 6px}.dcxAtlasSearchLine{grid-template-columns:minmax(0,1fr) 32px}.dcxAtlasSearchClear{width:32px;min-width:32px}}

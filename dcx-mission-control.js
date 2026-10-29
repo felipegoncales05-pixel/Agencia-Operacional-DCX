@@ -233,6 +233,7 @@
   if(!root||!body)return;
   root.querySelectorAll('[data-mc-tab]').forEach(b=>{b.classList.toggle('active',b.dataset.mcTab===tab);b.setAttribute('aria-selected',String(b.dataset.mcTab===tab))});
   body.innerHTML=tab==='evaluations'?renderEvaluations():tab==='archive'?renderMissions(true):renderMissions(false);
+  window.dispatchEvent?.(new CustomEvent('dcx:mission-control-render'));
  }
  function setupListeners(){
   const r=room(),database=db();
@@ -263,6 +264,6 @@
   render();
  }
  window.DCX=window.DCX||{};
- window.DCX.MissionControl={canSeeMission,getStatus,canRequest,getTeamId:teamId,isAssigned,confirmFromRequest,restrictNewMission,refreshPlayer(){if(!host){window.DCX?.StoryStudio?.refreshPlayer?.();window.OPHPlayer?.refreshPreps?.()}}};
+ window.DCX.MissionControl={canSeeMission,getStatus,canRequest,getTeamId:teamId,isAssigned,confirmFromRequest,restrictNewMission,getSelected:()=>selected,refreshPlayer(){if(!host){window.DCX?.StoryStudio?.refreshPlayer?.();window.OPHPlayer?.refreshPreps?.()}}};
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();

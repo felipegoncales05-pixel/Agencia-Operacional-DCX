@@ -97,6 +97,7 @@ function showModule(missionId,moduleId){
  const actions=$('dcxModuleModalActions');actions.innerHTML='';
  if(m.type==='preparations'){
   const mc=window.DCX?.MissionControl;
+  const readonly=['observing','completed'].includes(window.DCX?.MissionOps?.getTeamState?.(op.id,mc?.getTeamId?.()))||window.DCX?.MissionOps?.isArchived?.(op.id);
   if(mc&&!mc.canSeeMission(op.id)){actions.textContent='MISSÃO NÃO AUTORIZADA PARA SUA EQUIPE.';return}
   const local=loadLocal(localKey(op.id));
   const items=op.preparations||[];
@@ -106,18 +107,19 @@ function showModule(missionId,moduleId){
    const pending=current?.state==='analysis';
    const status=done?'CONCLUÍDA PELO KEYMASTER':pending?'AGUARDANDO KEYMASTER':p.interaction==='request'?'SOLICITAR CONCLUSÃO':p.interaction==='local'?'CHECKLIST PESSOAL':'SOMENTE LEITURA';
    return '<div class="dcxMissionPrepAction"><span>'+esc(p.symbol||'◎')+'</span><div><b>'+esc(p.title)+'</b><p>'+esc(p.description)+'</p><small>'+esc(status)+'</small></div>'+
-   (done?'<strong>✓</strong>':pending?'<strong>⌛</strong>':p.interaction==='local'?'<button data-local-prep="'+esc(p.id)+'" aria-pressed="'+!!local[p.id]+'">'+(local[p.id]?'✓ MARCADO':'MARCAR PARA MIM')+'</button>':p.interaction==='request'?'<button data-request-prep="'+esc(p.id)+'">ENVIAR PEDIDO</button>':'')+'</div>';
+   (done?'<strong>✓</strong>':pending?'<strong>⌛</strong>':readonly?'<span>SOMENTE LEITURA</span>':p.interaction==='local'?'<button data-local-prep="'+esc(p.id)+'" aria-pressed="'+!!local[p.id]+'">'+(local[p.id]?'✓ MARCADO':'MARCAR PARA MIM')+'</button>':p.interaction==='request'?'<button data-request-prep="'+esc(p.id)+'">ENVIAR PEDIDO</button>':'')+'</div>';
   }).join(''):'<p>Sem preparações publicadas.</p>';
  }else if(m.type==='choice'){
+  const readonly=['observing','completed'].includes(window.DCX?.MissionOps?.getTeamState?.(op.id,window.DCX?.MissionControl?.getTeamId?.()))||window.DCX?.MissionOps?.isArchived?.(op.id);
   actions.innerHTML='<p class="dcxMissionChoiceIntro">Sua escolha será enviada ao Keymaster e não muda a missão sem a aprovação dele.</p>'+
-   (m.options||[]).map((v,i)=>'<button type="button" data-module-choice="'+i+'">'+esc(v)+'</button>').join('');
+   (readonly?'<p>SOMENTE LEITURA — EQUIPE OBSERVADORA OU MISSÃO ENCERRADA</p>':(m.options||[]).map((v,i)=>'<button type="button" data-module-choice="'+i+'">'+esc(v)+'</button>').join(''));
  }
  overlay.hidden=false;$('dcxModuleModalClose')?.focus();
 }
 async function sendInteraction(kind,value){
  const op=window.DCX?.StoryStudio?.operations?.find(o=>o.id===playerMission&&o.status==='published');
  const module=op?.modules?.find(x=>x.id===currentModule&&x.published);
- if(!op||!module||window.DCX?.MissionControl&&!window.DCX.MissionControl.canSeeMission(op.id))return;
+ if(!op||!module||window.DCX?.MissionControl&&!window.DCX.MissionControl.canSeeMission(op.id)||['observing','completed'].includes(window.DCX?.MissionOps?.getTeamState?.(op.id,window.DCX?.MissionControl?.getTeamId?.()))||window.DCX?.MissionOps?.isArchived?.(op.id))return;
  if(kind==='choice'&&(module.type!=='choice'||!module.options.includes(value)))return;
  if(kind==='prep'&&(module.type!=='preparations'||!op.preparations.some(p=>p.id===value&&p.interaction==='request')||!window.DCX?.MissionControl?.canRequest(op.id,value))){$('dcxModuleModalStatus').textContent='PREPARAÇÃO INDISPONÍVEL PARA SUA EQUIPE.';return;}
  const btns=document.querySelectorAll('#dcxModuleModalActions button');btns.forEach(b=>b.disabled=true);

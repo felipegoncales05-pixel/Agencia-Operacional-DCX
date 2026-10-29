@@ -58,7 +58,7 @@ function head(){
  brand.append(node('small','','DCX // CRÔNICAS DO TEMPO'),node('strong','','CENTRAL CARTOGRÁFICA'));
  const nav=node('div','dcxAtlasNav');
  nav.append(btn('◉ GLOBO 3D',goGlobal,'global'),btn('⌖ TOKYO',()=>chooseCity('tokyo'),'tokyo'));
- const other=btn('◇ OUTRAS CIDADES',()=>{current='cities';refresh()},'cities');
+ const other=btn('◇ OUTRAS CIDADES',()=>{current='cities';syncSearch();refresh()},'cities');
  nav.append(other);
  const modes=node('div','dcxAtlasViewModes');
  modes.setAttribute('role','group');modes.setAttribute('aria-label','Detalhamento cartográfico');
@@ -173,7 +173,7 @@ function showPoint(p){
    ()=>window.DCX?.Cartography?.deletePoint?.(p),'dcxAtlasDelete'));
   detail.append(actions);
  }
- if(current!=='points'){current='points';refresh()}
+ if(current!=='points'){current='points';syncSearch();refresh()}
 }
 function makeRow(label,detail,click,icon='⌖'){
  const b=btn('',click,'dcxAtlasDirectoryRow');

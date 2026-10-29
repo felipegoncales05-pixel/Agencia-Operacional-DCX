@@ -292,7 +292,11 @@ function form(){
   try{
    b.disabled=true;
    if(action==='setTeam')await patchTeam(mission,t,val('teamState_'+t)==='observing'?'observe':val('teamState_'+t)==='completed'?'complete':'reactivate');
-   if(action==='archive')await mutate(mission,'mission.archive',s=>{s.archive=!s.archive;return s});
+   if(action==='archive'){
+    await mutate(mission,'mission.archive',s=>{s.archive=!s.archive;return s});
+    for(const tid of teamIds().filter(tid=>window.DCX?.MissionControl?.isAssigned?.(mission,tid)||record(mission).teams?.[tid]))
+     await pushNotice(mission,tid,record(mission).archive?'A missão foi encerrada pelo Keymaster.':'A missão foi reaberta pelo Keymaster.');
+   }
    if(action==='createPrep'||action==='editPrep'){
     const title=text('prepTitle');if(!title)throw Error('Título obrigatório.');
     await changePrep(mission,action==='editPrep'?val('prepId'):null,{title,description:text('prepDescription'),scope:val('prepScope'),ownerTeam:val('prepOwner')});
@@ -302,6 +306,7 @@ function form(){
    if(action==='prepVisibility'){
     await mutate(mission,'prep.visibility',s=>{s.preps[b.dataset.moPrep].visibility=s.preps[b.dataset.moPrep].visibility||{};
      s.preps[b.dataset.moPrep].visibility[t]=val('visibility_'+b.dataset.moPrep+'_'+t);return s});
+    if(val('visibility_'+b.dataset.moPrep+'_'+t)!=='none')await pushNotice(mission,t,'Uma preparação exclusiva foi revelada à sua equipe.');
    }
    if(action==='saveOutcome')await setOutcome(mission,t,val('outcome_'+t),text('internal_'+t),text('public_'+t),checked('published_'+t));
    if(action==='saveGeneral'){

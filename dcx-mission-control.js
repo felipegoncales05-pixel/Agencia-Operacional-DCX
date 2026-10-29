@@ -86,6 +86,15 @@
    control=next;
   }
  }
+ // Novas operações começam restritas. Missões já cadastradas preservam a visibilidade legada.
+ async function restrictNewMission(missionId){
+  if(!missionId||!/^[a-zA-Z0-9_-]{1,64}$/.test(missionId))throw Error('Identificador inválido');
+  await commit(next=>{
+   next.assignments=next.assignments||{};
+   if(!next.assignments[missionId])next.assignments[missionId]={configured:true,teams:{},updatedAt:Date.now()};
+   return next;
+  });
+ }
  async function saveAssignments(missionId,teamIds){
   const op=catalog().find(v=>v.id===missionId);if(!op)return;
   await commit(next=>{
@@ -254,6 +263,6 @@
   render();
  }
  window.DCX=window.DCX||{};
- window.DCX.MissionControl={canSeeMission,getStatus,canRequest,getTeamId:teamId,isAssigned,confirmFromRequest,refreshPlayer(){if(!host){window.DCX?.StoryStudio?.refreshPlayer?.();window.OPHPlayer?.refreshPreps?.()}}};
+ window.DCX.MissionControl={canSeeMission,getStatus,canRequest,getTeamId:teamId,isAssigned,confirmFromRequest,restrictNewMission,refreshPlayer(){if(!host){window.DCX?.StoryStudio?.refreshPlayer?.();window.OPHPlayer?.refreshPreps?.()}}};
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();

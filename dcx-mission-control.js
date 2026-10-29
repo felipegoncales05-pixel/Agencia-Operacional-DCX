@@ -15,6 +15,16 @@
   const legacy=(window.OPH?.PREP_DEFS?.[approach]||[]).map(([key,title,description])=>({id:'legacy:'+approach+':'+key,title,description,interaction:'request',legacyApproach:approach,legacyKey:key}));
   return [...original,...legacy];
  }
+ function findPrep(op,prepId){
+  if(!op)return null;
+  const own=op.preparations?.find(p=>p.id===prepId);if(own)return own;
+  if(op.id!=='operacao-h')return null;
+  for(const [approach,defs] of Object.entries(window.OPH?.PREP_DEFS||{})){
+   const row=(defs||[]).find(p=>'legacy:'+approach+':'+p[0]===prepId);
+   if(row)return {id:prepId,title:row[1],description:row[2],interaction:'request',legacyApproach:approach,legacyKey:row[0]};
+  }
+  return null;
+ }
  const room=()=>window.OPH?.Realtime?.getRoom?.()||'';
  const db=()=>window.OPH?.Realtime?.getFirebaseDatabase?.();
  const firebaseMode=()=>window.OPH?.Realtime?.getMode?.()==='firebase';
@@ -33,7 +43,7 @@
   return !!t&&(!a?.configured||!!a.teams?.[t]);
  }
  function getStatus(missionId,team,prepId){
-  const op=catalog().find(o=>o.id===missionId),p=catalogPreps(op).find(p=>p.id===prepId);
+  const op=catalog().find(o=>o.id===missionId),p=findPrep(op,prepId);
   if(!p)return {state:'unknown',confirmed:false};
   const record=control?.progress?.[missionId]?.[team]?.[prepId];
   if(record?.state==='confirmed')return {state:'confirmed',confirmed:true,legacy:false,updatedAt:record.updatedAt};
@@ -56,7 +66,7 @@
   return String(operators?.[player]?.narrative?.teamId||'');
  }
  function requestIsAuthorized(a){
-  const t=requestTeam(a),op=catalog().find(v=>v.id===a.missionId),p=catalogPreps(op).find(v=>v.id===a.value);
+  const t=requestTeam(a),op=catalog().find(v=>v.id===a.missionId),p=findPrep(op,a.value);
   return !!(a.type==='prep'&&t&&p?.interaction==='request'&&isAssigned(a.missionId,t)&&(!a.teamId||a.teamId===t));
  }
  function statusText(s){return s.confirmed?(s.legacy?'CONFIRMADA · LEGADO':'CONFIRMADA'):s.state==='analysis'?'EM ANÁLISE':'DISPONÍVEL'}
@@ -87,7 +97,7 @@
   render();
  }
  async function confirm(missionId,t,prepId,requestOwner){
-  const op=catalog().find(v=>v.id===missionId),team=teams?.[t],p=catalogPreps(op).find(v=>v.id===prepId);
+  const op=catalog().find(v=>v.id===missionId),team=teams?.[t],p=findPrep(op,prepId);
   if(!op||!team||!p||!isAssigned(missionId,t))throw Error('Missão, equipe ou preparação não autorizada.');
   if(!confirmDialog('Confirmar "'+p.title+'" para '+(team.name||t)+'?'))return false;
   await commit(next=>{
@@ -169,7 +179,7 @@
   const list=pendingTasks().filter(a=>a.type==='prep');
   if(!list.length)return '<p class="dcxMCEmpty">Nenhuma preparação aguardando avaliação. Escolhas narrativas continuam no editor original, abaixo.</p>';
   return '<div class="dcxMCList">'+list.map(a=>{
-   const op=catalog().find(o=>o.id===a.missionId),p=catalogPreps(op).find(p=>p.id===a.value);
+   const op=catalog().find(o=>o.id===a.missionId),p=findPrep(op,a.value);
    const t=requestTeam(a),name=teams?.[t]?.name,valid=requestIsAuthorized(a);
    const status=valid?getStatus(a.missionId,t,a.value):null;
    return '<article class="dcxMCCard"><small>'+esc(op?.title||a.missionTitle||'MISSÃO')+' · '+esc(name||'EQUIPE NÃO IDENTIFICADA')+'</small><h3>'+esc(p?.title||'PREPARAÇÃO NÃO ENCONTRADA')+'</h3><p>Solicitação de um integrante da equipe.</p>'+

@@ -1,18 +1,19 @@
 (()=>{
   'use strict';
   const STORE='dcx-player-settings-v1';
-  const THEMES=['arc-cyan','dcx-green','ember-amber','void-violet','frost-blue','crimson-ruby','neon-rose','ghost-mono','solar-gold','toxic-lime','ocean-teal','dusk-wine','midnight-night','steel-blue','forest-moss','sakura-rose','copper-bronze','arctic-ice','bloodmoon-dark','royal-sapphire','aurora-mint','sandstorm-desert','night-city-gold','edgerunner-pulse','edgerunners2-burn','chrome-ghost','glitch-red','synthwave-dusk','acid-signal','hologram-violet','blackout-comfort'];
+  const THEMES=['arc-cyan','dcx-green','ghost-mono','void-violet','royal-sapphire','sakura-rose','sandstorm-desert','night-city-gold','edgerunners2-burn','blackout-comfort'];
+  const MIGRATIONS={'ember-amber':'night-city-gold','frost-blue':'arc-cyan','crimson-ruby':'edgerunners2-burn','neon-rose':'sakura-rose','solar-gold':'night-city-gold','toxic-lime':'dcx-green','ocean-teal':'arc-cyan','dusk-wine':'sakura-rose','midnight-night':'blackout-comfort','steel-blue':'royal-sapphire','forest-moss':'dcx-green','copper-bronze':'sandstorm-desert','arctic-ice':'arc-cyan','bloodmoon-dark':'edgerunners2-burn','aurora-mint':'dcx-green','edgerunner-pulse':'edgerunners2-burn','chrome-ghost':'ghost-mono','glitch-red':'edgerunners2-burn','synthwave-dusk':'void-violet','acid-signal':'dcx-green','hologram-violet':'void-violet'};
   const DENSITIES=['comfortable','compact'];
   const DEFAULTS={theme:'arc-cyan',density:'comfortable'};
   const $=id=>document.getElementById(id);
-  function read(){try{const raw=JSON.parse(localStorage.getItem(STORE)||'{}');return{theme:THEMES.includes(raw.theme)?raw.theme:DEFAULTS.theme,density:DENSITIES.includes(raw.density)?raw.density:DEFAULTS.density}}catch{return{...DEFAULTS}}}
+  function read(){try{const raw=JSON.parse(localStorage.getItem(STORE)||'{}');return{theme:THEMES.includes(raw.theme)?raw.theme:(MIGRATIONS[raw.theme]||DEFAULTS.theme),density:DENSITIES.includes(raw.density)?raw.density:DEFAULTS.density}}catch{return{...DEFAULTS}}}
   let state=read();
   function persist(){try{localStorage.setItem(STORE,JSON.stringify(state))}catch{}}
   function apply(updateUI=true){document.documentElement.dataset.playerTheme=state.theme;document.documentElement.dataset.playerDensity=state.density;if(updateUI)syncUI()}
   function syncUI(){
     document.querySelectorAll('[data-theme-choice]').forEach(btn=>{const active=btn.dataset.themeChoice===state.theme;btn.classList.toggle('active',active);btn.setAttribute('aria-pressed',String(active));const badge=btn.querySelector('.settingsSelected');if(badge)badge.textContent=active?'ATIVO':'USAR'});
     document.querySelectorAll('[data-density-choice]').forEach(btn=>{const active=btn.dataset.densityChoice===state.density;btn.classList.toggle('active',active);btn.setAttribute('aria-pressed',String(active))});
-    const label=$('playerSettingsCurrent');if(label){const names={"arc-cyan":"ARC // CIANO","dcx-green":"DCX // VERDE","ember-amber":"EMBER // ÂMBAR","void-violet":"VOID // VIOLETA","frost-blue":"FROST // AZUL","crimson-ruby":"CRIMSON // RUBI","neon-rose":"NEON // ROSA","ghost-mono":"GHOST // MONO","solar-gold":"SOLAR // DOURADO","toxic-lime":"TOXIC // LIMA","ocean-teal":"OCEAN // TURQUESA","dusk-wine":"DUSK // VINHO","midnight-night":"MIDNIGHT // NOTURNO","steel-blue":"STEEL // AÇO","forest-moss":"FOREST // MUSGO","sakura-rose":"SAKURA // ROSÉ","copper-bronze":"COPPER // COBRE","arctic-ice":"ARCTIC // GELO","bloodmoon-dark":"BLOODMOON // ESCURO","royal-sapphire":"ROYAL // SAFIRA","aurora-mint":"AURORA // MENTA","sandstorm-desert":"SANDSTORM // AREIA","night-city-gold":"NIGHT CITY // OURO","edgerunner-pulse":"EDGERUNNER // PULSE","edgerunners2-burn":"EDGERUNNERS 2 // BURN","chrome-ghost":"CHROME // GHOST","glitch-red":"GLITCH // VERMELHO","synthwave-dusk":"SYNTHWAVE // CREPÚSCULO","acid-signal":"ACID // SIGNAL","hologram-violet":"HOLOGRAMA // VIOLETA","blackout-comfort":"BLACKOUT // DESCANSO"};label.textContent=`${names[state.theme]} // ${state.density==='compact'?'COMPACTO':'CONFORTÁVEL'}`}
+    const label=$('playerSettingsCurrent');if(label){const names={"arc-cyan":"ARC // CIANO","dcx-green":"DCX // VERDE","ghost-mono":"GHOST // MONO","void-violet":"VOID // VIOLETA","royal-sapphire":"ROYAL // SAFIRA","sakura-rose":"SAKURA // ROSÉ","sandstorm-desert":"SANDSTORM // AREIA","night-city-gold":"NIGHT CITY // OURO","edgerunners2-burn":"EDGERUNNERS 2 // BURN","blackout-comfort":"BLACKOUT // DESCANSO"};label.textContent=`${names[state.theme]} // ${state.density==='compact'?'COMPACTO':'CONFORTÁVEL'}`}
   }
   function setTheme(theme){if(!THEMES.includes(theme))return;state.theme=theme;persist();apply()}
   function setDensity(density){if(!DENSITIES.includes(density))return;state.density=density;persist();apply()}
@@ -26,7 +27,7 @@
     $('playerOpenKeymaster')?.addEventListener('click',()=>window.DCX?.Navigation?.goKeymaster?.());
     document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('dcxSettingsPanel')?.classList.contains('hidden'))toggle(false)});
   }
-  function init(){apply(false);bind();syncUI();console.info('[DCX OS] PLAYER SETTINGS V5 // QUICK ACCESS + 31 THEMES + DENSITY // LOCAL ONLY')}
+  function init(){persist();apply(false);bind();syncUI();console.info('[DCX OS] PLAYER SETTINGS V5 // QUICK ACCESS + 10 THEMES + DENSITY // LOCAL ONLY')}
   window.DCX=window.DCX||{};window.DCX.PlayerSettings={toggle,setTheme,setDensity,reset,get state(){return{...state}}};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();

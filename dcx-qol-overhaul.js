@@ -16,23 +16,8 @@ function avatar(pid){try{return window.DCX?.Media?.getAvatarUrl?.(pid)||localSto
 function setAvatar(pid,data){try{data?localStorage.setItem(avatarKey(pid),data):localStorage.removeItem(avatarKey(pid))}catch{}}
 async function imageData(file){if(!file||!/^image\//.test(file.type))throw new Error('Selecione uma imagem.');if(file.size>8*1024*1024)throw new Error('Imagem muito grande (máx. 8 MB).');const url=URL.createObjectURL(file);try{const img=await new Promise((ok,fail)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=fail;i.src=url});const maxW=360,maxH=450,scale=Math.min(1,maxW/img.width,maxH/img.height),w=Math.max(1,Math.round(img.width*scale)),h=Math.max(1,Math.round(img.height*scale));const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');x.fillStyle='#080b10';x.fillRect(0,0,w,h);x.drawImage(img,0,0,w,h);return c.toDataURL('image/jpeg',.84)}finally{URL.revokeObjectURL(url)}}
 const extraThemes=[
- ['frost-blue','themeFrost','FROST // AZUL','Azul gelo + ciano claro sobre marinho profundo.'],
- ['crimson-ruby','themeCrimson','CRIMSON // RUBI','Rubi + coral sobre preto vinho.'],
- ['neon-rose','themeRose','NEON // ROSA','Magenta + ciano sobre ameixa escura.'],
- ['ghost-mono','themeGhost','GHOST // MONO','Grafite + prata fria para um terminal quase monocromático.'],
- ['solar-gold','themeSolar','SOLAR // DOURADO','Dourado + marfim sobre navy/preto profundo.'],
- ['toxic-lime','themeToxic','TOXIC // LIMA','Verde-limão + amarelo ácido sobre preto controlado.'],
- ['ocean-teal','themeOcean','OCEAN // TURQUESA','Azul-petróleo + turquesa + menta fria.'],
- ['dusk-wine','themeDusk','DUSK // VINHO','Bordô + rosé metálico + creme sobre vinho escuro.'],
- ['midnight-night','themeMidnight','MIDNIGHT // NOTURNO','Preto meia-noite + cinza chumbo + branco frio.'],
- ['steel-blue','themeSteel','STEEL // AÇO','Grafite + azul-aço + prata industrial.'],
- ['forest-moss','themeForest','FOREST // MUSGO','Verde-musgo + oliva + bege suave.'],
  ['sakura-rose','themeSakura','SAKURA // ROSÉ','Rosa queimado + vinho suave + creme.'],
- ['copper-bronze','themeCopper','COPPER // COBRE','Marrom profundo + cobre + bege quente.'],
- ['arctic-ice','themeArctic','ARCTIC // GELO','Cinza frio + azul gelo + branco clínico.'],
- ['bloodmoon-dark','themeBloodmoon','BLOODMOON // ESCURO','Preto carvão + vinho profundo + vermelho contido.'],
  ['royal-sapphire','themeRoyal','ROYAL // SAFIRA','Azul-marinho + safira + prata de alta patente.'],
- ['aurora-mint','themeAurora','AURORA // MENTA','Petróleo + menta + lilás frio.'],
  ['sandstorm-desert','themeSandstorm','SANDSTORM // AREIA','Marrom escuro + areia + dourado fosco.']
 ];
 function injectThemes(){

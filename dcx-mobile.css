@@ -1,0 +1,204 @@
+/* DCX MOBILE / 2026
+ * Applied LAST, after theme packs and dashboard overrides.
+ * Presentation only: no Firebase, player IDs, map data or authentication changes.
+ */
+@media (max-width: 980px) {
+  .app, #console, .dcxVcMain, .playerWorkspacePane, .kmWorkspaceView,
+  .kmSingle, .dcxPanel, .dcxCharacterGrid, .dcxTacticalMap {
+    max-width:100%; min-width:0; box-sizing:border-box;
+  }
+  :is(.cols2,.cols3,.approaches,.preps,.n02,.dcxAdminGrid,.kmGrid,.kmStudioLayout,
+      .dcxStoryInfoColumns,.dcxMissionBuilderLayout,.dcxFactionLayout,.kmCredentialsShell .kmCredLayout) {
+    grid-template-columns:minmax(0,1fr)!important;
+  }
+  img,video,canvas,svg { max-width:100%; }
+  .dcxMapLayout,.dcxMapOptimized .dcxMapLayout {
+    grid-template-columns:minmax(0,1fr)!important;
+  }
+  .kmWorkspaceView :is(input,select,textarea),.playerWorkspacePane :is(input,select,textarea){
+    max-width:100%;box-sizing:border-box;
+  }
+  .dcxVcContext{flex-wrap:wrap;align-items:flex-start;gap:10px}
+  .dcxVcQuick{flex-wrap:wrap}
+}
+@media (max-width: 780px) {
+  :root{--dcx-mobile-pad:10px}
+  html{max-width:100%;overflow-x:clip}
+  body{max-width:100%;overflow-x:clip}
+  .app,html[data-player-density=compact] .app,html[data-km-density=compact] .app{
+    width:100%;max-width:100%!important;padding:var(--dcx-mobile-pad)!important;box-sizing:border-box
+  }
+  .top,html[data-player-density=compact] .top,html[data-km-density=compact] .top{
+    position:relative!important;top:auto!important;display:flex!important;
+    flex-wrap:wrap!important;gap:9px!important;padding:11px!important;
+    min-width:0;border-radius:13px!important
+  }
+  .top .brand{flex:1 1 180px;min-width:0}
+  .top .brand b{font-size:clamp(12px,3.5vw,17px);overflow-wrap:anywhere}
+  .top .brand small{font-size:8px;letter-spacing:.04em;overflow-wrap:anywhere}
+  .top .actions{display:flex;flex:1 1 100%;width:100%;min-width:0;flex-wrap:wrap;justify-content:flex-start;gap:7px}
+  .top .actions>*{max-width:100%}
+  .top .actions .btn{white-space:normal;min-height:40px}
+  .roomBar,html[data-player-density=compact] .roomBar,html[data-km-density=compact] .roomBar{
+    display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;
+    align-items:center;gap:8px!important;padding:10px!important;min-width:0
+  }
+  .roomBar>b{grid-column:1/-1}
+  .roomBar input,.roomBar #playerUrl{width:100%!important;min-width:0!important;max-width:100%!important}
+  .roomBar .btn{min-height:44px;min-width:90px}
+  .login{width:calc(100% - 20px);max-width:480px;box-sizing:border-box;margin:7dvh auto;padding:16px}
+  .login input{box-sizing:border-box;font-size:16px}
+  .playerWorkspaceBar,html[data-player-density=compact] .playerWorkspaceBar{
+    display:flex!important;grid-template-columns:none!important;flex-wrap:nowrap!important;
+    gap:8px!important;width:100%!important;max-width:100%!important;
+    margin:0!important;padding:10px 1px 10px!important;
+    overflow-x:auto!important;overscroll-behavior-inline:contain;scroll-snap-type:x proximity;
+    scrollbar-width:thin;-webkit-overflow-scrolling:touch;
+  }
+  .playerWorkspaceBar>.playerWorkspaceTab,
+  html[data-player-density=compact] .playerWorkspaceBar>.playerWorkspaceTab{
+    flex:0 0 clamp(156px,48vw,225px)!important;
+    width:clamp(156px,48vw,225px)!important;
+    min-width:0!important;min-height:66px!important;
+    grid-template-columns:minmax(0,1fr)!important;
+    padding:12px!important;scroll-snap-align:start
+  }
+  .playerWorkspaceTab small{font-size:8px!important}
+  .playerWorkspaceTab b{font-size:16px!important;line-height:1.2!important}
+  .playerWorkspaceTab span{display:none!important}
+  .playerWorkspacePane.active{min-width:0;max-width:100%}
+  .playerWorkspacePane .view{padding:clamp(12px,3vw,22px)!important;min-height:0}
+  .playerWorkspacePane .screen{min-height:0}
+  .dcxPlayerDashboardShell,html[data-player-density=compact] .dcxPlayerDashboardShell{
+    display:grid!important;grid-template-columns:minmax(0,1fr)!important
+  }
+  .dcxFieldSidebar{
+    position:static!important;top:auto!important;min-height:0!important;
+    padding:10px!important
+  }
+  .dcxFieldSidebarTools.dcxWorkspaceGrid{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important
+  }
+  .dcxFieldTool.dcxModuleCard{
+    min-width:0;min-height:64px!important;padding:9px!important
+  }
+  .dcxFieldTool b{font-size:11px!important;overflow-wrap:anywhere}
+  .dcxDashMainGrid,.dcxDashHero{
+    grid-template-columns:minmax(0,1fr)!important
+  }
+  .dcxDashHeroCopy{padding:clamp(16px,4vw,28px)!important}
+  .dcxDashHeroCopy h1{font-size:clamp(29px,8vw,46px)!important;line-height:1.05!important}
+  .dcxDashHero.hasImage{min-height:275px!important}
+  .dcxDashSystem{min-width:0}
+  .dcxDashTools.dcxWorkspaceGrid,.dcxDashTeams{grid-template-columns:minmax(0,1fr)!important}
+  .dcxDashMetrics,.dcxVcMetrics,.dcxVcPlayerHud{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  #dcxVcLayout,html[data-km-density=compact] #dcxVcLayout{display:block!important;min-width:0}
+  #dcxVcMain{min-width:0;width:100%}
+  #dcxVcSidebar{
+    position:fixed!important;top:0!important;left:0!important;bottom:0!important;
+    height:100dvh!important;max-height:100dvh!important;
+    width:min(320px,87vw)!important;max-width:87vw!important;
+    z-index:1800!important;overflow-y:auto;overscroll-behavior:contain;
+  }
+  #dcxVcLayout.mobile-open .dcxVcBackdrop{display:block;z-index:1799!important}
+  #dcxVcLayout .dcxVcMenuToggle{display:inline-flex!important;align-items:center;min-height:44px}
+  #dcxVcSidebar .kmWorkspaceTab{min-height:44px!important}
+  #dcxVcSidebar .dcxVcMobileClose{min-height:44px}
+  .dcxVcContext{padding:12px!important}
+  .dcxVcMetrics .dcxVcMetric{min-height:56px}
+  .dcxTeamPanel,.dcxNotesPanel,.dcxPollsPanel,.dcxSettingsPanel,.dcxLocalPanel,
+  .dcxHandoutReaderOverlay,.dcxTeamDetailBackdrop,.qolCredBackdrop{
+    box-sizing:border-box;max-width:100%;
+  }
+  .dcxTeamPanel,.dcxNotesPanel,.dcxPollsPanel,.dcxSettingsPanel,.dcxLocalPanel{
+    inset:8px!important;max-height:calc(100dvh - 16px)!important
+  }
+  .yumiyaChat:not(.focus){
+    left:8px!important;right:8px!important;bottom:calc(8px + env(safe-area-inset-bottom))!important;
+    width:auto!important;max-width:none!important;height:min(78dvh,680px)!important;
+    max-height:calc(100dvh - 20px)!important
+  }
+  .yumiyaChat.focus{
+    width:calc(100vw - 16px)!important;height:calc(100dvh - 16px)!important;
+    max-width:none!important;max-height:none!important
+  }
+  .dcxCharacterDossier,.dcxMissionModal,.dcxHandoutReaderOverlay,.qolCredBackdrop{
+    padding:8px!important
+  }
+  .dcxCharacterDossierFrame,.dcxCharacterDossierPanel,
+  .dcxMissionModalCard,.dcxHandoutReader,.qolCredential{
+    width:100%!important;max-width:100%!important;
+    max-height:calc(100dvh - 16px)!important;box-sizing:border-box
+  }
+  .dcxCharacterDossierPanel{grid-template-columns:minmax(0,1fr)!important}
+  .dcxCharacterDossierMedia{min-height:220px;max-height:39dvh;border-right:0}
+  .dcxCharacterDossierContent{padding:20px}
+  .dcxCharacterGrid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .dcxAtlasActive{padding:4px!important}
+  .dcxAtlasTop{flex-wrap:wrap;align-items:flex-start;gap:9px;padding:9px}
+  .dcxAtlasBrand{flex:1 1 100%}
+  .dcxAtlasNav{width:100%;overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px}
+  .dcxAtlasNav .dcxAtlasBtn{flex:0 0 auto;min-height:40px}
+  .dcxAtlasActive .dcxMapField{height:clamp(315px,54dvh,580px)}
+  .dcxAtlasActive .dcxMapCanvas{height:100%!important;min-height:0!important}
+  .dcxAtlasSides{position:relative!important;top:auto!important;left:auto!important;right:auto!important;
+    display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1.45fr)!important;
+    padding:8px 0;gap:7px!important;pointer-events:auto!important
+  }
+  .dcxAtlasLocation,.dcxAtlasDirectory{width:100%!important;max-width:100%!important;min-width:0}
+  .dcxAtlasLocation{padding:9px!important}
+  .dcxAtlasPlace{font-size:14px}
+  .dcxAtlasDirectory{max-height:225px!important}
+  .dcxAtlasDirectoryList{max-height:145px!important;min-height:0}
+  .dcxAtlasScope .dcxAtlasBtn{min-height:34px}
+  .dcxAtlasBottom,.dcxAtlasActive .dcxAtlasHud .dcxAtlasBottom{
+    position:relative!important;top:auto!important;left:auto!important;right:auto!important;
+    flex-wrap:wrap;gap:8px;padding:5px 3px 10px
+  }
+  .dcxAtlasZoom .dcxAtlasBtn{min-width:44px;min-height:44px}
+  .dcxMapEditor,.dcxMapEditor form{max-width:100%;box-sizing:border-box}
+  .kmStudioCharVisualGrid,.kmStudioLayout,.kmStudioFieldPair,.kmMissionBuilderLayout,
+  .pollsWorkspace,.pollFormGrid{grid-template-columns:minmax(0,1fr)!important}
+  .kmCredLayout,.kmCredentialsShell .kmCredLayout{grid-template-columns:minmax(0,1fr)!important}
+  .kmCredStage,.kmCredDirectory{min-width:0;max-width:100%}
+}
+@media (max-width: 520px) {
+  :root{--dcx-mobile-pad:7px}
+  .dcxCharacterGrid{grid-template-columns:minmax(0,1fr)!important}
+  .dcxDashMetrics,.dcxVcMetrics,.dcxVcPlayerHud{grid-template-columns:minmax(0,1fr)!important}
+  .dcxFieldSidebarTools.dcxWorkspaceGrid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .dcxFieldTool .dcxModuleIcon{width:32px!important;height:32px!important}
+  .dcxFieldTool.dcxModuleCard{grid-template-columns:32px minmax(0,1fr)!important}
+  .dcxFieldTool .dcxModuleState{display:none!important}
+  .dcxAtlasSides{grid-template-columns:minmax(0,1fr)!important}
+  .dcxAtlasLocation{display:none!important}
+  .dcxAtlasDirectory{max-height:178px!important}
+  .dcxAtlasDirectoryList{max-height:105px!important}
+  .dcxAtlasActive .dcxMapField{height:clamp(320px,57dvh,520px)}
+  .dcxAtlasLocationCoords,.dcxAtlasLocalName{font-size:9px}
+  .dcxAtlasProviderModes{flex-wrap:wrap}
+  .dcxAtlasTop .dcxAtlasBtn{font-size:9px}
+  .dcxDashHeroCopy h1{font-size:clamp(26px,8vw,38px)!important}
+  .kmStudioLayout,.kmStudioCharVisualGrid,.dcxStoryInfoColumns,.dcxMissionsHero{
+    min-width:0
+  }
+  .qolCredBody,.dcxPlayerNoteLayout,.kmQolTools{grid-template-columns:minmax(0,1fr)!important}
+  .kmStudioEntry{min-width:0}
+  .yumiyaChat.focus .yumiyaComposer{grid-template-columns:minmax(0,1fr) 88px!important}
+  .yumiyaChat.focus .yumiyaFocusPortrait{min-height:0}
+  .dcxVcContextHeading h1{font-size:clamp(19px,5.4vw,26px)!important}
+}
+@media (pointer: coarse) and (max-width:980px){
+  :is(button,.btn,.dcxAtlasBtn,.dcxVcButton,.chatIconBtn,.kmWorkspaceTab,
+  .playerWorkspaceTab,.dcxCharacterPreview,.dcxMapDelete,.dcxAtlasRowDelete){
+    touch-action:manipulation;
+  }
+  :is(.btn,.chatIconBtn,.playerWorkspaceTab,.dcxAtlasBtn,.dcxVcMenuToggle,
+  .dcxVcMobileClose,.dcxMapDelete,.kmCredRow){min-height:44px}
+  :is(input[type=text],input[type=url],input[type=email],input[type=password],input[type=number],
+      input[type=search],textarea,select){font-size:16px!important}
+}
+@media (prefers-reduced-motion:reduce){
+  .playerWorkspaceBar{scroll-behavior:auto}
+  .dcxCharacterPreview{transition:none!important}
+}

@@ -84,7 +84,7 @@ function loadLocal(key){try{return JSON.parse(localStorage.getItem(key)||'{}')}c
 function localKey(missionId){return 'dcx-mission-local-'+(OPH.Realtime.getRoom()||'LOCAL')+'-'+missionId}
 function showModule(missionId,moduleId){
  const op=window.DCX?.StoryStudio?.operations?.find(o=>o.id===missionId&&o.status==='published');
- const m=op?.modules?.find(v=>v.id===moduleId&&v.published);if(!m)return;
+ const m=op?.modules?.find(v=>v.id===moduleId&&v.published);if(!m||window.DCX?.MissionControl&&!window.DCX.MissionControl.canSeeMission(missionId))return;
  playerMission=missionId;currentModule=moduleId;
  const overlay=$('dcxMissionModuleOverlay');if(!overlay)return;
  $('dcxModuleModalTitle').textContent=m.title;
@@ -96,27 +96,35 @@ function showModule(missionId,moduleId){
  if(framed){image.innerHTML=framed;image.hidden=false}else image.hidden=true;
  const actions=$('dcxModuleModalActions');actions.innerHTML='';
  if(m.type==='preparations'){
+  const mc=window.DCX?.MissionControl;
+  const readonly=['observing','completed'].includes(window.DCX?.MissionOps?.getTeamState?.(op.id,mc?.getTeamId?.()))||window.DCX?.MissionOps?.isArchived?.(op.id);
+  if(mc&&!mc.canSeeMission(op.id)){actions.textContent='MISSÃO NÃO AUTORIZADA PARA SUA EQUIPE.';return}
   const local=loadLocal(localKey(op.id));
   const items=op.preparations||[];
   actions.innerHTML=items.length?items.map(p=>{
-   const status=p.done?'CONCLUÍDA PELO KEYMASTER':p.interaction==='request'?'SOLICITAR CONCLUSÃO':p.interaction==='local'?'CHECKLIST PESSOAL':'SOMENTE LEITURA';
+   const current=mc?.getStatus(op.id,mc.getTeamId(),p.id);
+   const done=current?current.confirmed:p.done;
+   const pending=current?.state==='analysis';
+   const status=done?'CONCLUÍDA PELO KEYMASTER':pending?'AGUARDANDO KEYMASTER':p.interaction==='request'?'SOLICITAR CONCLUSÃO':p.interaction==='local'?'CHECKLIST PESSOAL':'SOMENTE LEITURA';
    return '<div class="dcxMissionPrepAction"><span>'+esc(p.symbol||'◎')+'</span><div><b>'+esc(p.title)+'</b><p>'+esc(p.description)+'</p><small>'+esc(status)+'</small></div>'+
-   (p.done?'<strong>✓</strong>':p.interaction==='local'?'<button data-local-prep="'+esc(p.id)+'" aria-pressed="'+!!local[p.id]+'">'+(local[p.id]?'✓ MARCADO':'MARCAR PARA MIM')+'</button>':p.interaction==='request'?'<button data-request-prep="'+esc(p.id)+'">ENVIAR PEDIDO</button>':'')+'</div>';
+   (done?'<strong>✓</strong>':pending?'<strong>⌛</strong>':readonly?'<span>SOMENTE LEITURA</span>':p.interaction==='local'?'<button data-local-prep="'+esc(p.id)+'" aria-pressed="'+!!local[p.id]+'">'+(local[p.id]?'✓ MARCADO':'MARCAR PARA MIM')+'</button>':p.interaction==='request'?'<button data-request-prep="'+esc(p.id)+'">ENVIAR PEDIDO</button>':'')+'</div>';
   }).join(''):'<p>Sem preparações publicadas.</p>';
  }else if(m.type==='choice'){
+  const readonly=['observing','completed'].includes(window.DCX?.MissionOps?.getTeamState?.(op.id,window.DCX?.MissionControl?.getTeamId?.()))||window.DCX?.MissionOps?.isArchived?.(op.id);
   actions.innerHTML='<p class="dcxMissionChoiceIntro">Sua escolha será enviada ao Keymaster e não muda a missão sem a aprovação dele.</p>'+
-   (m.options||[]).map((v,i)=>'<button type="button" data-module-choice="'+i+'">'+esc(v)+'</button>').join('');
+   (readonly?'<p>SOMENTE LEITURA — EQUIPE OBSERVADORA OU MISSÃO ENCERRADA</p>':(m.options||[]).map((v,i)=>'<button type="button" data-module-choice="'+i+'">'+esc(v)+'</button>').join(''));
  }
  overlay.hidden=false;$('dcxModuleModalClose')?.focus();
 }
 async function sendInteraction(kind,value){
  const op=window.DCX?.StoryStudio?.operations?.find(o=>o.id===playerMission&&o.status==='published');
  const module=op?.modules?.find(x=>x.id===currentModule&&x.published);
- if(!op||!module)return;
+ if(!op||!module||window.DCX?.MissionControl&&!window.DCX.MissionControl.canSeeMission(op.id)||['observing','completed'].includes(window.DCX?.MissionOps?.getTeamState?.(op.id,window.DCX?.MissionControl?.getTeamId?.()))||window.DCX?.MissionOps?.isArchived?.(op.id))return;
  if(kind==='choice'&&(module.type!=='choice'||!module.options.includes(value)))return;
- if(kind==='prep'&&(module.type!=='preparations'||!op.preparations.some(p=>p.id===value&&p.interaction==='request'&&!p.done)))return;
+ if(kind==='prep'&&(module.type!=='preparations'||!op.preparations.some(p=>p.id===value&&p.interaction==='request')||!window.DCX?.MissionControl?.canRequest(op.id,value))){$('dcxModuleModalStatus').textContent='PREPARAÇÃO INDISPONÍVEL PARA SUA EQUIPE.';return;}
  const btns=document.querySelectorAll('#dcxModuleModalActions button');btns.forEach(b=>b.disabled=true);
  const msg={missionId:op.id,moduleId:module.id,type:kind,value,
+  ...(kind==='prep'?{teamId:window.DCX.MissionControl.getTeamId()}:{}),
  missionTitle:clean(op.title,100),moduleTitle:clean(module.title,120),createdAt:Date.now()};
  try{
   const auth=OPH.Realtime.getFirebaseAuth?.(),db=OPH.Realtime.getFirebaseDatabase?.(),room=OPH.Realtime.getRoom?.(),u=auth?.currentUser?.uid;
@@ -157,8 +165,8 @@ async function resolveTask(owner,requestId,accept){
  if(!auth?.currentUser||!db||!room)return;
  try{
   if(accept&&a.type==='prep'){
-   const ok=await window.DCX.StoryStudio.completePreparation(a.missionId,a.value);
-   if(!ok)throw Error('Não foi possível concluir a preparação.');
+   const ok=await window.DCX?.MissionControl?.confirmFromRequest(owner,a);
+   if(!ok)return;
   }
   await db.ref('rooms/'+room+'/requests/'+owner+'/missionActions/'+requestId).remove();
  }catch(e){console.error(e);alert('Ação não concluída: '+e.message)}
@@ -172,6 +180,6 @@ function inbox(){
  });
 }
 function init(){host?(bindHost(),inbox()):bindPlayer()}
-window.DCX=window.DCX||{};window.DCX.MissionBuilder={renderEditor,readModules,moduleGrid,symbolOptions};
+window.DCX=window.DCX||{};window.DCX.MissionBuilder={renderEditor,readModules,moduleGrid,symbolOptions,refreshOpenModule(){if(!host&&playerMission&&currentModule&&$('dcxMissionModuleOverlay')&&!$('dcxMissionModuleOverlay').hidden)showModule(playerMission,currentModule)}};
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();

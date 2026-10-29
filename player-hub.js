@@ -7,6 +7,7 @@
     return [...document.querySelectorAll('#workspaceGolpe [data-mission-content]')];
   }
   function openMission(id){
+    if(window.DCX?.MissionControl&&!window.DCX.MissionControl.canSeeMission(id)){showMissionList();return}
     const chosen=id==='operacao-h'?$('dcxMissionDetail'):$('dcxMissionDynamic');
     const known=window.DCX?.StoryStudio?.operations?.some(op=>op.id===id&&op.status==='published');
     if(!chosen||!known)return false;

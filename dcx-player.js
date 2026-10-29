@@ -21,14 +21,47 @@ window.DCX = window.DCX || {};
   function teamAccent(i){return ["#ff4f7d","#54a8ff","#b867ff","#43e3c2","#ffb64d","#62d7ff","#ff6fcf","#8be06f","#f06d6d","#7e8dff","#56dfaa","#d19cff"][i%12]}
   function touch(){lastInteraction=Date.now()}
   function accessStorageKey(){return `dcx-access-key-${room}`}
-  function setGate(show,msg=""){const g=$("dcxAccessGate");if(!g)return;g.classList.toggle("hidden",!show);document.body.classList.toggle("dcxAccessLocked",!!show);if($("dcxAccessStatus"))$("dcxAccessStatus").textContent=msg;if(show){const saved=localStorage.getItem("oph-name")||"";if($("dcxAccessName")&&!$("dcxAccessName").value)$("dcxAccessName").value=saved;setTimeout(()=>$("dcxAccessName")?.focus(),60)}}
+  function setGate(show,msg=""){if(window.DCX?.Lobby){if(show)window.DCX.Lobby.showError(msg);return}const g=$("dcxAccessGate");if(!g)return;g.classList.toggle("hidden",!show);document.body.classList.toggle("dcxAccessLocked",!!show);if($("dcxAccessStatus"))$("dcxAccessStatus").textContent=msg;if(show){const saved=localStorage.getItem("oph-name")||"";if($("dcxAccessName")&&!$("dcxAccessName").value)$("dcxAccessName").value=saved;setTimeout(()=>$("dcxAccessName")?.focus(),60)}}
   function playerApp(){try{return firebase.app("OPH_PLAYER")}catch(e){return firebase.initializeApp(window.OPH_CONFIG.firebase,"OPH_PLAYER")}}
   async function ensureFirebase(){if(!window.OPH_CONFIG?.firebase?.enabled)return false;if(!window.firebase)throw new Error("Firebase SDK indisponível");const app=playerApp(),auth=app.auth();try{await auth.setPersistence(firebase.auth.Auth.Persistence.SESSION)}catch(e){}if(auth.currentUser&&!auth.currentUser.isAnonymous){try{await auth.signOut()}catch(e){}}if(!auth.currentUser)await auth.signInAnonymously();db=app.database();uid=auth.currentUser.uid;return true}
   async function readPublicAccess(){try{return (await ref("access/public").once("value")).val()||{requireKey:false,allowNewPlayers:true}}catch(e){console.warn("access public",e);return{requireKey:false,allowNewPlayers:true}}}
   async function validateSavedKey(code){if(!code)return false;try{const s=await ref(`access/invitations/${code}`).once("value"),v=s.val();return !!(v&&v.enabled!==false)}catch(e){return false}}
   async function blocked(pid){if(!pid)return false;try{const s=await ref(`access/blockedPlayers/${pid}`).once("value");return !!s.val()?.blocked}catch(e){return false}}
 
+  async function checkAccess({roomId,code=""}={}){
+    // Inspect a target room without changing the active room or its heartbeat/subscriptions.
+    const target=String(roomId||room||"FRIA-01").toUpperCase().replace(/[^A-Z0-9_-]/g,"").slice(0,24)||"FRIA-01";
+    const local=key=>{try{return localStorage.getItem(key)||""}catch{return""}};
+    try{
+      if(!await ensureFirebase())return{allowed:true,local:true,requireKey:false,message:"Terminal local pronto. Identifique-se para continuar."};
+      const at=p=>db.ref(`rooms/${target}/dcx/${p}`);
+      const pub=(await at("access/public").once("value")).val()||{requireKey:false,allowNewPlayers:true};
+      let savedIdentity=null;try{savedIdentity=JSON.parse(local("oph-yumiya-identity-"+target)||"null")}catch{}
+      const pid=savedIdentity?.playerId||local("oph-yumiya-player-id");
+      if(pid&&(await at(`access/blockedPlayers/${pid}`).once("value")).val()?.blocked){return{allowed:false,requireKey:!!pub.requireKey,message:"Acesso bloqueado pelo Keymaster para este operador."};}
+      const saved=keyNorm(local("dcx-access-key-"+target));
+      const valid=async key=>{
+        if(!key)return false;
+        const invite=(await at(`access/invitations/${key}`).once("value")).val();
+        return !!(invite&&invite.enabled!==false);
+      };
+      const savedKeyValid=saved&&(pub.requireKey||pub.allowNewPlayers===false)?await valid(saved):false;
+      if(pub.allowNewPlayers===false&&!savedKeyValid)return{allowed:false,requireKey:!!pub.requireKey,message:"A sala está fechada para novos acessos. Fale com o Keymaster."};
+      const given=keyNorm(code),candidate=given||saved;
+      if(pub.requireKey){
+        const accepted=given?await valid(given):savedKeyValid;
+        if(!accepted)return{allowed:false,requireKey:true,savedKeyValid,field:"dcxAccessKey",message:candidate?"Key inválida ou revogada. Solicite uma nova ao Keymaster.":"Esta sala exige uma Key de entrada fornecida pelo Keymaster."};
+        return{allowed:true,requireKey:true,savedKeyValid,acceptedKey:candidate,message:"Convite validado. Pronto para acessar a central."};
+      }
+      return{allowed:true,requireKey:false,message:"Sala pronta. Identifique-se para acessar a central."};
+    }catch(e){
+      console.warn("[DCX LOBBY] Validação de sala indisponível",e);
+      return{allowed:false,requireKey:false,message:"Não foi possível validar a sala. Confira a conexão e tente novamente."};
+    }
+  }
+
   async function bootstrap(){
+    if(window.DCX?.Lobby)return window.DCX.Lobby.prepare();
     try{room=new URLSearchParams(location.search).get("room")||localStorage.getItem("oph-room")||window.OPH_CONFIG?.defaultRoom||"FRIA-01";await ensureFirebase();const pub=await readPublicAccess();const i=identity();if(i&&await blocked(i.playerId)){setGate(true,"ACESSO BLOQUEADO PELO KEYMASTER");return}
       if(!pub.requireKey){setGate(false);await window.OPHPlayer?.connect?.();return}
       const saved=localStorage.getItem(accessStorageKey())||"";if(saved&&i?.name&&await validateSavedKey(saved)){setGate(false);await window.OPHPlayer?.connect?.();return}
@@ -36,6 +69,7 @@ window.DCX = window.DCX || {};
     }catch(e){console.error("DCX bootstrap",e);setGate(true,"FALHA AO VALIDAR ACESSO")}
   }
   async function submitAccess(){
+    if(window.DCX?.Lobby)return window.DCX.Lobby.enter();
     const nm=String($("dcxAccessName")?.value||"").trim().replace(/\s+/g," ").slice(0,40),code=keyNorm($("dcxAccessKey")?.value||"");if(!nm){setGate(true,"INFORME O NOME DO OPERADOR");return}if(!code){setGate(true,"INFORME A KEY");return}
     try{await ensureFirebase();const pub=await readPublicAccess();if(pub.allowNewPlayers===false&&!localStorage.getItem(accessStorageKey())){setGate(true,"NOVOS ACESSOS ESTÃO FECHADOS");return}const s=await ref(`access/invitations/${code}`).once("value"),v=s.val();if(!v||v.enabled===false){setGate(true,"KEY INVÁLIDA OU REVOGADA");return}localStorage.setItem(accessStorageKey(),code);localStorage.setItem("oph-name",nm);if($("name"))$("name").value=nm;setGate(false);await window.OPHPlayer?.connect?.();
     }catch(e){console.error(e);setGate(true,"FALHA AO VALIDAR KEY")}
@@ -199,5 +233,5 @@ window.DCX = window.DCX || {};
   function getLocalIdentity(){return {playerId,name,room,connected};}
 
   ["pointerdown","keydown","touchstart"].forEach(ev=>window.addEventListener(ev,touch,{passive:true}));document.addEventListener("visibilitychange",()=>{touch();heartbeat()});window.addEventListener("focus",()=>{touch();heartbeat()});window.addEventListener("blur",heartbeat);
-  window.DCX.Player={openTeamDetail,renderTeamShowcase,bootstrap,submitAccess,init,toggleTeam,toggleNotes,newNote,selectNote,saveNote,deleteNote,exportNote,getCredentialData,getLocalIdentity};
+  window.DCX.Player={openTeamDetail,renderTeamShowcase,bootstrap,submitAccess,checkAccess,init,toggleTeam,toggleNotes,newNote,selectNote,saveNote,deleteNote,exportNote,getCredentialData,getLocalIdentity};
 })();

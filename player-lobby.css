@@ -1,0 +1,84 @@
+/* DCX reception: theme-aware, no fixed brand palette and no simulated security claims. */
+body.dcxLobbyActive > :not(#dcxAccessGate):not(script):not(style){display:none!important}
+#dcxPlayerConsole[hidden],#dcxLobbyKeyField[hidden]{display:none!important}
+#dcxAccessGate.playerLobby{
+  --lobby-bg:var(--neo-bg,var(--ps-bg0,var(--bg)));
+  --lobby-panel:var(--neo-panel,var(--ps-panel,var(--panel)));
+  --lobby-panel2:var(--neo-panel2,var(--ps-panel2,var(--panel2)));
+  --lobby-line:var(--neo-line,var(--ps-line,var(--line)));
+  --lobby-text:var(--neo-text,var(--ps-text,var(--text)));
+  --lobby-muted:var(--neo-muted,var(--ps-muted,var(--muted)));
+  --lobby-accent:var(--neo-accent,var(--ps-accent,var(--cyan)));
+  --lobby-alt:var(--ps-accent2,var(--blue));
+  --lobby-warn:var(--ps-warn,var(--gold));
+  --lobby-danger:var(--ps-danger,var(--red));
+  position:relative;inset:auto;z-index:2;display:flex;flex-direction:column;isolation:isolate;
+  min-height:100vh;min-height:100svh;padding:0;color:var(--lobby-text);
+  background:radial-gradient(ellipse at 12% 38%,color-mix(in srgb,var(--lobby-accent) 8%,transparent),transparent 56%),radial-gradient(ellipse at 90% 10%,color-mix(in srgb,var(--lobby-alt) 5%,transparent),transparent 45%),var(--lobby-bg);
+  font-family:var(--dcx-appearance-font,ui-monospace,monospace);
+}
+#dcxAccessGate.playerLobby.hidden{display:none!important}
+.playerLobby::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background-image:linear-gradient(color-mix(in srgb,var(--lobby-accent) 4%,transparent) 1px,transparent 1px),linear-gradient(90deg,color-mix(in srgb,var(--lobby-accent) 4%,transparent) 1px,transparent 1px);background-size:48px 48px;mask-image:linear-gradient(110deg,transparent,var(--lobby-text),transparent)}
+.playerLobbyHeader{display:flex;justify-content:space-between;align-items:center;gap:24px;padding:20px clamp(20px,4vw,64px);border-bottom:1px solid var(--lobby-line)}
+.playerLobbyBrand{display:flex;align-items:center;gap:14px;min-width:0}
+.playerLobbyMark{display:grid;place-items:center;width:42px;height:42px;flex:0 0 auto;border:1px solid var(--lobby-accent);color:var(--lobby-accent);clip-path:polygon(0 0,80% 0,100% 20%,100% 100%,20% 100%,0 80%)}
+.playerLobbyMark .dcxSignalIcon{width:27px;height:27px}
+.playerLobbyBrand b{display:block;font:800 12px/1.5 var(--dcx-appearance-font,monospace);letter-spacing:.1em}
+.playerLobbyBrand small{display:block;margin-top:3px;font-size:9px;line-height:1.5;letter-spacing:.12em;color:var(--lobby-muted)}
+.playerLobbyMaster{display:inline-flex;align-items:center;gap:9px;min-height:44px;padding:8px 13px;border:1px solid var(--lobby-line);color:var(--lobby-muted);font-size:10px;font-weight:700;letter-spacing:.06em;text-decoration:none;flex-shrink:0}
+.playerLobbyMaster:hover{border-color:var(--lobby-accent);color:var(--lobby-accent)}
+.playerLobbyLayout{width:min(1440px,100%);margin:auto;padding:clamp(30px,6vh,76px) clamp(20px,5vw,76px);display:grid;grid-template-columns:minmax(0,1.15fr) minmax(350px,.85fr);gap:clamp(28px,5vw,80px);align-items:center;flex:1}
+.playerLobbyIntro{min-width:0}
+.playerLobbyKicker{display:flex;align-items:center;gap:11px;color:var(--lobby-accent);font-size:10px;font-weight:800;letter-spacing:.18em}
+.playerLobbyKicker::before{content:"";width:27px;height:2px;background:var(--lobby-accent)}
+.playerLobbyIntro h1{margin:22px 0 18px;font:900 clamp(44px,5.9vw,84px)/.98 var(--dcx-appearance-font,ui-sans-serif,sans-serif);letter-spacing:-.055em;overflow-wrap:anywhere;outline-offset:8px}
+.playerLobbyIntro h1 span{display:block;color:transparent;-webkit-text-stroke:1px var(--lobby-text)}
+.playerLobbyGreeting{font-size:11px;line-height:1.6;font-weight:800;letter-spacing:.08em;color:var(--lobby-accent);max-width:60ch;overflow-wrap:anywhere}
+.playerLobbyDescription{margin:16px 0 0;max-width:54ch;font-size:14px;line-height:1.8;color:var(--lobby-muted)}
+.playerLobbyRoutes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:32px;padding-top:22px;border-top:1px solid var(--lobby-line)}
+.playerLobbyRoute{min-width:0}
+.playerLobbyRoute > span{display:block;color:var(--lobby-accent);margin-bottom:12px}
+.playerLobbyRoute > span .dcxSignalIcon{width:23px;height:23px}
+.playerLobbyRoute b{display:block;font-size:11px;letter-spacing:.08em}
+.playerLobbyRoute small{display:block;margin-top:7px;font-size:10px;line-height:1.6;color:var(--lobby-muted)}
+.playerLobbySignal{display:flex;align-items:center;gap:10px;margin-top:32px;color:var(--lobby-muted);font-size:9px;letter-spacing:.09em}
+.playerLobbySignal i{display:flex;align-items:center;gap:3px;height:18px}
+.playerLobbySignal i::before,.playerLobbySignal i::after{content:"";display:block;width:3px;background:var(--lobby-accent);height:9px}
+.playerLobbySignal i::after{height:17px}
+.playerLobbyCard{position:relative;min-width:0;border:1px solid var(--lobby-line);border-radius:var(--dcx-appearance-radius,14px);background:linear-gradient(140deg,color-mix(in srgb,var(--lobby-accent) 3%,var(--lobby-panel)),var(--lobby-bg));box-shadow:0 20px 90px color-mix(in srgb,var(--lobby-bg) 82%,transparent);padding:clamp(22px,3vw,38px)}
+.playerLobbyCard::before{content:"";position:absolute;top:-1px;left:24px;width:64px;height:3px;background:var(--lobby-accent)}
+.playerLobbyCardHeader{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:24px;padding-bottom:18px;border-bottom:1px solid var(--lobby-line)}
+.playerLobbyCardHeader small{font-size:9px;font-weight:800;letter-spacing:.15em;color:var(--lobby-accent)}
+.playerLobbyCardHeader h2{margin:7px 0 0;font-size:22px;line-height:1.25;letter-spacing:-.03em}
+.playerLobbyNode{display:grid;place-items:center;min-width:37px;height:37px;border:1px solid var(--lobby-line);font-size:12px;color:var(--lobby-accent)}
+.playerLobbyField{display:grid;gap:8px;margin-top:18px;min-width:0}
+.playerLobbyField label{font-size:10px;letter-spacing:.1em;font-weight:800;color:var(--lobby-text)}
+.playerLobbyField label em{font-style:normal;font-size:9px;color:var(--lobby-accent);margin-right:8px}
+.playerLobbyField small{color:var(--lobby-muted);font-size:10px;line-height:1.5}
+.playerLobby input{box-sizing:border-box;width:100%;min-width:0;height:48px;border:1px solid var(--lobby-line);border-radius:var(--dcx-appearance-button-radius,5px);background:var(--lobby-bg);color:var(--lobby-text);padding:0 13px;margin:0;font:500 14px/1.2 var(--dcx-appearance-font,monospace);outline-offset:3px}
+.playerLobby input::placeholder{color:var(--lobby-muted);opacity:.8}
+.playerLobby input:focus{outline:2px solid var(--lobby-accent);border-color:var(--lobby-accent)}
+.playerLobby input[aria-invalid=true]{border-color:var(--lobby-danger)}
+.playerLobby input[readonly]{opacity:.7}
+.playerLobbySubmit{width:100%;display:flex;align-items:center;justify-content:space-between;gap:14px;min-height:52px;border:1px solid var(--lobby-accent);border-radius:var(--dcx-appearance-button-radius,5px);padding:13px 16px;margin-top:24px;background:var(--lobby-accent);color:var(--lobby-bg);font:900 11px/1.4 var(--dcx-appearance-font,monospace);letter-spacing:.1em;transition:filter .14s ease}
+.playerLobbySubmit .dcxSignalIcon{width:23px;height:23px}
+.playerLobbySubmit:hover{filter:brightness(1.08)}
+.playerLobbySubmit:disabled{opacity:.65;filter:none}
+.playerLobby :is(button,a):focus-visible{outline:2px solid var(--lobby-accent);outline-offset:4px}
+.playerLobbyStatus{display:block;min-height:3.2em;margin:14px 0 0;font-size:11px;line-height:1.6;color:var(--lobby-muted);overflow-wrap:anywhere}
+.playerLobbyStatus[data-tone=error]{color:var(--lobby-danger)}
+.playerLobbyStatus[data-tone=ready]{color:var(--lobby-accent)}
+.playerLobbyRoomMeta{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-top:10px;padding-top:14px;border-top:1px solid var(--lobby-line);font-size:9px;line-height:1.6;color:var(--lobby-muted)}
+.playerLobbyRoomMeta b{color:var(--lobby-text);overflow-wrap:anywhere}
+.playerLobbyFootnote{font-size:10px;line-height:1.7;color:var(--lobby-muted);margin:18px 0 0}
+.playerLobbyFooter{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:16px clamp(20px,4vw,64px);border-top:1px solid var(--lobby-line);color:var(--lobby-muted);font-size:9px;line-height:1.5;letter-spacing:.08em}
+.playerLobbyNetwork{display:flex;align-items:center;gap:8px}
+.playerLobbyNetwork::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--lobby-accent)}
+.playerLobby[data-offline=true] .playerLobbyNetwork::before{background:var(--lobby-danger)}
+.playerLobby noscript{display:block;margin-top:14px;color:var(--lobby-danger);font-size:12px;line-height:1.6}
+html[data-dcx-appearance=d-burn-nomad] .playerLobbyCard{border-left:4px solid var(--lobby-accent)}
+html[data-dcx-appearance=capri-signal-bloom] .playerLobbyCard{background-image:radial-gradient(ellipse at 100% 0,color-mix(in srgb,var(--lobby-alt) 12%,transparent),transparent 65%),linear-gradient(135deg,var(--lobby-panel),var(--lobby-bg))}
+html[data-dcx-appearance=ghost-black-ice] .playerLobbyCard{box-shadow:none;background:var(--lobby-panel)}
+@media(max-width:960px){.playerLobbyLayout{grid-template-columns:1fr;gap:34px;max-width:760px;padding-top:34px}.playerLobbyIntro h1{font-size:clamp(44px,9vw,70px)}.playerLobbyDescription{max-width:none}.playerLobbySignal{display:none}.playerLobbyRoutes{margin-top:24px}.playerLobbyCard{padding:26px}}
+@media(max-width:540px){.playerLobbyHeader{gap:12px;padding:14px 18px}.playerLobbyBrand b{font-size:10px}.playerLobbyBrand small{font-size:8px}.playerLobbyBrand{gap:9px}.playerLobbyMaster{padding:8px;min-width:44px;justify-content:center}.playerLobbyMaster span{display:none}.playerLobbyMark{width:34px;height:34px}.playerLobbyLayout{padding:28px 18px}.playerLobbyDescription{font-size:13px}.playerLobbyRoutes{gap:10px}.playerLobbyRoute b{font-size:10px}.playerLobbyRoute small{font-size:9px}.playerLobbyCard{padding:22px 18px}.playerLobbyCardHeader h2{font-size:21px}.playerLobbyFooter{padding:16px 18px}.playerLobbyKicker{font-size:9px;letter-spacing:.1em}}
+@media(prefers-reduced-motion:reduce){.playerLobbySubmit{transition:none!important}}

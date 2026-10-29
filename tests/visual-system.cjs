@@ -39,6 +39,11 @@ const failures=[],summary={combinations:0,checks:[],screenshots:[]};
 let browser;
 async function check(name,fn){try{await fn();summary.checks.push({name,passed:true});console.log('PASS',name)}catch(e){failures.push(name+': '+e.message);summary.checks.push({name,passed:false,error:e.message});console.error('FAIL',name,e.message)}}
 async function snap(page,name){const file=path.join(output,name+'.png');await page.screenshot({path:file});summary.screenshots.push(file);}
+async function enterLobby(page){
+  await page.fill('#dcxAccessName','QA Operador');
+  await page.click('#dcxLobbySubmit');
+  await page.waitForSelector('#dcxPlayerConsole:not([hidden])');
+}
 async function run(){
   await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
   const base='http://127.0.0.1:'+server.address().port;
@@ -65,11 +70,23 @@ async function run(){
     const visualKey=host?'dcx-km-visual-v1':'dcx-player-visual-v1';
     console.log('OPEN',role);await page.goto(url,{waitUntil:'domcontentloaded'});
     await page.waitForFunction(()=>window.DCX?.Appearance&&document.querySelectorAll('[data-appearance-choice]').length===4);
+    if(!host){
+      await check('player: reception is visible before joining',async()=>{
+        assert(await page.locator('#dcxAccessGate').isVisible());
+        assert.equal(await page.locator('#dcxPlayerConsole').isVisible(),false);
+        assert.equal(await page.locator('#conn.on').count(),0);
+        await snap(page,'player-lobby-desktop');
+        await page.setViewportSize({width:390,height:844});
+        assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2));
+        await snap(page,'player-lobby-mobile');
+        await page.setViewportSize({width:1440,height:1000});
+      });
+    }
     if(host){
       await page.fill('#email','qa@example.invalid');await page.fill('#password','test-fixture-only');
       await page.click('.kmAccessSubmit');await page.waitForSelector('#console:not(.hidden)');
       await page.click('.kmWorkspaceTab[data-tab=settings]');
-    }else await page.click('#playerSettingsQuickBtn');
+    }else {await enterLobby(page);await page.click('#playerSettingsQuickBtn');}
     await page.waitForSelector('#dcxAppearanceSettings:visible');
     await check(role+': controls and accessible names',async()=>{
       assert.equal(await page.locator('[data-appearance-choice]').count(),4);
@@ -94,7 +111,7 @@ async function run(){
       assert.equal(await page.getAttribute('html','data-dcx-appearance'),'capri-signal-bloom');
       assert.equal(await page.getAttribute('html','data-dcx-cursor'),'large');
       if(host){await page.click('.kmAccessSubmit');await page.waitForSelector('#console:not(.hidden)');await page.click('[data-tab=settings].kmWorkspaceTab');}
-      else await page.click('#playerSettingsQuickBtn');
+      else {await enterLobby(page);await page.click('#playerSettingsQuickBtn');}
     });
     await check(role+': six native cursor states, scaling and system fallback',async()=>{
       for(const mode of ['signal','large','system']){

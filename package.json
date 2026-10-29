@@ -5,7 +5,8 @@
     "test:lobby": "node tests/player-lobby.cjs",
     "icons:export": "node scripts/export-signal-icons.cjs",
     "test:visual-preferences": "node tests/visual-preferences.cjs",
-    "test:visual": "node tests/visual-system.cjs"
+    "test:visual": "node tests/visual-system.cjs",
+    "test:missions": "node tests/mission-control.cjs"
   },
   "devDependencies": {
     "jsdom": "30.1.3",

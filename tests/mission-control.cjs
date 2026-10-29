@@ -74,6 +74,9 @@ async function run(){
  assert.equal(host.window.DCX.StoryStudio.operations[0].preparations[0].done,false,"Não apaga ou modifica status global anterior");
  host.current.approaches.selected="stealth";host.callbacks.state(host.current);
  assert.equal(h.getStatus("operacao-h","alpha","legacy:con:consult").confirmed,true,"Trocar abordagem não apaga legado");
- console.log("DCX Mission Control: 10 verificações concluídas.");
+ await h.restrictNewMission("nova-missao");
+ assert.equal(host.current.missionControl.assignments["nova-missao"].configured,true,"Nova missão inicia com designação explícita");
+ assert.equal(Object.keys(host.current.missionControl.assignments["nova-missao"].teams).length,0,"Nova missão inicia sem equipes");
+ console.log("DCX Mission Control: 12 verificações concluídas.");
 }
 run().catch(e=>{console.error(e);process.exitCode=1});

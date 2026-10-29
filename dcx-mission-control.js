@@ -36,7 +36,7 @@
  function canSeeMission(id){
   const a=assignment(id);
   if(!a?.configured)return true; // Sem designacao explicita: compatibilidade com catalogos legados.
-  const t=teamId();return !!(t&&a.teams?.[t]);
+  const t=teamId();return !!(t&&(a.teams?.[t]||['observing','completed'].includes(window.DCX?.MissionOps?.getTeamState?.(id,t))));
  }
  function isAssigned(id,t){
   const a=assignment(id);
@@ -56,7 +56,7 @@
  function canRequest(missionId,prepId){
   const t=teamId(),op=catalog().find(o=>o.id===missionId&&o.status==='published');
   const p=catalogPreps(op).find(p=>p.id===prepId);
-  return !!(t&&op&&canSeeMission(missionId)&&isAssigned(missionId,t)&&p?.interaction==='request'&&!getStatus(missionId,t,prepId).confirmed&&!getStatus(missionId,t,prepId).state.includes('analysis'));
+  return !!(t&&op&&canSeeMission(missionId)&&isAssigned(missionId,t)&&!window.DCX?.MissionOps?.isArchived?.(missionId)&&!['observing','completed'].includes(window.DCX?.MissionOps?.getTeamState?.(missionId,t))&&p?.interaction==='request'&&!getStatus(missionId,t,prepId).confirmed&&!getStatus(missionId,t,prepId).state.includes('analysis'));
  }
  function pendingTasks(){
   return Object.entries(requests).flatMap(([owner,node])=>Object.entries(node?.missionActions||{}).map(([id,a])=>({...(a||{}),owner,id}))).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));

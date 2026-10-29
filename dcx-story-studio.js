@@ -104,7 +104,7 @@ function imageMarkup(url,alt,cls,frame){
 function statusLabel(o){return o.status==='draft'?'RASCUNHO':'PUBLICADA'}
 function playerOperations(){
  const list=$('dcxMissionsList');if(!list)return;
- const visible=studio.operations.filter(o=>o.status==='published');
+ const visible=studio.operations.filter(o=>o.status==='published'&&(!window.DCX?.MissionControl||window.DCX.MissionControl.canSeeMission(o.id)));
  list.innerHTML=visible.length?visible.map(o=>'<button class="dcxMissionTile dcxStoryMissionTile" type="button" data-mission-open="'+esc(o.id)+'">'+
    '<span class="dcxStoryTileArt">'+imageMarkup(o.imageUrl,o.title,'dcxStoryTileImage',o.imageFrame)+'</span>'+
    '<span class="dcxMissionTileInfo"><small>'+esc(o.code||'MISSÃO DCX')+' // '+esc(statusLabel(o))+'</small><strong>'+esc(o.title)+'</strong><span>'+esc(o.summary||'Acesse os arquivos desta operação.')+'</span></span>'+
@@ -205,9 +205,12 @@ const stageModules=[
  {index:5,icon:'N',title:'N-02',desc:'Arquivos de investigação'},
  {index:6,icon:'!',title:'PROTOCOLOS',desc:'Medidas para emergências'}
 ];
+function prepIsDone(op,p){const mc=window.DCX?.MissionControl;return mc?mc.getStatus(op.id,mc.getTeamId(),p.id).confirmed:!!p.done}
 function prepMarkup(op){
- return (op.preparations||[]).length?op.preparations.map((p,i)=>
-   '<div class="dcxStoryPrep '+(p.done?'isDone':'')+'"><span>'+esc(p.symbol||String(i+1).padStart(2,'0'))+'</span><div><b>'+esc(p.title)+'</b><p>'+esc(p.description)+'</p></div><em>'+ (p.done?'CONCLUÍDA':'PENDENTE')+'</em></div>').join(''):'<p class="dcxStoryMuted">As preparações desta missão ainda não foram personalizadas.</p>';
+ return (op.preparations||[]).length?op.preparations.map((p,i)=>{
+   const done=prepIsDone(op,p);
+   return '<div class="dcxStoryPrep '+(done?'isDone':'')+'"><span>'+esc(p.symbol||String(i+1).padStart(2,'0'))+'</span><div><b>'+esc(p.title)+'</b><p>'+esc(p.description)+'</p></div><em>'+ (done?'CONCLUÍDA':'PENDENTE')+'</em></div>';
+ }).join(''):'<p class="dcxStoryMuted">As preparações desta missão ainda não foram personalizadas.</p>';
 }
 function objectiveMarkup(op){return op.objectives.length?op.objectives.map((x,i)=>'<li><span>'+String(i+1).padStart(2,'0')+'</span>'+esc(x)+'</li>').join(''):'<li>Objetivos ainda não definidos.</li>'}
 function heroMarkup(op){
@@ -218,7 +221,7 @@ function heroMarkup(op){
 }
 function renderMission(missionId){
  currentMission=missionId||'operacao-h';
- const op=studio.operations.find(o=>o.id===currentMission&&o.status==='published');
+ const op=studio.operations.find(o=>o.id===currentMission&&o.status==='published'&&(!window.DCX?.MissionControl||window.DCX.MissionControl.canSeeMission(o.id)));
  const dynamic=$('dcxMissionDynamic');
  if(!op){
    if(currentMission!=='operacao-h')window.DCX?.PlayerHub?.showMissionList?.();
@@ -238,7 +241,7 @@ function renderMission(missionId){
    dynamic.innerHTML='<header class="dcxMissionDetailHead"><button class="dcxMissionBack" type="button">‹ TODAS AS MISSÕES</button><div><small>MISSÕES // '+esc(op.code||'ARQUIVO DCX')+'</small><strong>'+esc(op.title)+'</strong></div></header>'+
     heroMarkup(op)+'<div class="dcxStoryInfoColumns dcxStoryDynamicColumns">'+
     '<section><h3>OBJETIVOS</h3><ol>'+objectiveMarkup(op)+'</ol></section>'+
-    '<section><h3>PREPARAÇÕES <small>'+op.preparations.filter(p=>p.done).length+'/'+op.preparations.length+' CONCLUÍDAS</small></h3>'+prepMarkup(op)+'</section></div>'+ 
+    '<section><h3>PREPARAÇÕES <small>'+op.preparations.filter(p=>prepIsDone(op,p)).length+'/'+op.preparations.length+' CONCLUÍDAS</small></h3>'+prepMarkup(op)+'</section></div>'+ 
     (window.DCX?.MissionBuilder?.moduleGrid?.(op,false)||'');
  }
 }
@@ -527,6 +530,7 @@ window.DCX.StoryStudio={
   if(success)renderHost();
   return success;
  },
+ refreshPlayer(){if(!host)renderPlayer()},
  get operations(){return studio.operations.slice()},
  get characters(){return studio.characters.slice()}
 };

@@ -68,7 +68,7 @@ function bindRemote(){
 function apply(){
  for(const [key] of ZONES){
   const item=clean(remote[key]),style=document.documentElement.style;
-  style.setProperty('--dcx-type-'+key,stack(item));
+  style.setProperty('--dcx-type-'+key,item.font==='default'?'var(--dcx-appearance-font,ui-monospace,monospace)':stack(item));
   style.setProperty('--dcx-type-size-'+key,item.size+'%');
   style.setProperty('--dcx-type-spacing-'+key,item.spacing+'em');
   style.setProperty('--dcx-gradient-'+key,item.gradient?'linear-gradient(180deg,'+item.from+','+item.to+')':'none');

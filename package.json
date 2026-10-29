@@ -1,0 +1,13 @@
+{
+  "name": "agencia-operacional-dcx",
+  "private": true,
+  "scripts": {
+    "icons:export": "node scripts/export-signal-icons.cjs",
+    "test:visual-preferences": "node tests/visual-preferences.cjs",
+    "test:visual": "node tests/visual-system.cjs"
+  },
+  "devDependencies": {
+    "jsdom": "30.1.3",
+    "playwright": "1.62.1"
+  }
+}

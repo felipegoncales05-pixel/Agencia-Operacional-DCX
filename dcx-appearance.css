@@ -1,0 +1,131 @@
+/* Geometry and effects only: all colors come from the selected palette. */
+html[data-dcx-appearance]{
+  --dcx-appearance-font:ui-monospace,monospace;
+  --dcx-appearance-radius:14px;
+  --dcx-appearance-button-radius:9px;
+  --dcx-appearance-space:18px;
+  --dcx-appearance-line:1px;
+  --dcx-appearance-motion:140ms;
+  --dcx-v-bg:var(--neo-bg,var(--bg));
+  --dcx-v-panel:var(--neo-panel,var(--panel));
+  --dcx-v-panel2:var(--neo-panel2,var(--panel2));
+  --dcx-v-line:var(--neo-line,var(--line));
+  --dcx-v-text:var(--neo-text,var(--text));
+  --dcx-v-muted:var(--neo-muted,var(--muted));
+  --dcx-v-accent:var(--neo-accent,var(--cyan));
+  --dcx-v-alt:var(--blue);
+}
+.dcxSignalIcon{display:inline-block;vertical-align:middle;width:1.25em;height:1.25em;flex:0 0 auto;pointer-events:none;stroke-width:var(--dcx-icon-stroke,1.8);fill:none}
+.dcxHasSignalIcon > .dcxSignalIcon{margin-inline-end:.5em}
+.dcxModuleIcon > .dcxSignalIcon,.dcxDashPanelIcon > .dcxSignalIcon,.dcxMissionTileIcon > .dcxSignalIcon{width:75%;height:75%;margin:0}
+.dcxModuleIcon,.dcxDashPanelIcon,.dcxMissionTileIcon{display:grid;place-items:center}
+.chatIconBtn .dcxSignalIcon{width:18px;height:18px;margin:0}
+.dcxDockBtn > span .dcxSignalIcon{width:22px;height:22px}
+.dcxVcMetricIcon .dcxSignalIcon{width:24px;height:24px}
+.dcxVcMetricGo .dcxSignalIcon{width:16px;height:16px}
+.qwSignalIcon{color:var(--cyan);pointer-events:none}
+.qwSignalIcon .dcxSignalIcon{width:20px;height:20px}
+.qwSignalIcon .dcxSignalIcon :is(path,circle){fill:none!important;stroke:currentColor!important;stroke-width:1.8!important}
+
+/* Appearance picker: visible in both existing settings areas. */
+.dcxAppearanceSettings{min-width:0;border:1px solid var(--dcx-v-line);border-radius:16px;padding:clamp(14px,2vw,24px);background:var(--dcx-v-panel);color:var(--dcx-v-text)}
+.dcxAppearanceHead{display:flex;gap:18px;justify-content:space-between;align-items:flex-start;margin-bottom:18px}
+.dcxAppearanceHead small{font-size:10px;font-weight:800;letter-spacing:.14em;color:var(--dcx-v-accent)}
+.dcxAppearanceHead h2{font-size:clamp(18px,2.4vw,25px);line-height:1.2;margin:7px 0}
+.dcxAppearanceHead p,.dcxCursorSettings p{font-size:12px;line-height:1.6;color:var(--dcx-v-muted);margin:0;max-width:62ch}
+#dcxAppearanceCurrent{font-size:11px;color:var(--dcx-v-accent);padding:8px 10px;border:1px solid var(--dcx-v-line);max-width:240px;overflow-wrap:anywhere}
+.dcxAppearanceGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.dcxAppearanceChoice{position:relative;min-width:0;display:flex;flex-direction:column;gap:9px;text-align:left;border:1px solid var(--dcx-v-line);border-radius:12px;background:var(--dcx-v-bg);color:var(--dcx-v-text);padding:12px;transition:border-color .14s ease}
+.dcxAppearanceChoice:hover,.dcxAppearanceChoice.active{border-color:var(--dcx-v-accent)}
+.dcxAppearanceChoice.active{box-shadow:inset 0 0 0 1px var(--dcx-v-accent)}
+.dcxAppearanceChoice > small{color:var(--dcx-v-accent);font-size:9px;letter-spacing:.14em}
+.dcxAppearanceChoice > b{font-size:13px;line-height:1.4}
+.dcxAppearanceChoice > span:not(.dcxAppearancePreview){color:var(--dcx-v-muted);font-size:11px;line-height:1.55}
+.dcxAppearanceChoice em{align-self:flex-start;margin-top:auto;font-size:9px;font-style:normal;font-weight:800;letter-spacing:.1em;color:var(--dcx-v-accent);padding:6px 9px;border:1px solid var(--dcx-v-line)}
+.dcxAppearancePreview{position:relative;display:grid;grid-template-columns:1fr 2fr;grid-template-rows:18px 32px;gap:6px;width:100%;height:88px;padding:12px;overflow:hidden;background:var(--dcx-v-panel2);border:1px solid var(--dcx-v-line);border-radius:9px}
+.dcxAppearancePreview i{border:1px solid var(--dcx-v-accent);opacity:.65;border-radius:3px}
+.dcxAppearancePreview i:first-child{grid-column:1/-1;background:color-mix(in srgb,var(--dcx-v-accent) 12%,transparent)}
+.dcxAppearancePreview .dcxSignalIcon{position:absolute;right:23px;bottom:17px;width:24px;height:24px;color:var(--dcx-v-accent)}
+.dcxAppearancePreview[data-preview=d-burn-nomad]{border-radius:0;border-left:4px solid var(--dcx-v-accent);clip-path:polygon(0 0,calc(100% - 12px) 0,100% 12px,100% 100%,0 100%)}
+.dcxAppearancePreview[data-preview=d-burn-nomad] i{border-radius:0;border-width:2px}
+.dcxAppearancePreview[data-preview=capri-signal-bloom]{border-radius:18px 4px;background:radial-gradient(ellipse at 90% 10%,color-mix(in srgb,var(--dcx-v-alt) 23%,transparent),transparent 80%),var(--dcx-v-panel2)}
+.dcxAppearancePreview[data-preview=capri-signal-bloom] i{border-radius:8px 2px;transform:translate(2px,-1px)}
+.dcxAppearancePreview[data-preview=ghost-black-ice]{border-radius:3px;background:var(--dcx-v-bg)}
+.dcxAppearancePreview[data-preview=ghost-black-ice] i{border-color:var(--dcx-v-muted);border-radius:0;opacity:.45}
+.dcxCursorSettings{margin:22px 0 0;min-width:0;padding:16px 0 0;border:0;border-top:1px solid var(--dcx-v-line)}
+.dcxCursorSettings legend{padding-right:10px;font-size:11px;font-weight:800;letter-spacing:.1em}
+.dcxCursorChoices{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.dcxCursorChoices button,.dcxCursorDemo > :not(:first-child){border:1px solid var(--dcx-v-line);border-radius:5px;padding:10px 12px;min-height:40px;color:var(--dcx-v-text);background:var(--dcx-v-bg);font-size:11px}
+.dcxCursorChoices button.active{border-color:var(--dcx-v-accent);box-shadow:inset 0 0 0 1px var(--dcx-v-accent);color:var(--dcx-v-accent)}
+.dcxCursorDemo{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:16px;font-size:11px;color:var(--dcx-v-muted)}
+.dcxCursorDemo > span{display:flex;align-items:center}
+.dcxAppearanceFoot{display:flex;gap:14px;align-items:center;justify-content:space-between;border-top:1px solid var(--dcx-v-line);padding-top:16px;margin-top:18px}
+.dcxAppearanceFoot span{font-size:11px;line-height:1.5;color:var(--dcx-v-muted);max-width:60ch}
+.dcxAppearanceFoot .btn{min-height:42px;white-space:normal}
+.dcxAppearanceSettings :is(button,select):focus-visible{outline:2px solid var(--dcx-v-accent);outline-offset:3px}
+
+/* Profiles do not modify color variables, content order or panel visibility. */
+html[data-dcx-appearance=d-burn-nomad]{--dcx-appearance-radius:2px;--dcx-appearance-button-radius:1px;--dcx-appearance-space:16px;--dcx-appearance-line:2px;--dcx-appearance-font:'Oxanium','Arial Black',sans-serif;--dcx-icon-stroke:2.1}
+html[data-dcx-appearance=capri-signal-bloom]{--dcx-appearance-radius:22px 6px;--dcx-appearance-button-radius:12px 3px;--dcx-appearance-space:22px;--dcx-appearance-font:'Space Grotesk','Trebuchet MS',sans-serif;--dcx-appearance-motion:180ms;--dcx-icon-stroke:1.8}
+html[data-dcx-appearance=ghost-black-ice]{--dcx-appearance-radius:4px;--dcx-appearance-button-radius:3px;--dcx-appearance-space:14px;--dcx-appearance-font:'Share Tech Mono','Courier New',monospace;--dcx-appearance-motion:0ms;--dcx-icon-stroke:1.5}
+html[data-dcx-appearance]:not([data-dcx-appearance=command-standard]) :is(.top,.roomBar,.dcxPanel,.adminPanel,.card,.dcxDashPanel,.dcxDashHero,.dcxMissionsHero,.dcxMissionTile,.dcxStoryModule,.dcxCharacterCard,.dcxFactionCard,.dcxFactionsHero,.dcxMapHero,.dcxMapSidebar,.dcxSettingsPanel,.dcxTeamPanel,.dcxNotesPanel,.dcxPollsPanel,.dcxLocalPanel,.yumiyaChat,.dcxAppearanceSettings){
+  border-radius:var(--dcx-appearance-radius)!important;
+  border-width:var(--dcx-appearance-line)!important;
+  transition:border-color var(--dcx-appearance-motion) ease,box-shadow var(--dcx-appearance-motion) ease;
+}
+html[data-dcx-appearance]:not([data-dcx-appearance=command-standard]) :is(.btn,.kmWorkspaceTab,.dcxModuleCard,.playerWorkspaceTab,.dcxAppearanceChoice){border-radius:var(--dcx-appearance-button-radius)!important}
+html[data-dcx-appearance]:not([data-dcx-appearance=command-standard]) :is(.dcxPanel,.adminPanel,.card){padding:var(--dcx-appearance-space)}
+html[data-dcx-appearance]:not([data-dcx-appearance=command-standard]) :is(.brand b,.dcxPanel h2,.dcxDashPanelHead b,.dcxMapHero h1,.dcxCharactersIntro h1,.dcxFactionHero h1,.dcxAppearanceHead h2){font-family:var(--dcx-type-interface,var(--dcx-appearance-font))}
+html[data-dcx-appearance=d-burn-nomad] :is(.dcxPanel,.adminPanel,.dcxDashPanel,.dcxMissionTile,.dcxCharacterCard,.dcxFactionCard,.dcxAppearanceSettings){border-left:4px solid var(--dcx-v-accent)!important;box-shadow:inset 7px 0 0 color-mix(in srgb,var(--dcx-v-accent) 7%,transparent)!important}
+html[data-dcx-appearance=d-burn-nomad] :is(.dcxDashHero,.dcxMissionsHero,.dcxMapHero){background-image:repeating-linear-gradient(135deg,color-mix(in srgb,var(--dcx-v-accent) 6%,transparent) 0 10px,transparent 10px 24px),linear-gradient(110deg,var(--dcx-v-panel),var(--dcx-v-bg))!important}
+html[data-dcx-appearance=d-burn-nomad] :is(.top,.roomBar){border-bottom:3px solid var(--dcx-v-accent)!important}
+html[data-dcx-appearance=d-burn-nomad] :is(.playerWorkspaceTab b,.kmWorkspaceTab){font-weight:900;letter-spacing:.05em}
+html[data-dcx-appearance=d-burn-nomad] :is(.btn,.kmWorkspaceTab){background-image:linear-gradient(135deg,transparent calc(100% - 8px),color-mix(in srgb,var(--dcx-v-accent) 35%,transparent) 8px)!important}
+html[data-dcx-appearance=capri-signal-bloom] :is(.dcxPanel,.adminPanel,.dcxDashPanel,.dcxMissionsHero,.dcxCharactersIntro,.dcxAppearanceSettings){background-image:radial-gradient(ellipse at 100% 0,color-mix(in srgb,var(--dcx-v-alt) 12%,transparent),transparent 58%),linear-gradient(135deg,var(--dcx-v-panel),var(--dcx-v-bg))!important;box-shadow:0 8px 24px color-mix(in srgb,var(--dcx-v-accent) 6%,transparent),inset 0 0 0 3px color-mix(in srgb,var(--dcx-v-accent) 4%,transparent)!important}
+html[data-dcx-appearance=capri-signal-bloom] .dcxSignalIcon{filter:drop-shadow(0 0 5px color-mix(in srgb,var(--dcx-v-accent) 25%,transparent))}
+html[data-dcx-appearance=capri-signal-bloom] :is(.dcxDashHero,.dcxMissionsHero){background-image:radial-gradient(circle at 80% 20%,color-mix(in srgb,var(--dcx-v-alt) 15%,transparent),transparent 60%),radial-gradient(var(--dcx-v-line) .8px,transparent .8px)!important;background-size:auto,18px 18px!important}
+html[data-dcx-appearance=ghost-black-ice] :is(.top,.dcxPanel,.adminPanel,.card,.dcxDashPanel,.dcxDashHero,.dcxMissionsHero,.dcxCharactersIntro,.dcxModuleCard,.dcxMissionTile,.dcxAppearanceSettings){box-shadow:none!important;background:var(--dcx-v-panel)!important;backdrop-filter:none!important}
+html[data-dcx-appearance=ghost-black-ice] :is(.dcxWorkspaceHero,.kmCommandHero,.dcxMissionsHero,.dcxDashHero){background:color-mix(in srgb,var(--dcx-v-bg) 88%,transparent)!important}
+html[data-dcx-appearance=ghost-black-ice] :is(.dcxSignalIcon,.kmAccessSeal){filter:none!important;box-shadow:none!important}
+html[data-dcx-appearance=ghost-black-ice] body::before,html[data-dcx-appearance=ghost-black-ice] body::after{opacity:.025!important}
+html[data-dcx-appearance=ghost-black-ice] :is(.kmAccessSweep,.kmAccessSeal::after){animation:none!important}
+html[data-dcx-appearance=ghost-black-ice] :is(.btn,.playerWorkspaceTab,.settingsTheme,.dcxAppearanceChoice){transform:none!important;transition:none!important}
+
+/* Honor explicit local Font Studio overrides and density, even after a profile switch. */
+html[data-dcx-own-font=on] .kmWorkspaceView :is(button,textarea,input,h1,h2,p,label){font-family:var(--dcx-own-font)!important}
+html[data-player-density=compact][data-dcx-appearance] :is(.dcxPanel,.adminPanel,.card),html[data-km-density=compact][data-dcx-appearance] :is(.dcxPanel,.adminPanel,.card){padding:12px}
+html[data-player-density=comfortable][data-dcx-appearance]:not([data-dcx-appearance=command-standard]) :is(.dcxPanel,.adminPanel,.card),html[data-km-density=comfortable][data-dcx-appearance]:not([data-dcx-appearance=command-standard]) :is(.dcxPanel,.adminPanel,.card){padding:var(--dcx-appearance-space)}
+
+@media(hover:hover) and (pointer:fine) and (forced-colors:none){
+  html[data-dcx-cursor=signal] body,html[data-dcx-cursor=large] body{cursor:var(--dcx-cursor-default),auto}
+  html:is([data-dcx-cursor=signal],[data-dcx-cursor=large]) :is(button,a[href],summary,[role=button],input[type=checkbox],input[type=radio],select){cursor:var(--dcx-cursor-interactive),pointer!important}
+  html:is([data-dcx-cursor=signal],[data-dcx-cursor=large]) :is(.dcxMapCanvas,.dcxMapCanvas canvas,.dcxMapOverlay,.dcxMapHybrid,.dcxMapLeaflet,.dcxFramingPreview,[data-dcx-cursor-state=precision]){cursor:var(--dcx-cursor-precision),crosshair!important}
+  html:is([data-dcx-cursor=signal],[data-dcx-cursor=large]) :is(input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=button]):not([type=submit]),textarea,[contenteditable=true]){cursor:text!important}
+  html:is([data-dcx-cursor=signal],[data-dcx-cursor=large]) :is(input[type=range],[draggable=true],[data-dcx-cursor-state=drag]){cursor:var(--dcx-cursor-drag),grab!important}
+  html:is([data-dcx-cursor=signal],[data-dcx-cursor=large]) :is(:disabled,[aria-disabled=true],[data-dcx-cursor-state=unavailable]){cursor:var(--dcx-cursor-unavailable),not-allowed!important}
+  html:is([data-dcx-cursor=signal],[data-dcx-cursor=large]) :is([aria-busy=true],[data-dcx-cursor-state=loading]){cursor:var(--dcx-cursor-loading),wait!important}
+  html:is([data-dcx-cursor=signal],[data-dcx-cursor=large]) [data-dcx-cursor-state=default]{cursor:var(--dcx-cursor-default),auto!important}
+  html[data-dcx-dragging=true]:is([data-dcx-cursor=signal],[data-dcx-cursor=large]) :is(.dcxMapCanvas,.dcxMapCanvas *,[draggable=true],[data-dcx-cursor-state=drag],.dcxFramingPreview){cursor:var(--dcx-cursor-drag),grabbing!important}
+  html[data-dcx-appearance=capri-signal-bloom] :is(.dcxAppearanceChoice,.btn):hover{transform:translateY(-1px)}
+}
+@media(max-width:1100px){.dcxAppearanceGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){
+  .dcxAppearanceHead,.dcxAppearanceFoot{flex-direction:column;align-items:stretch}
+  .dcxAppearanceSettings{padding:14px}
+  .dcxAppearanceGrid{gap:9px}
+  .dcxAppearanceChoice{padding:10px;gap:7px}
+  .dcxAppearanceChoice > b{font-size:12px}
+  .dcxCursorChoices button{min-height:44px;flex:1 1 140px}
+  .dcxCursorDemo{display:none}
+  #dcxAppearanceCurrent{max-width:none}
+  .dcxHasSignalIcon > .dcxSignalIcon{margin-inline-end:.3em}
+  html[data-dcx-appearance]:not([data-dcx-appearance=command-standard]){--dcx-appearance-space:14px}
+}
+@media(max-width:360px){.dcxAppearanceGrid{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){
+  html[data-dcx-appearance] *,html[data-dcx-appearance] *::before,html[data-dcx-appearance] *::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+  html[data-dcx-appearance] :is(.btn,.settingsTheme,.playerWorkspaceTab,.dcxAppearanceChoice):hover{transform:none!important}
+}
+html[data-dcx-reduced-motion=true] *,html[data-dcx-reduced-motion=true] *::before,html[data-dcx-reduced-motion=true] *::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+html[data-dcx-reduced-motion=true] :is(.btn,.settingsTheme,.playerWorkspaceTab,.dcxAppearanceChoice):hover{transform:none!important}
+@media(forced-colors:active){.dcxAppearanceChoice.active,.dcxCursorChoices button.active{outline:2px solid Highlight}.dcxAppearancePreview{forced-color-adjust:auto}}

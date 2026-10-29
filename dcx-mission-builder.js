@@ -84,7 +84,7 @@ function loadLocal(key){try{return JSON.parse(localStorage.getItem(key)||'{}')}c
 function localKey(missionId){return 'dcx-mission-local-'+(OPH.Realtime.getRoom()||'LOCAL')+'-'+missionId}
 function showModule(missionId,moduleId){
  const op=window.DCX?.StoryStudio?.operations?.find(o=>o.id===missionId&&o.status==='published');
- const m=op?.modules?.find(v=>v.id===moduleId&&v.published);if(!m)return;
+ const m=op?.modules?.find(v=>v.id===moduleId&&v.published);if(!m||window.DCX?.MissionControl&&!window.DCX.MissionControl.canSeeMission(missionId))return;
  playerMission=missionId;currentModule=moduleId;
  const overlay=$('dcxMissionModuleOverlay');if(!overlay)return;
  $('dcxModuleModalTitle').textContent=m.title;
@@ -117,7 +117,7 @@ function showModule(missionId,moduleId){
 async function sendInteraction(kind,value){
  const op=window.DCX?.StoryStudio?.operations?.find(o=>o.id===playerMission&&o.status==='published');
  const module=op?.modules?.find(x=>x.id===currentModule&&x.published);
- if(!op||!module)return;
+ if(!op||!module||window.DCX?.MissionControl&&!window.DCX.MissionControl.canSeeMission(op.id))return;
  if(kind==='choice'&&(module.type!=='choice'||!module.options.includes(value)))return;
  if(kind==='prep'&&(module.type!=='preparations'||!op.preparations.some(p=>p.id===value&&p.interaction==='request')||!window.DCX?.MissionControl?.canRequest(op.id,value))){$('dcxModuleModalStatus').textContent='PREPARAÇÃO INDISPONÍVEL PARA SUA EQUIPE.';return;}
  const btns=document.querySelectorAll('#dcxModuleModalActions button');btns.forEach(b=>b.disabled=true);

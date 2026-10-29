@@ -54,9 +54,10 @@
   return {state:pending?'analysis':'available',confirmed:false,legacy:false};
  }
  function canRequest(missionId,prepId){
-  const t=teamId(),op=catalog().find(o=>o.id===missionId&&o.status==='published');
+  const t=teamId(),op=catalog().find(o=>o.id===missionId);
   const p=catalogPreps(op).find(p=>p.id===prepId);
-  return !!(t&&op&&canSeeMission(missionId)&&isAssigned(missionId,t)&&!window.DCX?.MissionOps?.isArchived?.(missionId)&&!['observing','completed'].includes(window.DCX?.MissionOps?.getTeamState?.(missionId,t))&&p?.interaction==='request'&&!getStatus(missionId,t,prepId).confirmed&&!getStatus(missionId,t,prepId).state.includes('analysis'));
+  const activeCatalog=op?.status==='published'||(op?.id==='operacao-h'&&!!p?.legacyApproach);
+  return !!(t&&op&&activeCatalog&&canSeeMission(missionId)&&isAssigned(missionId,t)&&!window.DCX?.MissionOps?.isArchived?.(missionId)&&!['observing','completed'].includes(window.DCX?.MissionOps?.getTeamState?.(missionId,t))&&p?.interaction==='request'&&!getStatus(missionId,t,prepId).confirmed&&!getStatus(missionId,t,prepId).state.includes('analysis'));
  }
  function pendingTasks(){
   return Object.entries(requests).flatMap(([owner,node])=>Object.entries(node?.missionActions||{}).map(([id,a])=>({...(a||{}),owner,id}))).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
@@ -99,10 +100,24 @@
  }
  async function saveAssignments(missionId,teamIds){
   const op=catalog().find(v=>v.id===missionId);if(!op)return;
+  const previouslyConfigured=!!assignment(missionId)?.configured;
   const oldTeamIds=Object.keys(assignment(missionId)?.teams||{});
+  const newlyAdded=previouslyConfigured?teamIds.filter(t=>!oldTeamIds.includes(t)):[];
+  const legacyDone=(op.preparations||[]).filter(p=>p.done).map(p=>p.id);
+  if(op.id==='operacao-h')for(const [approach,defs] of Object.entries(window.OPH?.PREP_DEFS||{})){
+   for(const [key] of defs||[]){if(legacyState?.preps?.[approach]?.[key])legacyDone.push('legacy:'+approach+':'+key)}
+  }
   await commit(next=>{
    next.assignments=next.assignments||{};
    next.assignments[missionId]={configured:true,teams:Object.fromEntries(teamIds.map(t=>[t,true])),updatedAt:Date.now()};
+   if(newlyAdded.length&&legacyDone.length){
+    next.progress=next.progress||{};
+    next.progress[missionId]=next.progress[missionId]||{};
+    for(const team of newlyAdded){
+     const progress=next.progress[missionId][team]||(next.progress[missionId][team]={});
+     for(const prepId of legacyDone){if(!progress[prepId])progress[prepId]={state:'reopened',updatedAt:Date.now(),reason:'new-team-legacy-isolation'}}
+    }
+   }
    return next;
   });
   if(window.DCX?.MissionOps?.syncAssignments)await window.DCX.MissionOps.syncAssignments(missionId,oldTeamIds,teamIds);
@@ -268,6 +283,6 @@
   render();
  }
  window.DCX=window.DCX||{};
- window.DCX.MissionControl={canSeeMission,getStatus,canRequest,getTeamId:teamId,isAssigned,confirmFromRequest,restrictNewMission,getSelected:()=>selected,refreshPlayer(){if(!host){window.DCX?.StoryStudio?.refreshPlayer?.();window.OPHPlayer?.refreshPreps?.()}}};
+ window.DCX.MissionControl={canSeeMission,getStatus,canRequest,getTeamId:teamId,isAssigned,confirmFromRequest,restrictNewMission,saveAssignments,getSelected:()=>selected,refreshPlayer(){if(!host){window.DCX?.StoryStudio?.refreshPlayer?.();window.OPHPlayer?.refreshPreps?.()}}};
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();

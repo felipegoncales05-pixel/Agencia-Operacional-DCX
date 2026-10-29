@@ -148,8 +148,8 @@
   .dcxAtlasLocation,.dcxAtlasDirectory{width:100%!important;max-width:100%!important;min-width:0}
   .dcxAtlasLocation{padding:9px!important}
   .dcxAtlasPlace{font-size:14px}
-  .dcxAtlasDirectory{max-height:225px!important}
-  .dcxAtlasDirectoryList{max-height:145px!important;min-height:0}
+  .dcxAtlasDirectory{max-height:325px!important}
+  .dcxAtlasDirectoryList{max-height:205px!important;min-height:70px}
   .dcxAtlasScope .dcxAtlasBtn{min-height:34px}
   .dcxAtlasBottom,.dcxAtlasActive .dcxAtlasHud .dcxAtlasBottom{
     position:relative!important;top:auto!important;left:auto!important;right:auto!important;
@@ -175,8 +175,8 @@
     align-items:center;gap:5px!important;padding:8px!important}
   .dcxAtlasLocation .dcxAtlasScope{grid-column:1/-1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
   .dcxAtlasLocation .dcxAtlasPlace{font-size:13px!important}
-  .dcxAtlasDirectory{max-height:178px!important}
-  .dcxAtlasDirectoryList{max-height:105px!important}
+  .dcxAtlasDirectory{max-height:275px!important}
+  .dcxAtlasDirectoryList{max-height:155px!important;min-height:65px}
   .dcxAtlasActive .dcxMapField{height:clamp(320px,57dvh,520px)}
   .dcxAtlasLocationCoords,.dcxAtlasLocalName{font-size:9px}
   .dcxAtlasProviderModes{flex-wrap:wrap}

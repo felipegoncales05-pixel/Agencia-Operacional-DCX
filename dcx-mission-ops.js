@@ -166,7 +166,7 @@ async function mutate(missionId,event,fn){
 function patchTeam(mission,t,change){
  return mutate(mission,'team.'+change,s=>{s.teams=s.teams||{};const old=s.teams[t]||{state:'active',preps:{}};const preps=old.preps||{};
    if(change==='reactivate')Object.values(preps).forEach(p=>{if(p.state==='suspended')p.state='returned'});
-   s.teams[t]={...old,state:change==='reactivate'?'active':change==='observe'?'observing':'completed',preps};return s});
+   s.teams[t]={...old,state:change==='reactivate'?'active':change==='observe'?'observing':'completed',changedAt:Date.now(),preps};return s});
 }
 async function changePrep(mission,pid,params){
  return mutate(mission,pid?'prep.edit':'prep.create',s=>{
@@ -265,13 +265,16 @@ function form(){
     await generalOutcome(mission,val('overallResult'),text('overallInternal'),text('overallPublic'),selected,overrides);
    }
    if(action==='bind')await bindUser(val('bindUid'),val('bindPlayer'));
+   if(action==='revokeBinding')await db().ref(path('missionOps/bindings/'+b.dataset.moUid)).remove();
    if(action==='grant')await grantAgent(val('grantPlayer'),val('grantTeam'),mission,checked('grantFull'),false);
    if(action==='revokeGrant')await grantAgent(b.dataset.moPlayer,t,mission,false,true);
    if(action==='evaluate'){
     const owner=b.dataset.moOwner,requestId=b.dataset.moRequest,req=requests?.[owner]?.missionActions?.[requestId],binding=data.bindings?.[owner];
     const active=record(req?.missionId),p=active?.preps?.[req?.value],pteam=binding&&req?.teamId;
+    const teamState=active?.teams?.[pteam];
+    const pendingBeforeWithdrawal=teamState?.state==='observing'&&Number(req?.createdAt||0)>0&&Number(req.createdAt)<=Number(teamState.changedAt||0);
     if(!req||req.type!=='prepAdvanced'||!binding||!p||!getAccess(binding.playerId,req.missionId,pteam)||
-       !active.teams?.[pteam]||!['active','observing'].includes(active.teams[pteam].state)||p.scope==='exclusive'&&p.ownerTeam!==pteam)throw Error('Solicitação sem autorização válida.');
+       !teamState||!(teamState.state==='active'||pendingBeforeWithdrawal)||p.scope==='exclusive'&&p.ownerTeam!==pteam)throw Error('Solicitação sem autorização válida.');
     const decision=val('decision_'+requestId)||'confirm';
     await decidePrep(req.missionId,pteam,req.value,decision,clean(val('requestNote_'+requestId),500));
     await db().ref('rooms/'+room()+'/requests/'+owner+'/missionActions/'+requestId).remove();
@@ -364,7 +367,7 @@ function bindingsPanel(){
  return '<div class="dcxMOPSection"><h3>VERIFICAÇÃO DE IDENTIDADE DO AGENTE</h3><p>Valide manualmente a correspondência entre a sessão autenticada (UID) e o operador antes de liberar dados de missões. NÃO autorize apenas pelo nome informado pelo jogador.</p>'+
  '<div class="dcxMOPRow"><select name="bindUid">'+names.map(([u,v])=>'<option value="'+E(u)+'">'+E(v.identity?.nickname||u)+' · UID '+E(u.slice(0,12))+'</option>').join('')+'</select>'+
  '<select name="bindPlayer">'+Object.entries(operators||{}).filter(([k,v])=>v?.identity?.type!=='npc').map(([k,v])=>'<option value="'+E(k)+'">'+E(v.identity?.name||k)+'</option>').join('')+'</select>'+
- '<button class="btn" data-mo-action="bind">AUTORIZAR VÍNCULO</button></div><small>Vínculos existentes: '+Object.keys(data.bindings||{}).length+'</small></div>';
+ '<button class="btn" data-mo-action="bind">AUTORIZAR VÍNCULO</button></div><small>Vínculos existentes: '+Object.keys(data.bindings||{}).length+'</small>'+Object.entries(data.bindings||{}).map(([u,b])=>'<div class="dcxMOPRow"><b>'+E(operators?.[b.playerId]?.identity?.name||b.playerId)+' / UID '+E(u.slice(0,12))+'</b><button class="btn" data-mo-action="revokeBinding" data-mo-uid="'+E(u)+'">REVOGAR VÍNCULO</button></div>').join('')+'</div>';
 }
 function renderHost(){
  if(!host)return;const root=form();if(!root)return;

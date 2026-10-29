@@ -55,6 +55,14 @@ rooms/{sala}/
 
 O fluxo protegido é Keymaster → dados privados → visão individual segura. O navegador do jogador **não tem autorização para escrever progresso nem relatórios**. A confirmação depende do Keymaster e das Firebase Rules.
 
+## Compatibilidade verificada com exportação local (29/10/2026)
+
+Foi analisado **localmente** um backup JSON da sala `FRIA-01`, sem enviá-lo ao repositório. Ele contém cinco equipes reais, 20 registros de operadores (incluindo NPCs) e quatro missões no catálogo: três publicadas e a operação clássica `operacao-h` marcada como rascunho. O backup ainda não possui as novas estruturas `missionControl`, `missionOps`, `missionViews` ou notificações da Central, como esperado antes da instalação.
+
+A operação clássica D-1 usa o estado `state/preps`, independente do Story Studio. A Central foi ajustada para **aceitar pedidos D-1 mesmo quando `operacao-h` está em rascunho**, sem publicar os módulos do Story Studio. Uma primeira designação de equipes preserva as marcações globais legadas; equipes incluídas **depois de já haver designação explícita** recebem sobreposições locais para não herdar confirmações históricas.
+
+O backup contém registros de autenticação/sessões e códigos de acesso, portanto **não deve ser inserido no GitHub nem usado como fixture pública de testes**. Não houve migração nem restauração desse arquivo no Firebase real.
+
 ## Segurança e limitações importantes
 
 - **Não publicar diretamente o JSON versionado sem revisão!** O arquivo de regras do repositório pode estar desatualizado em relação ao Console Firebase. Mesclar somente as novas regras sob `dcx` com as regras **reais** vigentes, verificando o UID do Keymaster (há histórico de confusão entre o caractere `1` e a letra `l`).

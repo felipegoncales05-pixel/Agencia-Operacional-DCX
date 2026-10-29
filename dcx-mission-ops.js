@@ -134,6 +134,29 @@ async function pushNotice(missionId,t,text){
  for(const user of users)updates['missionNotices/'+user+'/'+key]={missionId,teamName:teamName(t),missionTitle:op(missionId)?.title||'MISSÃO',text:clean(text,240),createdAt:Date.now()};
  await db().ref(path('')).update(updates);
 }
+async function syncPending(){
+ if(!host||!room()||!db())return;
+ const all=Object.entries(requests||{}).flatMap(([owner,r])=>Object.entries(r?.missionActions||{}).map(([key,a])=>({...a,owner,key})));
+ const keys=new Set();
+ for(const a of all){
+  if(a.type!=='prepAdvanced')continue;
+  const bound=data.bindings?.[a.owner]?.playerId,m=record(a.missionId),prep=m.preps?.[a.value],team=m.teams?.[a.teamId];
+  const recognized=bound&&requests?.[a.owner]?.identity?.playerId===bound&&getAccess(bound,a.missionId,a.teamId);
+  const wasActive=team?.state==='active'||!team&&window.DCX?.MissionControl?.isAssigned?.(a.missionId,a.teamId);
+  const predatesWithdrawal=team?.state==='observing'&&Number(a.createdAt)<=Number(team.changedAt||0);
+  if(!recognized||!prep||!wasActive&&!predatesWithdrawal||prep.scope==='exclusive'&&prep.ownerTeam!==a.teamId)continue;
+  const old=team?.preps?.[a.value]?.state||'available';
+  if(!['available','returned'].includes(old))continue;
+  const token=a.missionId+'__'+a.teamId+'__'+a.value;if(keys.has(token))continue;keys.add(token);
+  await mutate(a.missionId,'prep.request',next=>{
+   next.teams=next.teams||{};const t=next.teams[a.teamId]||{state:'active',preps:{}};
+   t.preps=t.preps||{};
+   if(!t.preps[a.value]||['available','returned'].includes(t.preps[a.value].state))
+    t.preps[a.value]={state:'pending',at:Date.now(),version:next.preps?.[a.value]?.version||1};
+   next.teams[a.teamId]=t;return next;
+  });
+ }
+}
 function updatePlayerNotice(next){
  const previous=notices;notices=next||{};
  if(toastBaseline){
@@ -409,6 +432,7 @@ function bind(){
    if(requestBaseline){for(const key of updated){if(knownRequests.has(key))continue;
     database.ref('rooms/'+r+'/dcx/missionNotices/'+user+'/req_'+key).set({missionTitle:'CENTRAL DE MISSÕES',teamName:'AVALIAÇÃO',text:'Nova solicitação de preparação aguardando decisão.',createdAt:Date.now()}).catch(e=>console.warn(e))}}
    knownRequests=updated;requestBaseline=true;renderHost();schedulePublish();
+   syncPending().catch(e=>console.warn('[DCX Mission Ops] fila coletiva',e));
   });listeners.push(req);
  }else{
   watch('missionViews/'+user,v=>{playerView=v;playerPanels();updateViewer()});

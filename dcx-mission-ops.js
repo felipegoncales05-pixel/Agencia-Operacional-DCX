@@ -51,6 +51,10 @@ function getAccess(playerId,mission,t){
  const grant=data.grants?.[playerId]?.[t];
  return !!(grant&&(grant.full===true||grant.missions?.[mission]===true));
 }
+function canActGrant(playerId,mission,t){
+ if(operators?.[playerId]?.narrative?.teamId===t)return true;
+ return data.grants?.[playerId]?.[t]?.mode==='active'&&getAccess(playerId,mission,t);
+}
 function makeView(playerId){
  const view={missions:{},teams:{},generatedAt:Date.now()};
  const olist=catalog();
@@ -61,7 +65,15 @@ function makeView(playerId){
    if(!getAccess(playerId,o.id,t))continue;
    const teamState=r.teams?.[t]?.state||'active';
    if(!['active','observing','completed'].includes(teamState))continue;
-   const packet=feedFor(o.id,t);if(!packet)continue;
+   let packet=feedFor(o.id,t);if(!packet)continue;
+   const grant=operators?.[playerId]?.narrative?.teamId===t?null:data.grants?.[playerId]?.[t];
+   if(grant?.mode==='historical'){
+    packet=grant.snapshots?.[o.id];if(!packet)continue;
+    packet=JSON.parse(JSON.stringify(packet));packet.readOnly=true;packet.state='historical';
+   }else if(grant?.mode==='following'){
+    packet.readOnly=true;packet.state='observing';
+    Object.values(packet.preps||{}).forEach(p=>p.interaction='read');
+   }
    view.missions[o.id+'__'+t]=packet;
    view.teams[t]=teamName(t);
   }
@@ -70,7 +82,7 @@ function makeView(playerId){
 }
 function allowedUIDs(team,missionId){
  return Object.entries(data.bindings||{}).filter(([user,b])=>b?.playerId&&
-  getAccess(b.playerId,missionId,team) && teamIds().includes(team)).map(([user])=>user);
+  getAccess(b.playerId,missionId,team) && (operators[b.playerId]?.narrative?.teamId===team||data.grants?.[b.playerId]?.[team]?.mode!=='historical') && teamIds().includes(team)).map(([user])=>user);
 }
 function updateViewer(){
  if(host)return;
@@ -141,7 +153,7 @@ async function syncPending(){
  for(const a of all){
   if(a.type!=='prepAdvanced')continue;
   const bound=data.bindings?.[a.owner]?.playerId,m=record(a.missionId),prep=m.preps?.[a.value],team=m.teams?.[a.teamId];
-  const recognized=bound&&requests?.[a.owner]?.identity?.playerId===bound&&getAccess(bound,a.missionId,a.teamId);
+  const recognized=bound&&requests?.[a.owner]?.identity?.playerId===bound&&canActGrant(bound,a.missionId,a.teamId);
   const wasActive=team?.state==='active'||!team&&window.DCX?.MissionControl?.isAssigned?.(a.missionId,a.teamId);
   const predatesWithdrawal=team?.state==='observing'&&Number(a.createdAt)<=Number(team.changedAt||0);
   if(!recognized||!prep||!wasActive&&!predatesWithdrawal||prep.scope==='exclusive'&&prep.ownerTeam!==a.teamId)continue;
@@ -247,11 +259,12 @@ async function bindUser(user,player){
  await db().ref(path('missionNotices/'+user+'/'+id())).set({missionTitle:'DCX // INTEGRAÇÃO',teamName:'CENTRAL',text:'Briefing de integração: '+reports.length+' participação(ões) autorizada(s). Consulte as missões para acompanhar a situação atual.',createdAt:Date.now()});
  schedulePublish();
 }
-async function grantAgent(player,t,missionId,full,revoke){
+async function grantAgent(player,t,missionId,full,revoke,mode='active'){
  if(!operators[player]||!teams[t])throw Error('Agente ou equipe não encontrados.');
  const base={...(data.grants?.[player]?.[t]||{})};
  if(revoke){await db().ref(path('missionOps/grants/'+player+'/'+t)).remove()}
- else{base.full=!!full;base.missions=full?{}:{[missionId]:true};
+ else{base.full=!!full;base.missions=full?{}:{[missionId]:true};base.mode=['active','following','historical'].includes(mode)?mode:'active';base.changedAt=Date.now();
+  base.snapshots=base.mode==='historical'?Object.fromEntries(catalog().filter(o=>(full||o.id===missionId)&&window.DCX?.MissionControl?.isAssigned?.(o.id,t)).map(o=>[o.id,feedFor(o.id,t)])):{};
   await db().ref(path('missionOps/grants/'+player+'/'+t)).set(base)}
  schedulePublish();
 }
@@ -301,7 +314,7 @@ function form(){
     await db().ref(path('missionOps/bindings/'+b.dataset.moUid)).remove();
     await db().ref(path('missionViews/'+b.dataset.moUid)).remove();
    }
-   if(action==='grant')await grantAgent(val('grantPlayer'),val('grantTeam'),mission,checked('grantFull'),false);
+   if(action==='grant')await grantAgent(val('grantPlayer'),val('grantTeam'),mission,checked('grantFull'),false,val('grantMode'));
    if(action==='revokeGrant')await grantAgent(b.dataset.moPlayer,t,mission,false,true);
    if(action==='evaluate'){
     const owner=b.dataset.moOwner,requestId=b.dataset.moRequest,req=requests?.[owner]?.missionActions?.[requestId],binding=data.bindings?.[owner];
@@ -309,7 +322,7 @@ function form(){
     const teamState=active?.teams?.[pteam];
     const pendingBeforeWithdrawal=teamState?.state==='observing'&&Number(req?.createdAt||0)>0&&Number(req.createdAt)<=Number(teamState.changedAt||0);
     if(!req||req.type!=='prepAdvanced'||!binding||!p||!getAccess(binding.playerId,req.missionId,pteam)||
-       !teamState||!(teamState.state==='active'||pendingBeforeWithdrawal)||p.scope==='exclusive'&&p.ownerTeam!==pteam)throw Error('Solicitação sem autorização válida.');
+       !canActGrant(binding.playerId,req.missionId,pteam)||!teamState||!(teamState.state==='active'||pendingBeforeWithdrawal)||p.scope==='exclusive'&&p.ownerTeam!==pteam)throw Error('Solicitação sem autorização válida.');
     const decision=val('decision_'+requestId)||'confirm';
     await decidePrep(req.missionId,pteam,req.value,decision,clean(val('requestNote_'+requestId),500));
     await db().ref('rooms/'+room()+'/requests/'+owner+'/missionActions/'+requestId).remove();
@@ -394,10 +407,11 @@ function hostDetail(mission){
  '<div class="dcxMOPSection"><h3>AGENTES MULTIEQUIPE</h3><div class="dcxMOPRow">'+
  '<select name="grantPlayer">'+Object.entries(operators).filter(([k,v])=>v?.identity?.type!=='npc').map(([k,v])=>'<option value="'+E(k)+'">'+E(v.identity?.name||k)+'</option>').join('')+'</select>'+
  '<select name="grantTeam">'+teamIds().map(t=>'<option value="'+E(t)+'">'+E(teamName(t))+'</option>').join('')+'</select>'+
- '<label><input type="checkbox" name="grantFull"/> ACESSO À EQUIPE INTEIRA</label>'+
+ '<label><input type="checkbox" name="grantFull"/> ACESSO À EQUIPE INTEIRA</label>'+ 
+ '<select name="grantMode"><option value="active">PARTICIPAÇÃO ATIVA</option><option value="following">ACOMPANHAMENTO AO VIVO</option><option value="historical">HISTÓRICO CONGELADO</option></select>'+ 
  '<button class="btn" data-mo-action="grant" data-mo-mission="'+E(mission)+'">AUTORIZAR</button></div>'+
  Object.entries(data.grants||{}).flatMap(([player,g])=>Object.entries(g||{}).map(([t,v])=>({player,t,v}))).map(g=>
- '<div class="dcxMOPRow"><b>'+E(operators[g.player]?.identity?.name||g.player)+' · '+E(teamName(g.t))+'</b><small>'+(g.v.full?'EQUIPE INTEIRA':'MISSÕES SELECIONADAS')+'</small>'+
+ '<div class="dcxMOPRow"><b>'+E(operators[g.player]?.identity?.name||g.player)+' · '+E(teamName(g.t))+'</b><small>'+(g.v.full?'EQUIPE INTEIRA':'MISSÕES SELECIONADAS')+' · '+E(g.v.mode||'active')+'</small>'+
  '<button class="btn" data-mo-action="revokeGrant" data-mo-player="'+E(g.player)+'" data-mo-team="'+E(g.t)+'">REVOGAR</button></div>').join('')+'</div>';
 }
 function bindingsPanel(){

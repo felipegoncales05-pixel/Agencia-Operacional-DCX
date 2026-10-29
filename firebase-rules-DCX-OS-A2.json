@@ -130,6 +130,34 @@
           "factionSecrets": {
             ".read": "auth != null && auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1'",
             ".write": "auth != null && auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1'"
+          },
+          "missionOps": {
+            ".read": "auth != null && auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1'",
+            ".write": "auth != null && auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1'"
+          },
+          "missionViews": {
+            ".read": "auth != null && auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1'",
+            ".write": "auth != null && auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1'",
+            "$uid": {
+              ".read": "auth != null && (auth.uid === $uid || auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1')"
+            }
+          },
+          "missionNotices": {
+            ".read": "auth != null && auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1'",
+            ".write": "auth != null && auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1'",
+            "$uid": {
+              ".read": "auth != null && (auth.uid === $uid || auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1')"
+            }
+          },
+          "missionNoticeReads": {
+            ".read": "auth != null && auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1'",
+            "$uid": {
+              ".read": "auth != null && (auth.uid === $uid || auth.uid === '1uVVp67PW7c53fs6dstTDNE46Nz1')",
+              ".write": "auth != null && auth.uid === $uid",
+              "$noticeId": {
+                ".validate": "newData.val() === true || newData.val() === null"
+              }
+            }
           }
         }
       }

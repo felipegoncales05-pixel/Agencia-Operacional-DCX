@@ -10,7 +10,7 @@ const rt=()=>window.OPH?.Realtime,db=()=>rt()?.getFirebaseDatabase?.(),room=()=>
 const path=x=>'rooms/'+room()+'/dcx/'+x;
 const catalog=()=>window.DCX?.StoryStudio?.operations||[];
 const empty=()=>({missions:{},bindings:{},grants:{},audit:{}});
-let opsReady=false,data=empty(),operators={},teams={},requests={},currentRoom='',listeners=[],playerView={},notices={},reads={},started=false,toastBaseline=false,publishTimer=null,viewerTeam='',lastAuth='',error='';
+let opsReady=false,resetting=new Set(),data=empty(),operators={},teams={},requests={},currentRoom='',listeners=[],playerView={},notices={},reads={},started=false,toastBaseline=false,publishTimer=null,viewerTeam='',lastAuth='',error='';
 const teamName=t=>teams?.[t]?.name||t;
 const currentMission=()=>window.DCX?.MissionControl?.getSelected?.()||'';
 const teamIds=()=>Object.keys(teams).filter(t=>t!=='_init'&&teams[t]?.name);
@@ -22,7 +22,7 @@ function activeTeam(mission,t){
  return membership==='active'||!membership&&basic;
 }
 function feedFor(mission,t,kind='active'){
- const o=op(mission),r=record(mission);if(!o)return null;
+ const o=op(mission),r=record(mission);if(!o||r.resetAt&&!r.teams?.[t])return null;
  const responsible=r.teams?.[t],state=r.archive?'completed':(responsible?.state||kind);
  const preps={};
  for(const [pid,p] of Object.entries(r.preps||{})){
@@ -147,11 +147,11 @@ async function pushNotice(missionId,t,text){
  await db().ref(path('')).update(updates);
 }
 async function syncPending(){
- if(!host||!room()||!db())return;
+ if(!host||!room()||!db()||!opsReady||resetting.size)return;
  const all=Object.entries(requests||{}).flatMap(([owner,r])=>Object.entries(r?.missionActions||{}).map(([key,a])=>({...a,owner,key})));
  const keys=new Set();
  for(const a of all){
-  if(a.type!=='prepAdvanced')continue;
+  if(a.type!=='prepAdvanced'||Number(a.createdAt||0)<=Number(record(a.missionId).resetAt||0))continue;
   const bound=data.bindings?.[a.owner]?.playerId,m=record(a.missionId),prep=m.preps?.[a.value],team=m.teams?.[a.teamId];
   const recognized=bound&&requests?.[a.owner]?.identity?.playerId===bound&&canActGrant(bound,a.missionId,a.teamId);
   const wasActive=team?.state==='active'||!team&&window.DCX?.MissionControl?.isAssigned?.(a.missionId,a.teamId);
@@ -179,6 +179,7 @@ function updatePlayerNotice(next){
  toastBaseline=true;updateNotices();
 }
 function nextMissionState(missionId){return JSON.parse(JSON.stringify(data.missions?.[missionId]||{teams:{},preps:{},outcomes:{},general:{},archive:false}))}
+/* DCX_RESET_MISSION_IMPLEMENTATION */
 async function mutate(missionId,event,fn){
  if(!host||!db()||!room()||!opsReady)throw Error('Regras da Central de Missões ainda não habilitadas no Firebase.');
  let changed=false;
@@ -208,7 +209,7 @@ async function syncAssignments(mission,previous,current){
  const removed=previous.filter(t=>!current.includes(t));
  const added=current.filter(t=>!previous.includes(t));
  for(const t of removed)await patchTeam(mission,t,'observe');
- for(const t of added)if(record(mission).teams?.[t]?.state==='observing')await patchTeam(mission,t,'reactivate');
+ for(const t of added)await patchTeam(mission,t,'reactivate');
 }
 async function changePrep(mission,pid,params){
  return mutate(mission,pid?'prep.edit':'prep.create',s=>{
@@ -269,7 +270,7 @@ async function grantAgent(player,t,missionId,full,revoke,mode='active'){
  schedulePublish();
 }
 async function publishViews(){
- if(!host||!db()||!room())return;
+ if(!host||!db()||!room()||!opsReady||resetting.size)return;
  const entries=Object.entries(data.bindings||{});if(!entries.length)return;
  const changes={};
  for(const [user,b] of entries){
@@ -292,6 +293,7 @@ function form(){
   try{
    b.disabled=true;
    if(!opsReady)throw Error('Central avançada aguardando as novas regras do Firebase. Nenhuma alteração foi realizada.');
+   if(action==='resetMission'){await resetMission(mission);renderHost();return}
    if(action==='setTeam')await patchTeam(mission,t,val('teamState_'+t)==='observing'?'observe':val('teamState_'+t)==='completed'?'complete':'reactivate');
    if(action==='archive'){
     await mutate(mission,'mission.archive',s=>{s.archive=!s.archive;return s});
@@ -369,7 +371,9 @@ function hostDetail(mission){
  const o=op(mission),r=record(mission);if(!o)return '';
  const ts=teamIds().filter(t=>window.DCX?.MissionControl?.isAssigned?.(mission,t)||r.teams?.[t]);
  return '<div class="dcxMOPHeader"><h3>GESTÃO AVANÇADA // '+E(o.title)+'</h3><p>Atualizações de equipes, preparações classificadas, encerramentos e relatórios.</p></div>'+
- '<div class="dcxMOPSection"><h3>ESTADO DA OPERAÇÃO</h3><button class="btn" data-mo-action="archive" data-mo-mission="'+E(mission)+'">'+(r.archive?'REABRIR OPERAÇÃO':'ARQUIVAR / ENCERRAR MISSÃO')+'</button></div>'+
+ '<div class="dcxMOPSection"><h3>ESTADO DA OPERAÇÃO</h3><button class="btn" data-mo-action="archive" data-mo-mission="'+E(mission)+'">'+(r.archive?'REABRIR OPERAÇÃO':'ARQUIVAR / ENCERRAR MISSÃO')+'</button>'+
+ '<div class="dcxMOPReset"><div><b>REINICIAR ESTA OPERAÇÃO</b><p>Zera somente a Central desta missão: equipes designadas, preparações adicionais, progresso, desfechos, relatórios, avisos e solicitações. Não apaga a missão do Criador nem afeta outras missões. Exige duas confirmações.</p></div>'+
+ '<button class="btn dcxMOPDanger" type="button" data-mo-action="resetMission" data-mo-mission="'+E(mission)+'" '+(!opsReady?'disabled':'')+'>REINICIAR OPERAÇÃO</button></div></div>'+
  '<div class="dcxMOPSection"><h3>EQUIPES OPERACIONAIS</h3>'+ts.map(t=>{
   const s=r.teams?.[t]?.state||'active';
   return '<div class="dcxMOPRow"><b>'+E(teamName(t))+'</b><select name="teamState_'+E(t)+'">'+
@@ -479,6 +483,6 @@ function init(){
  bind();
 }
 window.DCX=window.DCX||{};
-window.DCX.MissionOps={getView:()=>playerView,getPrivate:()=>host?data:null,makeView,feedFor,refresh:renderHost,getTeamState:(mission,t)=>record(mission).teams?.[t]?.state||'',getTeamChangedAt:(mission,t)=>record(mission).teams?.[t]?.changedAt||0,isArchived:mission=>!!record(mission).archive,syncAssignments};
+window.DCX.MissionOps={buildResetPatch,resetMission,getView:()=>playerView,getPrivate:()=>host?data:null,makeView,feedFor,refresh:renderHost,getTeamState:(mission,t)=>record(mission).teams?.[t]?.state||'',getTeamChangedAt:(mission,t)=>record(mission).teams?.[t]?.changedAt||0,isArchived:mission=>!!record(mission).archive,syncAssignments};
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();

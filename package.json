@@ -8,7 +8,8 @@
     "test:visual": "node tests/visual-system.cjs",
     "test:missions": "node tests/mission-control.cjs",
     "test:mission-ops": "node tests/mission-ops.cjs",
-    "test:missions:all": "npm run test:missions && npm run test:mission-ops"
+    "test:missions:all": "npm run test:missions && npm run test:mission-ops && npm run test:mission-reset",
+    "test:mission-reset": "node tests/mission-reset.cjs"
   },
   "devDependencies": {
     "jsdom": "30.1.3",

@@ -244,9 +244,12 @@ async function resetMission(missionId){
   const root='rooms/'+room(),database=db();
   const nodes=['requests','dcx/missionViews','dcx/missionNotices','dcx/missionNoticeReads','dcx/missionOps'];
   const values=await Promise.all(nodes.map(p=>database.ref(root+'/'+p).once('value').then(s=>s.val()||{})));
-  const updates=buildResetPatch(missionId,Date.now(),{requests:values[0],views:values[1],notices:values[2],reads:values[3],ops:values[4]});
+  const resetAt=Date.now();
+  const updates=buildResetPatch(missionId,resetAt,{requests:values[0],views:values[1],notices:values[2],reads:values[3],ops:values[4]});
   // Multi-location update: falha de qualquer regra cancela a operação inteira.
   await database.ref(root).update(updates);
+  // Impede que um publicador com estado local antigo reenvie visoes da missao reiniciada.
+  data.missions={...(data.missions||{}),[missionId]:{resetAt}};
   error='Operação "'+mission.title+'" reiniciada. Agora você pode reconfigurar equipes e preparações.';
   return true;
  }finally{

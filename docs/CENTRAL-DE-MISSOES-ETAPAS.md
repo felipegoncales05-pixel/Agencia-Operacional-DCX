@@ -63,6 +63,28 @@ A operação clássica D-1 usa o estado `state/preps`, independente do Story Stu
 
 O backup contém registros de autenticação/sessões e códigos de acesso, portanto **não deve ser inserido no GitHub nem usado como fixture pública de testes**. Não houve migração nem restauração desse arquivo no Firebase real.
 
+## Reiniciar uma operação específica
+
+No Keymaster, entre em **MISSÕES → ABRIR CONTROLE → ESTADO DA OPERAÇÃO → REINICIAR OPERAÇÃO**. O botão é distinto de **Arquivar / Encerrar**.
+
+O sistema pede duas confirmações: digitar o **ID exato da operação** e aceitar o alerta de exclusão. A limpeza acontece numa **única atualização multipath no Firebase**. Caso qualquer permissão falhe, nenhuma parte deve ser gravada.
+
+O reset dessa operação:
+
+- Deixa a missão **sem equipes designadas**; o Keymaster pode selecioná-las novamente.
+- Apaga progresso e aprovações de preparações coletivas **só dessa missão**.
+- Limpa preparações novas exclusivas/gerais, versões operacionais, status de equipe, desfechos, relatórios publicados, arquivo e as configurações avançadas dessa missão.
+- Remove pedidos pendentes daquela missão da fila do Keymaster, preservando identidades e pedidos de outras missões.
+- Remove os pacotes de missão publicados em `missionViews/$uid`, suas notificações individuais e os recibos de leitura associados.
+- Remove concessões restritas a essa missão e snapshots históricos dela; preserva autorizações que se aplicam à equipe inteira e/ou a outras missões.
+- **Não altera** `state/storyStudio`, `state/preps`, operadores, equipes, identidade de jogadores, outras operações ou a configuração do Firebase.
+- Suprime as aprovações globais legadas na visualização da missão reiniciada, evitando que reapareçam mesmo depois de salvar novas equipes. O estado legado em si permanece intacto, para preservar outras funcionalidades.
+- Preserva o histórico de auditoria e registra o evento `mission.reset`, para rastreabilidade.
+
+O reinício exige Firebase conectado e regras privadas autorizadas para o Keymaster; caso contrário, o botão aparece **desabilitado** no painel avançado. Não há botão Desfazer. Guarde um backup antes de executar.
+
+**Atenção:** quando as equipes forem designadas de novo, a operação continua com os mesmos objetivos e módulos do Criador, mas todas as configurações operacionais da Central começam do zero. As equipes e agentes são cadastros globais e, por isso, não são apagados.
+
 ## Segurança e limitações importantes
 
 - **Não publicar diretamente o JSON versionado sem revisão!** O arquivo de regras do repositório pode estar desatualizado em relação ao Console Firebase. Mesclar somente as novas regras sob `dcx` com as regras **reais** vigentes, verificando o UID do Keymaster (há histórico de confusão entre o caractere `1` e a letra `l`).

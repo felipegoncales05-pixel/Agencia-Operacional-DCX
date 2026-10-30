@@ -48,7 +48,7 @@
   const record=control?.progress?.[missionId]?.[team]?.[prepId];
   if(record?.state==='confirmed')return {state:'confirmed',confirmed:true,legacy:false,updatedAt:record.updatedAt};
   if(record?.state==='reopened')return {state:'available',confirmed:false,legacy:false};
-  if(p.done||p.legacyApproach&&legacyState?.preps?.[p.legacyApproach]?.[p.legacyKey])return {state:'confirmed',confirmed:true,legacy:true};
+  if(!assignment(missionId)?.legacySuppressed&&(p.done||p.legacyApproach&&legacyState?.preps?.[p.legacyApproach]?.[p.legacyKey]))return {state:'confirmed',confirmed:true,legacy:true};
   const pending=host?pendingTasks().some(a=>a.type==='prep'&&a.missionId===missionId&&a.value===prepId&&requestTeam(a)===team):
    Object.values(ownPending||{}).some(a=>a.type==='prep'&&a.missionId===missionId&&a.value===prepId&&a.teamId===team);
   return {state:pending?'analysis':'available',confirmed:false,legacy:false};
@@ -70,7 +70,7 @@
   const t=requestTeam(a),op=catalog().find(v=>v.id===a.missionId),p=findPrep(op,a.value);
   const observer=window.DCX?.MissionOps?.getTeamState?.(a.missionId,t)==='observing';
   const beforeObserver=observer&&Number(a.createdAt||0)>0&&Number(a.createdAt)<=Number(window.DCX?.MissionOps?.getTeamChangedAt?.(a.missionId,t)||0);
-  return !!(a.type==='prep'&&t&&p?.interaction==='request'&&(isAssigned(a.missionId,t)||beforeObserver)&&a.teamId===t);
+  return !!(a.type==='prep'&&t&&p?.interaction==='request'&&(isAssigned(a.missionId,t)||beforeObserver)&&a.teamId===t&&(!assignment(a.missionId)?.resetAt||Number(a.createdAt||0)>Number(assignment(a.missionId).resetAt)));
  }
  function statusText(s){return s.confirmed?(s.legacy?'CONFIRMADA · LEGADO':'CONFIRMADA'):s.state==='analysis'?'EM ANÁLISE':'DISPONÍVEL'}
  function message(s){const node=$('dcxMissionControlStatus');if(node)node.textContent=s}
@@ -109,7 +109,7 @@
   }
   await commit(next=>{
    next.assignments=next.assignments||{};
-   next.assignments[missionId]={configured:true,teams:Object.fromEntries(teamIds.map(t=>[t,true])),updatedAt:Date.now()};
+   next.assignments[missionId]={...(next.assignments[missionId]||{}),configured:true,teams:Object.fromEntries(teamIds.map(t=>[t,true])),updatedAt:Date.now()};
    if(newlyAdded.length&&legacyDone.length){
     next.progress=next.progress||{};
     next.progress[missionId]=next.progress[missionId]||{};

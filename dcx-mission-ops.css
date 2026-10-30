@@ -39,3 +39,13 @@
 .dcxMOPInbox button{background:#173a50;border:1px solid #417c94;border-radius:7px;padding:6px;color:#ecf9ff;cursor:pointer}
 .dcxMOPToast{position:fixed;bottom:80px;right:20px;z-index:99999;width:min(310px,88vw);padding:14px;border-radius:12px;background:#113a4c;border:1px solid #60c7dd;color:#e9fdff;box-shadow:0 15px 40px rgba(0,0,0,.5);font:700 12px/1.5 monospace}
 @media(max-width:700px){.dcxMOPRow{align-items:stretch;flex-direction:column}.dcxMOPRow>*{width:100%}.dcxMOPNotifications{margin:8px 0}.dcxMOPInbox{right:auto;left:0}}
+
+/* Reinicio de operacao: area destrutiva, visualmente isolada. */
+.dcxMOPReset{margin-top:16px;padding:13px 14px;border:1px solid rgba(225,96,100,.5);border-radius:11px;background:rgba(80,18,28,.22);display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap}
+.dcxMOPReset>div{flex:1;min-width:200px}
+.dcxMOPReset b{font:800 12px/1.5 monospace;letter-spacing:.08em;color:#ffd8d8}
+.dcxMOPReset p{font-size:12px;color:#e5b1b8;line-height:1.55;margin:7px 0 0}
+.dcxMOPReset .dcxMOPDanger{color:#fff;background:#7e2336;border:1px solid #e0646b;padding:9px 14px;border-radius:9px;cursor:pointer;font-weight:800}
+.dcxMOPReset .dcxMOPDanger:not(:disabled):hover{background:#a92b42}
+.dcxMOPReset .dcxMOPDanger:disabled{opacity:.45;cursor:not-allowed}
+@media(max-width:700px){.dcxMOPReset .dcxMOPDanger{width:100%}}

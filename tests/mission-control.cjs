@@ -83,6 +83,13 @@ async function run(){
  await h.saveAssignments("operacao-h",["alpha","bravo"]);host.callbacks.state(host.current);
  assert.equal(h.getStatus("operacao-h","bravo","legacy:con:consult").confirmed,false,"Equipe adicionada não herda confirmação global");
  assert.equal(h.getStatus("operacao-h","alpha","legacy:con:consult").confirmed,true,"Equipe original mantém confirmação após ingresso da Bravo");
- console.log("DCX Mission Control: verificações legadas e de equipe aprovadas.");
+ host.current.missionControl.assignments["operacao-h"]={configured:true,teams:{},legacySuppressed:true,resetAt:Date.now()};
+ delete host.current.missionControl.progress["operacao-h"];
+ host.callbacks.state(host.current);
+ assert.equal(h.getStatus("operacao-h","alpha","legacy:con:consult").confirmed,false,"Reset impede retorno da confirmação global legada");
+ await h.saveAssignments("operacao-h",["alpha"]);host.callbacks.state(host.current);
+ assert.equal(h.getStatus("operacao-h","alpha","legacy:con:consult").confirmed,false,"Reatribuição não reativa conclusão legada");
+ assert.equal(host.current.missionControl.assignments["operacao-h"].legacySuppressed,true,"O bloqueio do legado sobrevive à nova designação");
+ console.log("DCX Mission Control: verificações legadas, reset e equipes aprovadas.");
 }
 run().catch(e=>{console.error(e);process.exitCode=1});

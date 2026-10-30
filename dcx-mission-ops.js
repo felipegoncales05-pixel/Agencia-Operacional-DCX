@@ -179,7 +179,82 @@ function updatePlayerNotice(next){
  toastBaseline=true;updateNotices();
 }
 function nextMissionState(missionId){return JSON.parse(JSON.stringify(data.missions?.[missionId]||{teams:{},preps:{},outcomes:{},general:{},archive:false}))}
-/* DCX_RESET_MISSION_IMPLEMENTATION */
+// Reset por missao: atualizacao multipath atômica, preservando todas as outras operacoes.
+function buildResetPatch(missionId,stamp,snapshot){
+ if(!/^[a-zA-Z0-9_-]{1,64}$/.test(missionId))throw Error('Identificador da missão inválido.');
+ const changes={
+  ['state/missionControl/assignments/'+missionId]:{configured:true,teams:{},legacySuppressed:true,resetAt:stamp,updatedAt:stamp},
+  ['state/missionControl/progress/'+missionId]:null,
+  ['dcx/missionOps/missions/'+missionId]:{resetAt:stamp}
+ };
+ const req=snapshot.requests||{},views=snapshot.views||{},notices=snapshot.notices||{},reads=snapshot.reads||{},ops=snapshot.ops||{};
+ // Limpa solicitações pendentes desta missão, sem alterar as identidades dos jogadores.
+ for(const [owner,body] of Object.entries(req)){
+  for(const [requestId,request] of Object.entries(body?.missionActions||{})){
+   if(request?.missionId===missionId)changes['requests/'+owner+'/missionActions/'+requestId]=null;
+  }
+ }
+ // Retira visualizações antigas de qualquer UID, inclusive de usuários já desvinculados.
+ for(const [user,body] of Object.entries(views)){
+  for(const [key] of Object.entries(body?.missions||{})){
+   if(key.startsWith(missionId+'__'))changes['dcx/missionViews/'+user+'/missions/'+key]=null;
+  }
+ }
+ for(const [user,items] of Object.entries(notices)){
+  for(const [notificationId,n] of Object.entries(items||{})){
+   if(n?.missionId!==missionId)continue;
+   changes['dcx/missionNotices/'+user+'/'+notificationId]=null;
+   if(reads[user]?.[notificationId]!=null)
+    changes['dcx/missionNoticeReads/'+user+'/'+notificationId]=null;
+  }
+ }
+ // Grants de uma missao deixam de existir; grants da equipe inteira sao preservados.
+ // Snapshots desta missão não podem sobreviver ao reset.
+ for(const [agent,granted] of Object.entries(ops.grants||{})){
+  for(const [team,grant] of Object.entries(granted||{})){
+   if(!grant||typeof grant!=='object')continue;
+   const grantPath='dcx/missionOps/grants/'+agent+'/'+team;
+   const targets=Object.keys(grant.missions||{});
+   if(grant.missions?.[missionId]){
+    if(!grant.full&&targets.length===1){
+     changes[grantPath]=null;continue;
+    }
+    changes[grantPath+'/missions/'+missionId]=null;
+   }
+   if(grant.snapshots?.[missionId])changes[grantPath+'/snapshots/'+missionId]=null;
+  }
+ }
+ // O histórico de auditoria é mantido; gravamos o reinício para rastreabilidade.
+ changes['dcx/missionOps/audit/'+id()]={missionId,action:'mission.reset',by:uid(),at:stamp};
+ return changes;
+}
+async function resetMission(missionId){
+ if(!host||!opsReady||!db()||!room()||rt()?.getMode?.()!=='firebase')
+  throw Error('O reset exige Keymaster conectado ao Firebase com regras da Central ativas.');
+ const mission=op(missionId);
+ if(!mission||!/^[a-zA-Z0-9_-]{1,64}$/.test(missionId))throw Error('Selecione uma missão válida.');
+ if(resetting.has(missionId))throw Error('Já existe um reinício em andamento.');
+ const entered=window.prompt('ATENÇÃO: o reset apaga as configurações, pedidos, aprovações, preparações e relatórios desta missão na Central.\n\nPara confirmar '+mission.title+', digite o ID exato:\n'+missionId,'');
+ if(entered===null)return false;
+ if(entered.trim()!==missionId)throw Error('Identificador incorreto. Nenhum dado foi alterado.');
+ if(!window.confirm('REINICIAR SOMENTE "'+mission.title+'"?\n\nEsta ação não tem botão Desfazer. O Criador de Missões e outras operações serão preservados.'))return false;
+ resetting.add(missionId);
+ clearTimeout(publishTimer);
+ try{
+  const root='rooms/'+room(),database=db();
+  const nodes=['requests','dcx/missionViews','dcx/missionNotices','dcx/missionNoticeReads','dcx/missionOps'];
+  const values=await Promise.all(nodes.map(p=>database.ref(root+'/'+p).once('value').then(s=>s.val()||{})));
+  const updates=buildResetPatch(missionId,Date.now(),{requests:values[0],views:values[1],notices:values[2],reads:values[3],ops:values[4]});
+  // Multi-location update: falha de qualquer regra cancela a operação inteira.
+  await database.ref(root).update(updates);
+  error='Operação "'+mission.title+'" reiniciada. Agora você pode reconfigurar equipes e preparações.';
+  return true;
+ }finally{
+  resetting.delete(missionId);
+  schedulePublish();
+ }
+}
+
 async function mutate(missionId,event,fn){
  if(!host||!db()||!room()||!opsReady)throw Error('Regras da Central de Missões ainda não habilitadas no Firebase.');
  let changed=false;

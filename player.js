@@ -142,36 +142,22 @@ console.info("[DCX OS] A2.2 AUTH ISOLATION // PLAYER // YUMIYA CORE FINAL-11");
   function moodWord(v){return v<25?"BAIXA":v<55?"ELEVADA":v<80?"ALTA":"CRÍTICA"}
   function euphoriaWord(v){return v<25?"CONTIDA":v<55?"PRESENTE":v<80?"ALTA":"EUFÓRICA"}
   function loadPortraitFor(key,preset="standard"){
-    const portrait=$("yumiyaFocusPortrait");if(!portrait)return;
+    const portrait=$("yumiyaFocusPortrait"),image=$("yumiyaPortraitImage"),loader=window.DCX?.YumiyaPortraits;if(!portrait||!image||!loader)return;
     key=portraitMoodFiles[key]?key:"normal";
     preset=String(preset||"standard").toLowerCase().replace(/[^a-z0-9_-]/g,"")||"standard";
-    const loadKey=preset+":"+key;
+    const loadKey=preset+":"+key+":"+loader.modeKey();
     if(loadedPortraitKey===loadKey)return;
     loadedPortraitKey=loadKey;
     const mood=portraitMoodFiles[key];
-    const candidates=[];
-    if(preset!=="standard")candidates.push(`yumiya-${preset}-${mood}.png`);
-    candidates.push(`yumiya-${mood}.png`);
-    if(key==="normal")candidates.push("yumiya-portrait.png");
-    const tryNext=()=>{
-      const src=candidates.shift();
-      if(!src){
-        portrait.classList.remove("hasPortrait");
-        portrait.style.removeProperty("--yumiyaPortrait");
-        loadedPortraitKey="";
-        return;
-      }
-      const img=new Image();
-      img.onload=()=>{
-        portrait.style.setProperty("--yumiyaPortrait",`url('${src}?v=YUPNG1')`);
-        portrait.classList.add("hasPortrait");
-        console.info(`YU BOT PORTRAIT // ${key.toUpperCase()} // PNG OK`);
-      };
-      img.onerror=tryNext;
-      img.src=src+"?v=YUPNG1";
-    };
-    tryNext();
+    portrait.dataset.yumiyaMood=mood;
+    loader.load(image,{key,preset,animate:true}).then(result=>{
+      if(loadKey!==loadedPortraitKey||result.cancelled)return;
+      if(!result.ok){portrait.classList.remove("hasPortrait");loadedPortraitKey="";return}
+      portrait.classList.add("hasPortrait");
+      console.info(`YU BOT PORTRAIT // ${key.toUpperCase()} // ${result.animated?"GIF":"PNG"} OK`);
+    });
   }
+  window.addEventListener("dcx-yumiya-motion-change",()=>{loadedPortraitKey="";renderYumiyaAffect()});
   function renderYumiyaAffect(){
     const a=effectiveAffect();
     const anger=Math.max(0,Math.min(100,Math.round(Number(a.anger)||0)));

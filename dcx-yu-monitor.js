@@ -8,7 +8,15 @@ const number=(n,f)=>Math.min(100,Math.max(0,Math.round(Number(n) || f || 0)));
 function paint(prefix,data,detail){
  const portrait=images[data.portrait]?data.portrait:'normal';
  const img=$(prefix+'Portrait'),name=$(prefix+'Name'),subtitle=$(prefix+'Detail');
- if(img&&img.dataset.portrait!==portrait){img.dataset.portrait=portrait;img.src=images[portrait];img.onerror=()=>{img.hidden=true;img.parentElement?.classList.add('imageMissing')};img.onload=()=>{img.hidden=false;img.parentElement?.classList.remove('imageMissing')}}
+ const loader=window.DCX?.YumiyaPortraits,mode=loader?.modeKey?.()||'static';
+ if(img&&(img.dataset.portrait!==portrait||img.dataset.motionMode!==mode)){
+   img.dataset.portrait=portrait;img.dataset.motionMode=mode;
+   if(loader)loader.load(img,{key:portrait,animate:true}).then(result=>{
+     if(img.dataset.portrait!==portrait||img.dataset.motionMode!==mode||result.cancelled)return;
+     img.hidden=!result.ok;img.parentElement?.classList.toggle('imageMissing',!result.ok);
+   });
+   else{img.src=images[portrait];img.onerror=()=>{img.hidden=true;img.parentElement?.classList.add('imageMissing')};img.onload=()=>{img.hidden=false;img.parentElement?.classList.remove('imageMissing')}}
+ }
  if(name)name.textContent=names[portrait];
  if(subtitle)subtitle.textContent=detail;
  for(const k of ['anger','tension','euphoria']){const value=number(data[k],0),bar=$(prefix+k+'Bar'),out=$(prefix+k+'Value');if(bar)bar.style.width=value+'%';if(out)out.textContent=value+'%'}
@@ -34,6 +42,7 @@ function init(){
  document.querySelector('#yumiyaPortraitCtl')?.addEventListener('click',()=>requestAnimationFrame(update));
  document.querySelector('[data-km-view="yumiya"]')?.addEventListener('change',e=>{if(e.target.closest('.kmAffectPanel'))requestAnimationFrame(update)});
  window.OPH?.Realtime?.onState?.(state=>{connected=true;delivered=deliveredReaction(state);update()});
+ window.addEventListener('dcx-yumiya-motion-change',update);
  update();
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();

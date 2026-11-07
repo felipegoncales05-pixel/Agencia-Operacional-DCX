@@ -2,6 +2,7 @@
   "name": "agencia-operacional-dcx",
   "private": true,
   "scripts": {
+    "test:yumiya": "node tests/yumiya-portraits.cjs",
     "test:lobby": "node tests/player-lobby.cjs",
     "icons:export": "node scripts/export-signal-icons.cjs",
     "test:visual-preferences": "node tests/visual-preferences.cjs",

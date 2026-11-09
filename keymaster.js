@@ -299,7 +299,7 @@ console.info("[DCX OS] YUMIYA REACTION SYNC V2 // CLEAR EPOCH FIX");
     syncValue($("operatorAngerCtl"),anger);syncValue($("operatorTensionCtl"),tension);syncValue($("operatorEuphoriaCtl"),euphoria);
     if($("operatorAngerValue"))$("operatorAngerValue").textContent=anger+"%";if($("operatorTensionValue"))$("operatorTensionValue").textContent=tension+"%";if($("operatorEuphoriaValue"))$("operatorEuphoriaValue").textContent=euphoria+"%";
     document.querySelectorAll("#operatorPortraitCtl [data-portrait]").forEach(b=>b.classList.toggle("gold",b.dataset.portrait===(shown.portrait||"normal")));
-    if($("operatorAssetHint"))$("operatorAssetHint").textContent=shown.preset==="kang"?"Kang procura yumiya-kang-normal/medo/envergonhada/raiva/feliz.png e cai nos portraits padrão se não encontrar.":"Preset padrão usa os cinco portraits atuais da Yumiya.";
+    if($("operatorAssetHint"))$("operatorAssetHint").textContent=shown.preset==="kang"?"Kang usa seus retratos em GIF ou PNG, quando disponíveis. Se faltarem, usa os retratos padrão da Yumiya.":"Preset padrão usa os cinco portraits atuais da Yumiya.";
   }
   function selectOperatorProfile(uid){selectedProfileUid=uid||"";renderOperatorProfiles()}
   async function toggleOperatorProfile(on){

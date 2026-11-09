@@ -34,7 +34,7 @@ async function fixture({data={},saved={},query='?room=FRIA-01',real=false,connec
       async publishIdentity(i){writes.push({path:'identity',value:i})},
       getUid:()=>auth.currentUser.uid,getRoom:()=>currentRoom,getFirebaseAuth:()=>auth,getFirebaseDatabase:()=>db
     };
-    w.eval(read('player-welcome.js'));w.eval(read('player.js'));
+    w.eval(read('player-welcome.js'));w.eval(read('dcx-yu-portraits.js'));w.eval(read('player.js'));
   }else{
     w.OPHPlayer={async connect(opts){calls.push({options:opts,room:d.getElementById('room').value,name:d.getElementById('name').value});return connect?connect():true;}};
   }

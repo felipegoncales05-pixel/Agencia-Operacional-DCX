@@ -100,8 +100,6 @@ console.info("[DCX OS] A2.2 AUTH ISOLATION // PLAYER // YUMIYA CORE FINAL-11");
     toast("OPERADOR RENOMEADO // "+name.toUpperCase());
   }
   function changeYumiyaIdentity(){openYumiyaRename()}
-  const portraitMoodFiles={normal:"normal",fear:"medo",embarrassed:"envergonhada",anger:"raiva",happy:"feliz"};
-  let loadedPortraitKey="";
   function operatorProfile(){
     const identity=getYumiyaIdentity();
     if(!identity?.playerId)return null;
@@ -138,40 +136,8 @@ console.info("[DCX OS] A2.2 AUTH ISOLATION // PLAYER // YUMIYA CORE FINAL-11");
     // A reação só muda quando uma fala da Yumiya traz um snapshot entregue no mesmo update.
     return latestMessageReactionForMe() || deliveredReactionFallback() || {anger:12,tension:18,euphoria:10,portrait:"normal",preset:"standard",tone:"professional",exclusive:false};
   }
-  function setupYumiyaPortrait(){renderYumiyaAffect()}
   function moodWord(v){return v<25?"BAIXA":v<55?"ELEVADA":v<80?"ALTA":"CRÍTICA"}
   function euphoriaWord(v){return v<25?"CONTIDA":v<55?"PRESENTE":v<80?"ALTA":"EUFÓRICA"}
-  function loadPortraitFor(key,preset="standard"){
-    const portrait=$("yumiyaFocusPortrait");if(!portrait)return;
-    key=portraitMoodFiles[key]?key:"normal";
-    preset=String(preset||"standard").toLowerCase().replace(/[^a-z0-9_-]/g,"")||"standard";
-    const loadKey=preset+":"+key;
-    if(loadedPortraitKey===loadKey)return;
-    loadedPortraitKey=loadKey;
-    const mood=portraitMoodFiles[key];
-    const candidates=[];
-    if(preset!=="standard")candidates.push(`yumiya-${preset}-${mood}.png`);
-    candidates.push(`yumiya-${mood}.png`);
-    if(key==="normal")candidates.push("yumiya-portrait.png");
-    const tryNext=()=>{
-      const src=candidates.shift();
-      if(!src){
-        portrait.classList.remove("hasPortrait");
-        portrait.style.removeProperty("--yumiyaPortrait");
-        loadedPortraitKey="";
-        return;
-      }
-      const img=new Image();
-      img.onload=()=>{
-        portrait.style.setProperty("--yumiyaPortrait",`url('${src}?v=YUPNG1')`);
-        portrait.classList.add("hasPortrait");
-        console.info(`YU BOT PORTRAIT // ${key.toUpperCase()} // PNG OK`);
-      };
-      img.onerror=tryNext;
-      img.src=src+"?v=YUPNG1";
-    };
-    tryNext();
-  }
   function renderYumiyaAffect(){
     const a=effectiveAffect();
     const anger=Math.max(0,Math.min(100,Math.round(Number(a.anger)||0)));
@@ -190,7 +156,7 @@ console.info("[DCX OS] A2.2 AUTH ISOLATION // PLAYER // YUMIYA CORE FINAL-11");
       portrait.classList.toggle("affectTensionHigh",tension>=70);
       portrait.classList.toggle("affectEuphoriaHigh",euphoria>=70);
     }
-    loadPortraitFor(a.portrait||"normal",a.preset||"standard");
+    if(focusMode)OPH.YumiyaPortraits.render("yumiyaFocusImage",a.portrait,a.preset);
     const identity=getYumiyaIdentity();
     const label=$("yumiyaChannelLabel");
     if(label)label.textContent=a.exclusive&&identity?`CANAL INDIVIDUAL // ${identity.name.toUpperCase()}`:"KIRYUIN RESPONSE INTERFACE // CONSULTAS OPERACIONAIS";
@@ -566,7 +532,8 @@ console.info("[DCX OS] A2.2 AUTH ISOLATION // PLAYER // YUMIYA CORE FINAL-11");
     $("yumiyaIdentityInput").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();confirmYumiyaIdentity()}});
     $("yumiyaRenameInput")?.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();confirmYumiyaRename()}else if(e.key==="Escape"){e.preventDefault();cancelYumiyaRename()}});
     document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("yumiyaRenamePanel")?.classList.contains("hidden")){e.preventDefault();cancelYumiyaRename();return}if(e.key==="Escape"&&focusMode){e.preventDefault();toggleYumiyaFocus(false)}});
-    setupYumiyaPortrait();applyYumiyaFocus();
+    OPH.YumiyaPortraits.render("dcxDashboardYumiyaPortrait");
+    applyYumiyaFocus();
     render();setTimeout(()=>window.DCX?.Player?.bootstrap?.(),0)
   });
 })();

@@ -1,14 +1,14 @@
 (()=>{'use strict';
 if(!/keymaster\.html$/i.test(location.pathname))return;
 const $=id=>document.getElementById(id);
-const images={normal:'yumiya-normal.png',fear:'yumiya-medo.png',embarrassed:'yumiya-envergonhada.png',anger:'yumiya-raiva.png',happy:'yumiya-feliz.png'};
+const portraits=OPH.YumiyaPortraits;
 const names={normal:'NORMAL',fear:'MEDO',embarrassed:'ENVERGONHADA',anger:'RAIVA',happy:'FELIZ'};
 let delivered={portrait:'normal',anger:12,tension:18,euphoria:10},connected=false;
 const number=(n,f)=>Math.min(100,Math.max(0,Math.round(Number(n) || f || 0)));
 function paint(prefix,data,detail){
- const portrait=images[data.portrait]?data.portrait:'normal';
- const img=$(prefix+'Portrait'),name=$(prefix+'Name'),subtitle=$(prefix+'Detail');
- if(img&&img.dataset.portrait!==portrait){img.dataset.portrait=portrait;img.src=images[portrait];img.onerror=()=>{img.hidden=true;img.parentElement?.classList.add('imageMissing')};img.onload=()=>{img.hidden=false;img.parentElement?.classList.remove('imageMissing')}}
+ const portrait=portraits.normalizeMood(data.portrait);
+ const name=$(prefix+'Name'),subtitle=$(prefix+'Detail');
+ portraits.render(prefix+'Portrait',portrait);
  if(name)name.textContent=names[portrait];
  if(subtitle)subtitle.textContent=detail;
  for(const k of ['anger','tension','euphoria']){const value=number(data[k],0),bar=$(prefix+k+'Bar'),out=$(prefix+k+'Value');if(bar)bar.style.width=value+'%';if(out)out.textContent=value+'%'}
